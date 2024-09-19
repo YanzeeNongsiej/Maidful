@@ -1,0 +1,840 @@
+// import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+// import 'package:http/http.dart' as http;
+import 'package:ibitf_app/DAO/maiddao.dart';
+import 'package:ibitf_app/DAO/usersdao.dart';
+import 'package:ibitf_app/chatpage.dart';
+import 'package:ibitf_app/controller/chat_controller.dart';
+import 'package:ibitf_app/jobprofile.dart';
+import 'package:ibitf_app/jobresume.dart';
+//pages
+import 'package:ibitf_app/login.dart';
+import 'package:ibitf_app/maidlist.dart';
+// import 'package:ibitf_app/maid.dart';
+import 'package:ibitf_app/service/auth.dart';
+
+// import 'material_design_indicator.dart';
+
+class EmployerHome extends StatefulWidget {
+  final String? uname;
+  final String? uid;
+  const EmployerHome({Key? key, @required this.uname, @required this.uid})
+      : super(key: key);
+  @override
+  _EmployerHomePageState createState() => _EmployerHomePageState();
+}
+
+class _EmployerHomePageState extends State<EmployerHome>
+    with SingleTickerProviderStateMixin {
+  // final serverUrl = 'http://192.168.82.8:3000';
+
+  final nameController = TextEditingController();
+  final addressController = TextEditingController();
+  final ChatController chatcontroller = ChatController();
+  Stream? ChatroomStream;
+  get uname => null;
+  String userID = FirebaseAuth.instance.currentUser!.uid;
+  String newaddress = "", newname = "", userid = "";
+  // Stream<QuerySnapshot> fetchChats() {
+  //   // Stream<QuerySnapshot<Object?>> qs = Chatdao().getChats(widget.uid as String);
+  //   // return qs;
+  // }
+
+  Future<QuerySnapshot> fetchChats() async {
+    QuerySnapshot qs = await maidDao().getAllMaids();
+    return qs;
+  }
+
+  Future<QuerySnapshot> fetchOwnServices() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getOwnServices1(userID);
+    return qs;
+  }
+
+  Future<QuerySnapshot> fetchOwnJobProfile() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getOwnJobProfile(userID);
+    return qs;
+  }
+
+  late TabController _tabController;
+
+  final _selectedColor = const Color(0xff1a73e8);
+
+  final _iconTabs = [
+    const Tab(icon: Icon(Icons.home)),
+    const Tab(icon: Icon(Icons.chat_rounded)),
+    const Tab(icon: Icon(Icons.settings)),
+  ];
+
+  ontheload() async {
+    ChatroomStream = await chatcontroller.getChats(userID);
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    _tabController = TabController(length: 3, vsync: this);
+    ontheload();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _tabController.dispose();
+  }
+
+  void handleClick(String value) async {
+    switch (value) {
+      case 'Logout':
+        await AuthMethods.signOut();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LogIn()));
+        }
+        break;
+      case 'Settings':
+        break;
+    }
+  }
+
+  // bool showOptions = false;
+  // void toggleOptions() {
+  //   setState(() {
+  //     showOptions =
+  //         !showOptions; // Toggling the visibility of additional options
+  //   });
+  // }
+
+  Widget _buildChatList() {
+    return StreamBuilder(
+      stream: ChatroomStream,
+      builder: (context, AsyncSnapshot snapshot) {
+        //errors
+        if (snapshot.hasError) {
+          return Text("Error ${snapshot.error}");
+        }
+        //loading
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text("loading...");
+        }
+        //listview
+        return snapshot.hasData
+            ? ListView.builder(
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  // print("item Count:${snapshot.data!.docs.length}");
+                  // print("Chatroom id:${snapshot.data!.docs[index].id}");
+                  DocumentSnapshot chatRoomItem = snapshot.data!.docs[index];
+                  String lastMsg = "", lastTime = "";
+                  if (userID == chatRoomItem.get("lastSender")) {
+                    lastMsg = "You:${chatRoomItem.get("lastMessage")}";
+                  } else {
+                    lastMsg = "${chatRoomItem.get("lastMessage")}";
+                  }
+                  DateTime getDate = chatRoomItem.get("timestamp").toDate();
+                  final now = DateTime.now();
+                  if (getDate.day == now.day &&
+                      getDate.month == now.month &&
+                      getDate.year == now.year) {
+                    lastTime = "${getDate.hour}:${getDate.minute}";
+                  } else {
+                    String monthstr = "";
+                    switch (getDate.month) {
+                      case 1:
+                        monthstr = "Jan";
+                        break;
+                      case 2:
+                        monthstr = "Feb";
+                        break;
+                      case 3:
+                        monthstr = "Mar";
+                        break;
+                      case 4:
+                        monthstr = "Apr";
+                        break;
+                      case 5:
+                        monthstr = "May";
+                        break;
+                      case 6:
+                        monthstr = "Jun";
+                        break;
+                      case 7:
+                        monthstr = "Jul";
+                        break;
+                      case 8:
+                        monthstr = "Aug";
+                        break;
+                      case 9:
+                        monthstr = "Sep";
+                        break;
+                      case 10:
+                        monthstr = "Oct";
+                        break;
+                      case 11:
+                        monthstr = "Nov";
+                        break;
+                      case 12:
+                        monthstr = "Dec";
+                        break;
+                      default:
+                        monthstr = "Jan";
+                    }
+                    lastTime = "${getDate.day} $monthstr";
+                  }
+                  return FutureBuilder(
+                      future: getUserinfo(chatRoomItem.id),
+                      builder: (context, snapshot) {
+                        return snapshot.hasData
+                            ? ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: snapshot.data!.docs.length,
+                                itemBuilder: (context, index) {
+                                  final item = snapshot.data!.docs[index];
+                                  return GestureDetector(
+                                    onTap: () => {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => ChatPage(
+                                                  name: item.get("name"),
+                                                  receiverID:
+                                                      item.get("userid"),
+                                                  postType: chatRoomItem
+                                                      .get("post_type"),
+                                                  postTypeID: chatRoomItem
+                                                      .get("post_type_id"))))
+                                    },
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        foregroundImage: NetworkImage(
+                                            AuthMethods.user?.photoURL ?? ''),
+                                      ),
+                                      title: Text(item.get("name")),
+                                      subtitle: Text(
+                                        lastMsg,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            lastTime,
+                                            style:
+                                                const TextStyle(fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                      });
+                },
+              )
+            : const Center(
+                child: CircularProgressIndicator(),
+              );
+      },
+    );
+  }
+
+  Widget _buildServiceList() {
+    return FutureBuilder(
+        future: fetchOwnServices(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("loading...");
+          }
+          if (snapshot.hasData) {
+            if (snapshot.data!.docs.isEmpty) {
+              return const Text("No Services Yet");
+            } else {
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final item = snapshot.data!.docs[index];
+                  return Expanded(
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () => {},
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(
+                                      children: <InlineSpan>[
+                                        const TextSpan(
+                                          text: 'Schedule: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("schedule"),
+                                        ),
+                                        const TextSpan(
+                                          text: '\nTiming: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ),
+                                        const TextSpan(
+                                          text: '\nDays: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("days").toString(),
+                                        ),
+                                      ],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                      ))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.blue,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Navigator.pop(context);
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) => ChatPage(
+                                      //             name: item.get("name"),
+                                      //             receiverID: item.get("userid"),
+                                      //             postType: "services",
+                                      //             postTypeID: servItem.id)));
+                                    },
+                                    child: const Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          'Edit',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  // return GestureDetector(
+                  //   onTap: () => {},
+                  //   child: Text(
+                  //     item.get("rate"),
+                  //     textAlign: TextAlign.center,
+                  //   ),
+                  // );
+                },
+              );
+            }
+          } else {
+            return const Text("No Services Yet");
+          }
+        });
+  }
+
+  Widget _buildJobProfileList() {
+    return FutureBuilder(
+        future: fetchOwnJobProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("loading...");
+          }
+          if (snapshot.hasData) {
+            if (snapshot.data!.docs.isEmpty) {
+              return const Text("No Services Yet");
+            } else {
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final item = snapshot.data!.docs[index];
+                  return Expanded(
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () => {},
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(
+                                      children: <InlineSpan>[
+                                        const TextSpan(
+                                          text: 'Schedule: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("schedule"),
+                                        ),
+                                        const TextSpan(
+                                          text: '\nTiming: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ),
+                                        const TextSpan(
+                                          text: '\nDays: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("days").toString(),
+                                        ),
+                                      ],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                      ))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.blue,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Navigator.pop(context);
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) => ChatPage(
+                                      //             name: item.get("name"),
+                                      //             receiverID: item.get("userid"),
+                                      //             postType: "services",
+                                      //             postTypeID: servItem.id)));
+                                    },
+                                    child: const Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          'Edit',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+          } else {
+            return const Text("No Services Yet");
+          }
+        });
+  }
+
+  Future<QuerySnapshot> getUserinfo(String usrId) async {
+    userid = usrId.replaceAll("_", "").replaceAll(userID, "");
+    Future<QuerySnapshot<Object?>> qs = Usersdao().getUserDetails(userid);
+    return qs;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (BuildContext context) {
+            return SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Image.asset(
+                  "assets/maidful__1_-removebg-preview.png",
+                  fit: BoxFit.scaleDown,
+                ));
+          },
+        ),
+        // centerTitle: true,
+        // backgroundColor: _selectedColor,
+        // shadowColor: Colors.black,
+        // elevation: 0.5,
+        foregroundColor: Colors.black,
+        surfaceTintColor: Colors.red,
+        title: const Text("Maidful"),
+        actions: <Widget>[
+          PopupMenuButton<String>(
+            icon: CircleAvatar(
+              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
+            ),
+            onSelected: handleClick,
+            itemBuilder: (BuildContext context) {
+              return {'Logout', 'Settings'}.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
+            },
+          ),
+        ],
+      ),
+      bottomNavigationBar: TabBar(
+        controller: _tabController,
+        tabs: _iconTabs,
+        unselectedLabelColor: Colors.black,
+        labelColor: _selectedColor,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+          color: _selectedColor.withOpacity(0.2),
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          ListView(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Welcome, ${widget.uname}",
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.indigo[900],
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MaidList()))
+                      },
+                      child: Card(
+                        semanticContainer: true,
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        color: Colors.blueAccent[100],
+
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 10,
+                        // margin: EdgeInsets.all(10),
+                        child: const Column(
+                          children: [
+                            Icon(
+                              Icons.person_search_sharp,
+                              size: 100,
+                              color: Colors.white,
+                            ),
+                            // Image.asset(
+                            //   "assets/user.png",
+                            //   fit: BoxFit.scaleDown,
+                            // ),
+                            Text(
+                              "Maids",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Card(
+                      semanticContainer: true,
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                      color: Colors.blueAccent[100],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      elevation: 5,
+
+                      // margin: EdgeInsets.all(10),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.manage_search_outlined,
+                              size: 100, color: Colors.white),
+                          Text(
+                            "Job Profiles",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              "Active Maids",
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Colors.blueAccent[100],
+                      elevation: 10,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "My Services",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            _buildServiceList(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const JobResume()));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Add',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Colors.blueAccent[100],
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "Posted Job Profiles",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            _buildJobProfileList(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const JobProfile()));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Add',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
+          _buildChatList(),
+          const Center(
+            child: Text("This is the settings pages"),
+          ),
+        ],
+      ),
+      floatingActionButton: const FAB(),
+    );
+  }
+}
+
+class FAB extends StatefulWidget {
+  const FAB({super.key});
+
+  @override
+  State<FAB> createState() => _FABState();
+}
+
+class _FABState extends State<FAB> {
+  bool showOptions = false;
+  void toggleOptions() {
+    setState(() {
+      showOptions =
+          !showOptions; // Toggling the visibility of additional options
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Visibility(
+          visible: showOptions, // Show the options only if showOptions is true
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton.extended(
+                onPressed: () => {
+                  // Add your action for Option 1
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const JobResume()))
+                },
+                heroTag: null,
+                label: const Text(
+                  "Post a Service (Maids)",
+                ),
+                icon: const Icon(Icons.person_add_rounded),
+              ),
+              const SizedBox(height: 16.0),
+              FloatingActionButton.extended(
+                onPressed: () => {
+                  // Add your action for Option 1
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const JobProfile()))
+                },
+                heroTag: null,
+                label: const Text(
+                  "Post a Job Profile",
+                ),
+                icon: const Icon(Icons.add_card_sharp),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        FloatingActionButton(
+          onPressed: () {
+            toggleOptions(); // When the main FAB is pressed, toggleOptions is called
+          },
+          heroTag: null,
+          shape: const CircleBorder(),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          child: showOptions ? const Icon(Icons.close) : const Icon(Icons.add),
+        ),
+      ],
+    );
+  }
+}
