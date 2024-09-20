@@ -18,9 +18,8 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   String email = "", password = "";
 
-  TextEditingController mailcontroller = new TextEditingController();
-  TextEditingController passwordcontroller = new TextEditingController();
-  List<String> _lang = ['English', 'Khasi'];
+  TextEditingController mailcontroller = TextEditingController();
+  TextEditingController passwordcontroller = TextEditingController();
   String _selected = 'English';
   final XMLHandler _xmlHandler = XMLHandler();
 
@@ -61,14 +60,14 @@ class _LogInState extends State<LogIn> {
                   _xmlHandler.loadStrings(_selected);
                 });
               },
-              items: [
+              items: const [
                 DropdownMenuItem(
-                  child: Text('English'),
                   value: 'English',
+                  child: Text('English'),
                 ),
                 DropdownMenuItem(
-                  child: Text('Khasi'),
                   value: 'Khasi',
+                  child: Text('Khasi'),
                 ),
               ]),
         ),
@@ -330,7 +329,7 @@ class _LogInState extends State<LogIn> {
                               // Col(
                               //   children: [
                               // LayoutBuilder(builder: (context, constraints) {
-                              Container(
+                              SizedBox(
                                 //margin: EdgeInsets.fromLTRB(10, 50, 0, 0),
                                 width: (MediaQuery.sizeOf(context).width) / 1.5,
                                 height: MediaQuery.sizeOf(context).height,

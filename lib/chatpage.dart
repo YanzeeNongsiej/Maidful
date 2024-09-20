@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
+import 'package:ibitf_app/hiremaid.dart';
 // import 'package:marquee/marquee.dart';
 
 class ChatPage extends StatelessWidget {
@@ -23,6 +24,9 @@ class ChatPage extends StatelessWidget {
 
 //chatController
   final ChatController chatcontroller = ChatController();
+
+  //
+  DocumentSnapshot? itemglobal;
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -74,14 +78,11 @@ class ChatPage extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () {
                             // Navigator.pop(context);
-                            // Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) => ChatPage(
-                            //             name: item.get("name"),
-                            //             receiverID: item.get("userid"),
-                            //             postType: "services",
-                            //             postTypeID: servItem.id)));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => HireMaid(
+                                        itemGlobal: itemglobal, name: name)));
                           },
                           child: const Row(
                             children: [
@@ -90,27 +91,9 @@ class ChatPage extends StatelessWidget {
                                 color: Colors.white,
                               ),
                               Text(
-                                'Agree',
+                                'Hire this Maid',
                                 style: TextStyle(color: Colors.white),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Card(
-                      // elevation: 10,
-                      color: Colors.amber[600],
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            // Navigator.pop(context);
-                          },
-                          child: const Row(
-                            children: [
-                              Icon(Icons.threesixty_sharp),
-                              Text('Counter'),
                             ],
                           ),
                         ),
@@ -140,6 +123,7 @@ class ChatPage extends StatelessWidget {
           }
           //listview
           final item = snapshot.data!;
+          itemglobal = item;
           return Column(
             children: [
               Text(

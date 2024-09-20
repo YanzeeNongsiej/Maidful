@@ -204,6 +204,7 @@ class _JobResumeState extends State<JobResume>
 
   bool showOptionsDay = false, showOptionsHour = false;
   void checkPostAvailability() async {
+    print("_selectedTimingValue:$_selectedTimingValue");
     String schdle = "";
     if (_selectedTimingValue == 1) {
       schdle = "Live-in";
@@ -225,7 +226,7 @@ class _JobResumeState extends State<JobResume>
                   content: Text("Already available"),
                 );
               });
-        } else if (_selectedTimingValue == 1) {
+        } else if (_selectedTimingValue == 2) {
           String selTimeF = fromTimeController.text;
           String selTimeT = toTimeController.text;
           if (selTimeF.isNotEmpty && selTimeT.isNotEmpty) {
@@ -397,11 +398,11 @@ class _JobResumeState extends State<JobResume>
                                       groupValue: _selectedTimingValue,
                                       onChanged: (value) {
                                         // checkpost(value!);
-                                        checkPostAvailability();
                                         setState(() {
                                           _selectedTimingValue = value!;
                                           toggleTimings(1);
                                         });
+                                        checkPostAvailability();
                                       }),
                                   const Expanded(
                                     child: Text('Live-in'),
@@ -421,6 +422,7 @@ class _JobResumeState extends State<JobResume>
                                           _selectedTimingValue = value!;
                                           toggleTimings(2);
                                         });
+                                        checkPostAvailability();
                                       }),
                                   const Expanded(child: Text('Daily'))
                                 ],
@@ -435,10 +437,12 @@ class _JobResumeState extends State<JobResume>
                                       groupValue: _selectedTimingValue,
                                       onChanged: (value) {
                                         // checkpost(value!);
+
                                         setState(() {
                                           _selectedTimingValue = value!;
                                           toggleTimings(3);
                                         });
+                                        checkPostAvailability();
                                       }),
                                   const Expanded(child: Text('Hourly'))
                                 ],

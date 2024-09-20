@@ -312,36 +312,41 @@ class _EmployerHomePageState extends State<EmployerHome>
                             ),
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            // mainAxisAlignment: MainAxisAlignment.end,
+
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Card(
-                                // elevation: 10,
-                                color: Colors.blue,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Navigator.pop(context);
-                                      // Navigator.push(
-                                      //     context,
-                                      //     MaterialPageRoute(
-                                      //         builder: (context) => ChatPage(
-                                      //             name: item.get("name"),
-                                      //             receiverID: item.get("userid"),
-                                      //             postType: "services",
-                                      //             postTypeID: servItem.id)));
-                                    },
-                                    child: const Row(
-                                      children: [
-                                        Icon(
-                                          Icons.edit,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          'Edit',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ],
+                              Expanded(
+                                child: Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigator.pop(context);
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) => ChatPage(
+                                        //             name: item.get("name"),
+                                        //             receiverID: item.get("userid"),
+                                        //             postType: "services",
+                                        //             postTypeID: servItem.id)));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Edit',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -628,7 +633,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                         child: Column(
                           children: [
                             Text(
-                              "Active Maids",
+                              "Active Service(s)",
                               textAlign: TextAlign.center,
                             ),
                           ],
