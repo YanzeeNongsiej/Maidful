@@ -22,7 +22,8 @@ class _LogInState extends State<LogIn> {
   TextEditingController passwordcontroller = TextEditingController();
   String _selected = 'English';
   final XMLHandler _xmlHandler = XMLHandler();
-
+  List<bool> _iss = [true, false];
+  List<String> lang = ['English', 'Khasi'];
   final _formkey = GlobalKey<FormState>();
   @override
   void initState() {
@@ -33,7 +34,7 @@ class _LogInState extends State<LogIn> {
   }
 
   Widget addImage(name) {
-    return Column(
+    return Stack(
       children: [
         SizedBox(
             width: MediaQuery.of(context).size.width,
@@ -50,27 +51,39 @@ class _LogInState extends State<LogIn> {
 
   Widget restOfIt({zero, first, second, third}) {
     return Column(children: [
+      const SizedBox(
+        height: 10.0,
+      ),
       Container(
+        height: (Checkbox.width) * 1.5,
         child: Center(
-          child: DropdownButton(
-              value: _selected,
-              onChanged: (value) {
-                setState(() {
-                  _selected = value.toString();
-                  _xmlHandler.loadStrings(_selected);
-                });
-              },
-              items: const [
-                DropdownMenuItem(
-                  value: 'English',
-                  child: Text('English'),
-                ),
-                DropdownMenuItem(
-                  value: 'Khasi',
-                  child: Text('Khasi'),
-                ),
-              ]),
-        ),
+            child: ToggleButtons(
+          isSelected: _iss,
+          onPressed: (int index) {
+            setState(() {
+              if (index == 0) {
+                _iss[0] = true;
+                _iss[1] = false;
+              } else {
+                _iss[0] = false;
+                _iss[1] = true;
+              }
+
+              _selected = lang[index];
+              _xmlHandler.loadStrings(_selected);
+            });
+          },
+          children: [Text('English'), Text('Khasi')],
+          selectedColor: Colors.white,
+          fillColor: Colors.green,
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(10),
+          borderColor: Colors.black,
+          borderWidth: 0,
+        )),
+      ),
+      const SizedBox(
+        height: 20.0,
       ),
       Padding(
         padding: const EdgeInsets.only(left: 20.0, right: 20.0),
@@ -197,8 +210,8 @@ class _LogInState extends State<LogIn> {
                     print("no data for google sign in");
                     registerUser(user);
                   } else {
-                    Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => const Home()));
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => Home(s: _selected)));
                   }
                 } on FirebaseAuthException catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -280,15 +293,22 @@ class _LogInState extends State<LogIn> {
     };
     await Usersdao().addUserDetails(uploadUser).whenComplete(() =>
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const Home())));
+            MaterialPageRoute(builder: (context) => Home(s: _selected))));
   }
 
   userLogin() async {
     try {
+      // old code
+      // await FirebaseAuth.instance
+      //     .signInWithEmailAndPassword(email: email, password: password);
+      // Navigator.push(
+      //     context, MaterialPageRoute(builder: (context) =>  Home(s:_selected,xml:_xmlHandler)));
+
+      // new code
       await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const Home()));
+          .signInWithEmailAndPassword(email: email, password: password)
+          .whenComplete(() => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => Home(s: _selected))));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

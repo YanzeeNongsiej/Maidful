@@ -1,6 +1,12 @@
 <strings>
-<string name="forgot">Klet ka Password?</string>
+<string name="forgot">Nion hangne lada phi lah klet ka Password</string>
 <string name="signin"> Lane SignIn da ka</string>
 <string name="noac">Ym don account?</string>
 <string name="signup"> SignUp Mynta</string>
+<string name="welc">Khublei </string>
+<string name="active"> Ki jingtrei mynta</string>
+<string name="maid"> Wad Nongtrei(Na bynta ki trai-iing)</string>
+<string name="job"> Wad Kam(Na bynta ki nongtrei)</string>
+<string name="myserv"> Ki jingtrei jong nga</string>
+<string name="posted"> Ki Kam ba nga post</string>
 </strings>

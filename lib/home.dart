@@ -13,11 +13,15 @@ import 'package:ibitf_app/adminhome.dart';
 import 'package:ibitf_app/maidhome.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
+import 'package:ibitf_app/xmlhandle.dart';
 
 // import 'material_design_indicator.dart';
+String? _selected;
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  Home({Key? key, String s = 'English'}) : super(key: key) {
+    _selected = s;
+  }
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -61,11 +65,15 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
         Navigator.push(
             context, MaterialPageRoute(builder: (context) => const MaidHome()));
       } else if (_selectedRoleValue == 2) {
+        Navigator.pop(context);
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    EmployerHome(uname: name, uid: user!.uid)));
+                builder: (context) => EmployerHome(
+                      uname: name,
+                      uid: user!.uid,
+                      s: _selected,
+                    )));
       }
     }
   }
@@ -127,9 +135,17 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
               if (item == 'admin') {
                 return const AdminHome();
               } else if (item == "2") {
-                return EmployerHome(uname: name, uid: user!.uid);
+                return EmployerHome(
+                  uname: name,
+                  uid: user!.uid,
+                  s: _selected,
+                );
               } else if (item == "1") {
-                return EmployerHome(uname: name, uid: user!.uid);
+                return EmployerHome(
+                  uname: name,
+                  uid: user!.uid,
+                  s: _selected,
+                );
                 // return const MaidHome();
               } else {
                 //create another page to finish setup for the below code

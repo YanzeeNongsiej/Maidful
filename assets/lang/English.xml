@@ -3,4 +3,10 @@
 <string name="signin"> Or SignIn with</string>
 <string name="noac"> Don't have an account?</string>
 <string name="signup"> SignUp Now</string>
+<string name="welc"> Welcome</string>
+<string name="active">Active Service(s)</string>
+<string name="maid"> Maids(For Homeowners)</string>
+<string name="job"> Job Profiles(For Maids)</string>
+<string name="myserv"> My Services</string>
+<string name="posted"> Posted Job Services</string>
 </strings>

@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
@@ -15,14 +16,22 @@ import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/maidlist.dart';
 // import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
+import 'package:ibitf_app/xmlhandle.dart';
 
+String? _selected;
 // import 'material_design_indicator.dart';
+// XMLHandler? _xmlHandler;
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
   final String? uid;
-  const EmployerHome({Key? key, @required this.uname, @required this.uid})
-      : super(key: key);
+  final String? s;
+  XMLHandler? xml;
+  EmployerHome(
+      {Key? key, @required this.uname, @required this.uid, this.s, this.xml})
+      : super(key: key) {
+    _selected = s;
+  }
   @override
   _EmployerHomePageState createState() => _EmployerHomePageState();
 }
@@ -38,6 +47,10 @@ class _EmployerHomePageState extends State<EmployerHome>
   get uname => null;
   String userID = FirebaseAuth.instance.currentUser!.uid;
   String newaddress = "", newname = "", userid = "";
+  final XMLHandler _xmlHandler = XMLHandler();
+  List<bool> _iss = [true, false];
+  List<String> lang = ['English', 'Khasi'];
+  Color scolor = Colors.white;
   // Stream<QuerySnapshot> fetchChats() {
   //   // Stream<QuerySnapshot<Object?>> qs = Chatdao().getChats(widget.uid as String);
   //   // return qs;
@@ -80,6 +93,10 @@ class _EmployerHomePageState extends State<EmployerHome>
     _tabController = TabController(length: 3, vsync: this);
     ontheload();
     super.initState();
+
+    _xmlHandler.loadStrings(_selected.toString()).then((val) {
+      setState(() {});
+    });
   }
 
   @override
@@ -514,20 +531,58 @@ class _EmployerHomePageState extends State<EmployerHome>
         // elevation: 0.5,
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: const Text("Maidful"),
+        title: Text('Maidful'),
         actions: <Widget>[
-          PopupMenuButton<String>(
+          PopupMenuButton(
             icon: CircleAvatar(
               foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
             ),
             onSelected: handleClick,
             itemBuilder: (BuildContext context) {
-              return {'Logout', 'Settings'}.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
+              return [
+                const PopupMenuItem(
+                  value: "Logout",
+                  child: Text("Logout"),
+                ),
+                const PopupMenuItem(
+                  value: "Settings",
+                  child: Text("Settings"),
+                ),
+                PopupMenuItem(
+                  value: "Language",
+                  child: StatefulBuilder(builder: (context, setState) {
+                    return Container(
+                      height: (Checkbox.width) * 1.5,
+                      child: Center(
+                          child: ToggleButtons(
+                        isSelected: _iss,
+                        selectedColor: Colors.white,
+                        fillColor: Colors.green,
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                        borderColor: Colors.black,
+                        borderWidth: 0,
+                        onPressed: (int index) {
+                          setState(() {
+                            if (index == 0) {
+                              _iss[0] = true;
+                              _iss[1] = false;
+                            } else {
+                              _iss[0] = false;
+                              _iss[1] = true;
+                            }
+
+                            _selected = lang[index];
+                            _xmlHandler.loadStrings(_selected.toString());
+                            updateParentState();
+                          });
+                        },
+                        children: const [Text('English'), Text('Khasi')],
+                      )),
+                    );
+                  }),
+                )
+              ];
             },
           ),
         ],
@@ -552,7 +607,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  "Welcome, ${widget.uname}",
+                  "${_xmlHandler?.getString('welc')}, ${widget.uname}",
                   style: TextStyle(
                     fontSize: 20.0,
                     color: Colors.indigo[900],
@@ -579,7 +634,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                         ),
                         elevation: 10,
                         // margin: EdgeInsets.all(10),
-                        child: const Column(
+                        child: Column(
                           children: [
                             Icon(
                               Icons.person_search_sharp,
@@ -591,7 +646,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                             //   fit: BoxFit.scaleDown,
                             // ),
                             Text(
-                              "Maids",
+                              (_xmlHandler?.getString('maid')).toString(),
                               style: TextStyle(color: Colors.white),
                             ),
                           ],
@@ -610,12 +665,12 @@ class _EmployerHomePageState extends State<EmployerHome>
                       elevation: 5,
 
                       // margin: EdgeInsets.all(10),
-                      child: const Column(
+                      child: Column(
                         children: [
                           Icon(Icons.manage_search_outlined,
                               size: 100, color: Colors.white),
                           Text(
-                            "Job Profiles",
+                            (_xmlHandler?.getString('job')).toString(),
                             style: TextStyle(color: Colors.white),
                           ),
                         ],
@@ -624,7 +679,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ],
               ),
-              const Row(
+              Row(
                 children: [
                   Expanded(
                     child: Card(
@@ -633,7 +688,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                         child: Column(
                           children: [
                             Text(
-                              "Active Service(s)",
+                              (_xmlHandler?.getString('active')).toString(),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -653,8 +708,8 @@ class _EmployerHomePageState extends State<EmployerHome>
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
-                            const Text(
-                              "My Services",
+                            Text(
+                              ((_xmlHandler?.getString('myserv')).toString()),
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white),
                             ),
@@ -709,8 +764,8 @@ class _EmployerHomePageState extends State<EmployerHome>
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
-                            const Text(
-                              "Posted Job Profiles",
+                            Text(
+                              (_xmlHandler?.getString('posted')).toString(),
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white),
                             ),
@@ -766,6 +821,10 @@ class _EmployerHomePageState extends State<EmployerHome>
       ),
       floatingActionButton: const FAB(),
     );
+  }
+
+  void updateParentState() {
+    setState(() {});
   }
 }
 
