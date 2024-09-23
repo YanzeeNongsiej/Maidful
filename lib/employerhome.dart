@@ -560,7 +560,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                         fillColor: Colors.green,
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(10),
-                        borderColor: Colors.black,
+                        borderColor: Colors.grey,
                         borderWidth: 0,
                         onPressed: (int index) {
                           setState(() {
