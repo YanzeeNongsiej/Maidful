@@ -14,15 +14,11 @@ import 'package:ibitf_app/maidhome.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/xmlhandle.dart';
-
+import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
-String? _selected;
 
 class Home extends StatefulWidget {
-  Home({Key? key, String s = 'English'}) : super(key: key) {
-    _selected = s;
-  }
-
+  Home({Key? key}) : super(key: key);
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -30,12 +26,13 @@ class Home extends StatefulWidget {
 class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   String address = "", dob = "";
   String? name, docid;
-  final User? user = FirebaseAuth.instance.currentUser;
 
+  final User? user = FirebaseAuth.instance.currentUser;
   final namecontroller = TextEditingController();
   final dobcontroller = TextEditingController();
   final addressController = TextEditingController();
   final remarksController = TextEditingController();
+  XMLHandler _xmlHandler = XMLHandler();
   late TabController _tabController;
   int _selectedValue = 1;
   int _selectedRoleValue = 1;
@@ -48,6 +45,8 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
     "Bengali"
   ];
   List<String> selectedCheckBoxValue = [];
+
+  GlobalVariables gv = GlobalVariables();
 
   final _formkey = GlobalKey<FormState>();
 
@@ -72,7 +71,6 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
                 builder: (context) => EmployerHome(
                       uname: name,
                       uid: user!.uid,
-                      s: _selected,
                     )));
       }
     }
@@ -88,6 +86,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
+    _xmlHandler.loadStrings(gv.selected);
   }
 
   @override
@@ -138,13 +137,11 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
                 return EmployerHome(
                   uname: name,
                   uid: user!.uid,
-                  s: _selected,
                 );
               } else if (item == "1") {
                 return EmployerHome(
                   uname: name,
                   uid: user!.uid,
-                  s: _selected,
                 );
                 // return const MaidHome();
               } else {

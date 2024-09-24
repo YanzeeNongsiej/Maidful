@@ -9,4 +9,6 @@
 <string name="job"> Job Profiles(For Maids)</string>
 <string name="myserv"> My Services</string>
 <string name="posted"> Posted Job Services</string>
+<string name="nouser">No User Found for that Email</string>
+<string name="wrongpass">Wrong Password Provided by User</string>
 </strings>

@@ -7,6 +7,7 @@ import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -17,12 +18,11 @@ class LogIn extends StatefulWidget {
 
 class _LogInState extends State<LogIn> {
   String email = "", password = "";
-
+  GlobalVariables gv = GlobalVariables();
   TextEditingController mailcontroller = TextEditingController();
   TextEditingController passwordcontroller = TextEditingController();
-  String _selected = 'English';
   final XMLHandler _xmlHandler = XMLHandler();
-  List<bool> _iss = [true, false];
+  final List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   final _formkey = GlobalKey<FormState>();
   @override
@@ -69,8 +69,8 @@ class _LogInState extends State<LogIn> {
                 _iss[1] = true;
               }
 
-              _selected = lang[index];
-              _xmlHandler.loadStrings(_selected);
+              gv.selected = lang[index];
+              _xmlHandler.loadStrings(gv.selected);
             });
           },
           children: [Text('English'), Text('Khasi')],
@@ -210,8 +210,8 @@ class _LogInState extends State<LogIn> {
                     print("no data for google sign in");
                     registerUser(user);
                   } else {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(
-                        builder: (context) => Home(s: _selected)));
+                    Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => Home()));
                   }
                 } on FirebaseAuthException catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -292,8 +292,8 @@ class _LogInState extends State<LogIn> {
       "remarks": " ",
     };
     await Usersdao().addUserDetails(uploadUser).whenComplete(() =>
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => Home(s: _selected))));
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (context) => Home())));
   }
 
   userLogin() async {
@@ -308,20 +308,20 @@ class _LogInState extends State<LogIn> {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password)
           .whenComplete(() => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => Home(s: _selected))));
+              MaterialPageRoute(builder: (context) => Home())));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: Colors.orangeAccent,
             content: Text(
-              "No User Found for that Email",
+              _xmlHandler.getString('nouser'),
               style: TextStyle(fontSize: 18.0),
             )));
       } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: Colors.orangeAccent,
             content: Text(
-              "Wrong Password Provided by User",
+              _xmlHandler.getString('wrongpass'),
               style: TextStyle(fontSize: 18.0),
             )));
       }
@@ -339,7 +339,7 @@ class _LogInState extends State<LogIn> {
               SingleChildScrollView(
                 child: isPortrait
                     ? Column(children: [
-                        addImage("assets/$_selected.jpg"),
+                        addImage("assets/${gv.selected}.jpg"),
                         restOfIt(zero: 18, first: 18, second: 22, third: 32)
                       ])
                     : Expanded(
@@ -353,7 +353,7 @@ class _LogInState extends State<LogIn> {
                                 //margin: EdgeInsets.fromLTRB(10, 50, 0, 0),
                                 width: (MediaQuery.sizeOf(context).width) / 1.5,
                                 height: MediaQuery.sizeOf(context).height,
-                                child: addImage("assets/$_selected.jpg"),
+                                child: addImage("assets/${gv.selected}.jpg"),
 
                                 // );
                                 // }

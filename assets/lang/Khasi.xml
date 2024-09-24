@@ -9,4 +9,6 @@
 <string name="job"> Wad Kam(Na bynta ki nongtrei)</string>
 <string name="myserv"> Ki jingtrei jong nga</string>
 <string name="posted"> Ki Kam ba nga post</string>
+<string name="nouser">Ym don user ba don kato ka Email</string>
+<string name="wrongpass">Ka Password kam dei</string>
 </strings>

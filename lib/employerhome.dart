@@ -17,21 +17,17 @@ import 'package:ibitf_app/maidlist.dart';
 // import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
-String? _selected;
 // import 'material_design_indicator.dart';
 // XMLHandler? _xmlHandler;
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
   final String? uid;
-  final String? s;
-  XMLHandler? xml;
-  EmployerHome(
-      {Key? key, @required this.uname, @required this.uid, this.s, this.xml})
-      : super(key: key) {
-    _selected = s;
-  }
+
+  EmployerHome({Key? key, @required this.uname, @required this.uid})
+      : super(key: key);
   @override
   _EmployerHomePageState createState() => _EmployerHomePageState();
 }
@@ -48,6 +44,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String userID = FirebaseAuth.instance.currentUser!.uid;
   String newaddress = "", newname = "", userid = "";
   final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
   List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
@@ -94,7 +91,7 @@ class _EmployerHomePageState extends State<EmployerHome>
     ontheload();
     super.initState();
 
-    _xmlHandler.loadStrings(_selected.toString()).then((val) {
+    _xmlHandler.loadStrings(gv.selected.toString()).then((val) {
       setState(() {});
     });
   }
@@ -572,8 +569,8 @@ class _EmployerHomePageState extends State<EmployerHome>
                               _iss[1] = true;
                             }
 
-                            _selected = lang[index];
-                            _xmlHandler.loadStrings(_selected.toString());
+                            gv.selected = lang[index];
+                            _xmlHandler.loadStrings(gv.selected.toString());
                             updateParentState();
                           });
                         },
