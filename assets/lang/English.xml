@@ -11,4 +11,14 @@
 <string name="posted"> Posted Job Services</string>
 <string name="nouser">No User Found for that Email</string>
 <string name="wrongpass">Wrong Password Provided by User</string>
+<string name="nam">Name:  </string>
+<string name="addr">Address:  </string>
+<string name="sched">Schedule:  </string>
+<string name="day">Days:  </string>
+<string name="timing">Timing:  </string>
+<string name="serv">Services:  </string>
+<string name="workhist"> Work History:  </string>
+<string name="wage">Wage:  </string>
+<string name="rate">Rate:  </string>
+<string name="hire">Hire this Maid</string>
 </strings>

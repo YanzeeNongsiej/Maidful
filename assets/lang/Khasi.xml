@@ -11,4 +11,14 @@
 <string name="posted"> Ki Kam ba nga post</string>
 <string name="nouser">Ym don user ba don kato ka Email</string>
 <string name="wrongpass">Ka Password kam dei</string>
+<string name="nam">Kyrteng:  </string>
+<string name="addr">Jaka Sah:  </string>
+<string name="sched">Ka jingtrei:  </string>
+<string name="day">Sngi:  </string>
+<string name="timing">Ka por:  </string>
+<string name="serv">Ki kam:  </string>
+<string name="workhist"> Ki kam barim:  </string>
+<string name="wage">Tulop:  </string>
+<string name="rate">Ka dor:  </string>
+<string name="hire">Khot ia ine Nongtrei</string>
 </strings>
