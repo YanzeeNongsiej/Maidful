@@ -46,7 +46,11 @@ class _HireMaidState extends State<HireMaid> {
   bool use24HourTime = false;
   int _selectedWageValue = 1;
   late int selectedScheduleValue;
-  late String selectedScheduleString = "";
+  late String selectedScheduleString = "",
+      defTimeFrom = "",
+      defTimeTo = "",
+      _selectedWageString = "",
+      defRate = "";
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
 
@@ -63,12 +67,24 @@ class _HireMaidState extends State<HireMaid> {
       selectedScheduleValue = 3;
       selectedScheduleString = "Hourly";
     }
+    if (widget.itemGlobal?.get("wage") == "Weekly") {
+      _selectedWageValue = 1;
+      _selectedWageString = "Weekly";
+    } else {
+      _selectedWageValue = 2;
+      _selectedWageString = "Monthly";
+    }
+    defTimeFrom = widget.itemGlobal?.get("time_from");
+    defTimeTo = widget.itemGlobal?.get("time_to");
+    defRate = widget.itemGlobal?.get("rate");
     selectedDaysValue = widget.itemGlobal?.get("days").cast<String>();
+    selectedCheckBoxValue = widget.itemGlobal?.get("services").cast<String>();
     //  as List<String>;
     // List<String> strlist = dynamiclist.cast<String>();
     super.initState();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -292,8 +308,7 @@ class _HireMaidState extends State<HireMaid> {
                         children: [
                           const Text("Timing:  ",
                               style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                              "${widget.itemGlobal?.get("time_from")}-${widget.itemGlobal?.get("time_to")}"),
+                          Text("$defTimeFrom-$defTimeTo"),
                         ],
                       ),
                       trailing: const Card(
@@ -375,6 +390,8 @@ class _HireMaidState extends State<HireMaid> {
                                           setState(() {
                                             fromTimeController.text =
                                                 time.format(context).toString();
+                                            defTimeFrom =
+                                                time.format(context).toString();
                                           });
                                           // checkPostAvailability();
                                         }
@@ -453,6 +470,8 @@ class _HireMaidState extends State<HireMaid> {
                                           setState(() {
                                             toTimeController.text =
                                                 time.format(context).toString();
+                                            defTimeTo =
+                                                time.format(context).toString();
                                           });
                                           // checkPostAvailability();
                                         }
@@ -474,9 +493,7 @@ class _HireMaidState extends State<HireMaid> {
                     children: [
                       const Text("Services:  ",
                           style: TextStyle(fontWeight: FontWeight.bold)),
-                      for (var i = 0;
-                          i < widget.itemGlobal?.get("services").length;
-                          i++)
+                      for (var i = 0; i < selectedCheckBoxValue.length; i++)
                         Padding(
                           padding: const EdgeInsets.only(left: 30),
                           child: Row(
@@ -484,8 +501,7 @@ class _HireMaidState extends State<HireMaid> {
                             children: [
                               Text("${i + 1}. "),
                               Expanded(
-                                child: Text(
-                                    "${widget.itemGlobal?.get("services")[i]}"),
+                                child: Text(selectedCheckBoxValue[i]),
                               ),
                             ],
                           ),
@@ -540,7 +556,9 @@ class _HireMaidState extends State<HireMaid> {
                       options: variantsList,
                       selectedValues: selectedCheckBoxValue,
                       onChanged: (List<String> value) {
-                        value = selectedCheckBoxValue;
+                        // value = selectedCheckBoxValue;
+                        selectedCheckBoxValue = value;
+                        setState(() {});
                       },
                       whenEmpty: 'Select Service(s)',
                     ),
@@ -582,7 +600,7 @@ class _HireMaidState extends State<HireMaid> {
                           const Text("Wage:  ",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
-                          Text(widget.itemGlobal?.get("wage"),
+                          Text(_selectedWageString,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                         ],
@@ -617,6 +635,7 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
+                                              _selectedWageString = "Weekly";
                                               //toggleWage(1);
                                             });
                                           }),
@@ -636,6 +655,7 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
+                                              _selectedWageString = "Monthly";
                                               // toggleWage(2);
                                             });
                                           }),
@@ -657,7 +677,7 @@ class _HireMaidState extends State<HireMaid> {
                       const Text("Rate:  ",
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 25)),
-                      Text("\u{20B9}${widget.itemGlobal?.get("rate")}",
+                      Text("\u{20B9}$defRate",
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 25)),
                     ],
@@ -674,10 +694,10 @@ class _HireMaidState extends State<HireMaid> {
                   children: [
                     Column(
                       children: [
-                        const Text(
-                          "Rate",
-                          textAlign: TextAlign.start,
-                        ),
+                        // const Text(
+                        //   "Rate",
+                        //   textAlign: TextAlign.start,
+                        // ),
                         Row(
                           children: [
                             Container(
@@ -721,10 +741,15 @@ class _HireMaidState extends State<HireMaid> {
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
+                                  onChanged: (value) =>
+                                      {defRate = value, setState(() {})},
                                 ),
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(
+                          height: 20.0,
                         ),
                       ],
                     ),

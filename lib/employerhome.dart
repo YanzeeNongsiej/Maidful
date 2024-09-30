@@ -26,7 +26,7 @@ class EmployerHome extends StatefulWidget {
   final String? uname;
   final String? uid;
 
-  EmployerHome({Key? key, @required this.uname, @required this.uid})
+  const EmployerHome({Key? key, @required this.uname, @required this.uid})
       : super(key: key);
   @override
   _EmployerHomePageState createState() => _EmployerHomePageState();
@@ -45,7 +45,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String newaddress = "", newname = "", userid = "";
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
-  List<bool> _iss = [true, false];
+  final List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
   // Stream<QuerySnapshot> fetchChats() {
@@ -528,7 +528,7 @@ class _EmployerHomePageState extends State<EmployerHome>
         // elevation: 0.5,
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: Text('Maidful'),
+        title: const Text('Maidful'),
         actions: <Widget>[
           PopupMenuButton(
             icon: CircleAvatar(
@@ -548,7 +548,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                 PopupMenuItem(
                   value: "Language",
                   child: StatefulBuilder(builder: (context, setState) {
-                    return Container(
+                    return SizedBox(
                       height: (Checkbox.width) * 1.5,
                       child: Center(
                           child: ToggleButtons(
@@ -604,7 +604,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  "${_xmlHandler?.getString('welc')}, ${widget.uname}",
+                  "${_xmlHandler.getString('welc')}, ${widget.uname}",
                   style: TextStyle(
                     fontSize: 20.0,
                     color: Colors.indigo[900],
@@ -633,7 +633,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                         // margin: EdgeInsets.all(10),
                         child: Column(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.person_search_sharp,
                               size: 100,
                               color: Colors.white,
@@ -643,8 +643,8 @@ class _EmployerHomePageState extends State<EmployerHome>
                             //   fit: BoxFit.scaleDown,
                             // ),
                             Text(
-                              (_xmlHandler?.getString('maid')).toString(),
-                              style: TextStyle(color: Colors.white),
+                              (_xmlHandler.getString('maid')).toString(),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ],
                         ),
@@ -664,11 +664,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                       // margin: EdgeInsets.all(10),
                       child: Column(
                         children: [
-                          Icon(Icons.manage_search_outlined,
+                          const Icon(Icons.manage_search_outlined,
                               size: 100, color: Colors.white),
                           Text(
-                            (_xmlHandler?.getString('job')).toString(),
-                            style: TextStyle(color: Colors.white),
+                            (_xmlHandler.getString('job')).toString(),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -681,11 +681,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                   Expanded(
                     child: Card(
                       child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
                             Text(
-                              (_xmlHandler?.getString('active')).toString(),
+                              (_xmlHandler.getString('active')).toString(),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -706,9 +706,9 @@ class _EmployerHomePageState extends State<EmployerHome>
                         child: Column(
                           children: [
                             Text(
-                              ((_xmlHandler?.getString('myserv')).toString()),
+                              ((_xmlHandler.getString('myserv')).toString()),
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                             _buildServiceList(),
                             Row(
@@ -762,9 +762,9 @@ class _EmployerHomePageState extends State<EmployerHome>
                         child: Column(
                           children: [
                             Text(
-                              (_xmlHandler?.getString('posted')).toString(),
+                              (_xmlHandler.getString('posted')).toString(),
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                             _buildJobProfileList(),
                             Row(

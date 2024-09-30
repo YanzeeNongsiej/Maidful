@@ -54,7 +54,7 @@ class _LogInState extends State<LogIn> {
       const SizedBox(
         height: 10.0,
       ),
-      Container(
+      SizedBox(
         height: (Checkbox.width) * 1.5,
         child: Center(
             child: ToggleButtons(
@@ -73,13 +73,13 @@ class _LogInState extends State<LogIn> {
               _xmlHandler.loadStrings(gv.selected);
             });
           },
-          children: [Text('English'), Text('Khasi')],
           selectedColor: Colors.white,
           fillColor: Colors.green,
           color: Colors.black,
           borderRadius: BorderRadius.circular(10),
           borderColor: Colors.grey,
           borderWidth: 0,
+          children: [Text('English'), Text('Khasi')],
         )),
       ),
       const SizedBox(
@@ -315,14 +315,14 @@ class _LogInState extends State<LogIn> {
             backgroundColor: Colors.orangeAccent,
             content: Text(
               _xmlHandler.getString('nouser'),
-              style: TextStyle(fontSize: 18.0),
+              style: const TextStyle(fontSize: 18.0),
             )));
       } else if (e.code == 'wrong-password') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: Colors.orangeAccent,
             content: Text(
               _xmlHandler.getString('wrongpass'),
-              style: TextStyle(fontSize: 18.0),
+              style: const TextStyle(fontSize: 18.0),
             )));
       }
     }

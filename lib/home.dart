@@ -18,7 +18,7 @@ import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
 class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
+  const Home({Key? key}) : super(key: key);
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -32,7 +32,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   final dobcontroller = TextEditingController();
   final addressController = TextEditingController();
   final remarksController = TextEditingController();
-  XMLHandler _xmlHandler = XMLHandler();
+  final XMLHandler _xmlHandler = XMLHandler();
   late TabController _tabController;
   int _selectedValue = 1;
   int _selectedRoleValue = 1;

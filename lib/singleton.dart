@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class GlobalVariables {
   static final GlobalVariables instance = GlobalVariables._();
   factory GlobalVariables() => instance;
