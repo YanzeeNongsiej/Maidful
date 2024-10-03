@@ -827,7 +827,10 @@ class _HireMaidState extends State<HireMaid> {
     );
   }
 
-  sendAck() {
-    print("hello ${widget.itemGlobal?.get("schedule")}");
+  sendAck() async {
+    List<String> res = await english(selectedDaysValue, gv.selected);
+    print("Converted days: ${res}");
+    List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    print("Converted services: ${res2}");
   }
 }

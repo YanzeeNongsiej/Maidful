@@ -10,6 +10,7 @@ class XMLHandler {
         language.trim().isEmpty) {
       language = "English";
     }
+
     final xmlString = await rootBundle.loadString('assets/lang/$language.xml');
     final document = xml.XmlDocument.parse(xmlString);
     document.findAllElements('string').forEach((element) {
@@ -22,4 +23,8 @@ class XMLHandler {
   }
 
   String getString(String key) => strings[key] ?? '';
+  String getEnglishString(String val) {
+    String key = strings.keys.firstWhere((k) => strings[k] == val);
+    return key;
+  }
 }

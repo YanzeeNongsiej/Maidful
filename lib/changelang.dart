@@ -8,3 +8,20 @@ List<String> processLang(List<String> s, XMLHandler xml) {
   }
   return result;
 }
+
+Future<List<String>> english(List<String> s, String selected) async {
+  XMLHandler _xmlHandler = XMLHandler();
+  List<String> result = [];
+  String lang;
+  if (selected == "Khasi") {
+    lang = "Khasi";
+  } else {
+    lang = "English";
+  }
+  _xmlHandler.loadStrings(lang).then((val) {
+    for (var i in s) {
+      result.add(_xmlHandler.getEnglishString(i));
+    }
+  });
+  return result;
+}
