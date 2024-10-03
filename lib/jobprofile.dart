@@ -7,6 +7,8 @@ import 'package:ibitf_app/model/service.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class JobProfile extends StatefulWidget {
   const JobProfile({Key? key}) : super(key: key);
@@ -63,6 +65,14 @@ class _JobProfileState extends State<JobProfile>
 
   List<String> selectedCheckBoxValue = [];
   List<String> selectedDaysValue = [];
+  final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _xmlHandler.loadStrings(gv.selected);
+  }
 
   addJobProfile() async {
     final User? user = FirebaseAuth.instance.currentUser;
@@ -125,16 +135,16 @@ class _JobProfileState extends State<JobProfile>
       await maidDao()
           .addJobProfile(uploadJobProfile)
           .whenComplete(
-              () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                    "Added Successfully",
+                    _xmlHandler.getString('addedsucc'),
                     style: TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        "Some errors are present",
+        _xmlHandler.getString('error'),
         style: TextStyle(fontSize: 20.0),
       )));
     }
@@ -178,9 +188,9 @@ class _JobProfileState extends State<JobProfile>
           showDialog(
               context: context,
               builder: (context) {
-                return const AlertDialog(
+                return AlertDialog(
                   title: Text("Warning"),
-                  content: Text("Already available"),
+                  content: Text(_xmlHandler.getString('avail')),
                 );
               });
         } else if (_selectedTimingValue == 1) {
@@ -195,9 +205,9 @@ class _JobProfileState extends State<JobProfile>
               showDialog(
                   context: context,
                   builder: (context) {
-                    return const AlertDialog(
+                    return AlertDialog(
                       title: Text("Warning"),
-                      content: Text("Already available"),
+                      content: Text(_xmlHandler.getString('avail')),
                     );
                   });
             }
@@ -222,9 +232,9 @@ class _JobProfileState extends State<JobProfile>
                     showDialog(
                         context: context,
                         builder: (context) {
-                          return const AlertDialog(
+                          return AlertDialog(
                             title: Text("Warning"),
-                            content: Text("Already available"),
+                            content: Text(_xmlHandler.getString('avail')),
                           );
                         });
                     break;
@@ -311,7 +321,7 @@ class _JobProfileState extends State<JobProfile>
         ),
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: const Text("Add Job Profile"),
+        title: Text(_xmlHandler.getString('addjob')),
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
@@ -361,8 +371,9 @@ class _JobProfileState extends State<JobProfile>
                                           toggleTimings(1);
                                         });
                                       }),
-                                  const Expanded(
-                                    child: Text('Live-in'),
+                                  Expanded(
+                                    child:
+                                        Text(_xmlHandler.getString('livein')),
                                   )
                                 ],
                               ),
@@ -380,7 +391,9 @@ class _JobProfileState extends State<JobProfile>
                                           toggleTimings(2);
                                         });
                                       }),
-                                  const Expanded(child: Text('Daily'))
+                                  Expanded(
+                                      child:
+                                          Text(_xmlHandler.getString('daily')))
                                 ],
                               ),
                             ),
@@ -398,7 +411,9 @@ class _JobProfileState extends State<JobProfile>
                                           toggleTimings(3);
                                         });
                                       }),
-                                  const Expanded(child: Text('Hourly'))
+                                  Expanded(
+                                      child:
+                                          Text(_xmlHandler.getString('hourly')))
                                 ],
                               ),
                             ),
@@ -475,7 +490,8 @@ class _JobProfileState extends State<JobProfile>
                           showOptionsHour, // Show the options only if showOptions is true
                       child: Column(
                         children: [
-                          const Text("Timing", textAlign: TextAlign.center),
+                          Text(_xmlHandler.getString('timing'),
+                              textAlign: TextAlign.center),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -680,7 +696,8 @@ class _JobProfileState extends State<JobProfile>
                     ),
                     Column(
                       children: [
-                        const Text("Wage", textAlign: TextAlign.center),
+                        Text(_xmlHandler.getString('wage'),
+                            textAlign: TextAlign.center),
                         Column(
                           children: [
                             Row(
@@ -699,8 +716,9 @@ class _JobProfileState extends State<JobProfile>
                                               //toggleWage(1);
                                             });
                                           }),
-                                      const Expanded(
-                                        child: Text('Weekly'),
+                                      Expanded(
+                                        child: Text(
+                                            _xmlHandler.getString('weekly')),
                                       )
                                     ],
                                   ),
@@ -718,7 +736,9 @@ class _JobProfileState extends State<JobProfile>
                                               // toggleWage(2);
                                             });
                                           }),
-                                      const Expanded(child: Text('Monthly'))
+                                      Expanded(
+                                          child: Text(
+                                              _xmlHandler.getString('monthly')))
                                     ],
                                   ),
                                 ),
@@ -733,8 +753,8 @@ class _JobProfileState extends State<JobProfile>
                     ),
                     Column(
                       children: [
-                        const Text(
-                          "Rate",
+                        Text(
+                          _xmlHandler.getString('rate'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -808,9 +828,9 @@ class _JobProfileState extends State<JobProfile>
                           decoration: BoxDecoration(
                               color: const Color(0xFF273671),
                               borderRadius: BorderRadius.circular(30)),
-                          child: const Center(
+                          child: Center(
                               child: Text(
-                            "Post Job Profile",
+                            _xmlHandler.getString('postjob'),
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,

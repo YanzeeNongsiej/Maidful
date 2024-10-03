@@ -8,7 +8,8 @@ import 'package:ibitf_app/DAO/employerdao.dart';
 import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
-
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
 class MaidHome extends StatefulWidget {
@@ -39,11 +40,13 @@ class _MaidHomePageState extends State<MaidHome>
     const Tab(icon: Icon(Icons.calendar_month)),
     const Tab(icon: Icon(Icons.settings)),
   ];
-
+  final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
   @override
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
+    _xmlHandler.getString(gv.selected);
   }
 
   @override
@@ -180,8 +183,8 @@ class _MaidHomePageState extends State<MaidHome>
                           fit: BoxFit.scaleDown,
                         ),
                       ),
-                      const Text(
-                        "Welcome Maid",
+                      Text(
+                        _xmlHandler.getString('welc'),
                         style: TextStyle(
                           fontSize: 20.0,
                           color: Colors.blue,
@@ -290,8 +293,8 @@ class _MaidHomePageState extends State<MaidHome>
                   );
                 }
               }),
-          const Center(
-            child: Text("This is the settings page"),
+          Center(
+            child: Text(_xmlHandler.getString('setting')),
           ),
         ],
       ),

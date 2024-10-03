@@ -5,9 +5,14 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/hiremaid.dart';
-// import 'package:marquee/marquee.dart';
+import 'package:ibitf_app/singleton.dart';
+import 'package:ibitf_app/xmlhandle.dart';
 
-class ChatPage extends StatelessWidget {
+// import 'package:marquee/marquee.dart';
+final XMLHandler _xmlHandler = XMLHandler();
+GlobalVariables gv = GlobalVariables();
+
+class ChatPage extends StatefulWidget {
   final String name;
   final String receiverID;
   final String postType;
@@ -19,6 +24,11 @@ class ChatPage extends StatelessWidget {
       required this.postType,
       required this.postTypeID});
 
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
 // textController
   final TextEditingController _messageController = TextEditingController();
 
@@ -27,10 +37,19 @@ class ChatPage extends StatelessWidget {
 
   //
   DocumentSnapshot? itemglobal;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
+  }
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await chatcontroller.sendMessage(receiverID, _messageController.text);
+      await chatcontroller.sendMessage(
+          widget.receiverID, _messageController.text);
       _messageController.clear();
     }
   }
@@ -42,7 +61,7 @@ class ChatPage extends StatelessWidget {
         appBar: AppBar(
           title: Row(
             children: [
-              Text(name),
+              Text(widget.name),
               const SizedBox(width: 5),
               Flexible(
                 child: Card(
@@ -82,16 +101,17 @@ class ChatPage extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => HireMaid(
-                                        itemGlobal: itemglobal, name: name)));
+                                        itemGlobal: itemglobal,
+                                        name: widget.name)));
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(
                                 Icons.handshake,
                                 color: Colors.white,
                               ),
                               Text(
-                                'Hire this Maid',
+                                _xmlHandler.getString('hire'),
                                 style: TextStyle(color: Colors.white),
                               ),
                             ],
@@ -109,10 +129,10 @@ class ChatPage extends StatelessWidget {
   }
 
   Widget _buildPostDetails() {
-    if (postType == "services") {
+    if (widget.postType == "services") {
       return FutureBuilder(
         // StreamBuilder(
-        future: getService(postTypeID),
+        future: getService(widget.postTypeID),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Text("Error");
@@ -137,7 +157,7 @@ class ChatPage extends StatelessWidget {
         },
       );
     } else {
-      return const Text("No Job profile yet...");
+      return Text(_xmlHandler.getString('nojob'));
     }
   }
 
@@ -150,7 +170,7 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageList() {
     String senderID = FirebaseAuth.instance.currentUser!.uid;
     return StreamBuilder(
-      stream: chatcontroller.getMessages(receiverID, senderID),
+      stream: chatcontroller.getMessages(widget.receiverID, senderID),
       builder: (context, snapshot) {
         //errors
         if (snapshot.hasError) {
@@ -225,8 +245,4 @@ class ChatPage extends StatelessWidget {
       ),
     );
   }
-
-// }
-  // @override
-  // State<ChatPage> createState() => _ChatPageState();
 }

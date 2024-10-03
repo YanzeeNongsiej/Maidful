@@ -91,7 +91,7 @@ class _EmployerHomePageState extends State<EmployerHome>
     ontheload();
     super.initState();
 
-    _xmlHandler.loadStrings(gv.selected.toString()).then((val) {
+    _xmlHandler.loadStrings(gv.selected).then((val) {
       setState(() {});
     });
   }

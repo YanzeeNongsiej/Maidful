@@ -1,6 +1,8 @@
 import 'package:ibitf_app/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
@@ -14,20 +16,28 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   TextEditingController mailcontroller = TextEditingController();
 
   final _formkey = GlobalKey<FormState>();
+  final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _xmlHandler.loadStrings(gv.selected);
+  }
 
   resetPassword() async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        "Password Reset Email has been sent !",
+        _xmlHandler.getString('resetpass'),
         style: TextStyle(fontSize: 20.0),
       )));
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-          "No user found for that email.",
+          _xmlHandler.getString('nouser'),
           style: TextStyle(fontSize: 20.0),
         )));
       }
@@ -46,8 +56,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             ),
             Container(
               alignment: Alignment.topCenter,
-              child: const Text(
-                "Password Recovery",
+              child: Text(
+                _xmlHandler.getString('passrec'),
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 30.0,
@@ -57,8 +67,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             const SizedBox(
               height: 10.0,
             ),
-            const Text(
-              "Enter your mail",
+            Text(
+              _xmlHandler.getString('enterem'),
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 20.0,
@@ -117,9 +127,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(10)),
-                              child: const Center(
+                              child: Center(
                                 child: Text(
-                                  "Send Email",
+                                  _xmlHandler.getString('sendem'),
                                   style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 18.0,
@@ -134,8 +144,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                "Don't have an account?",
+                              Text(
+                                _xmlHandler.getString('noac'),
                                 style: TextStyle(
                                     fontSize: 18.0, color: Colors.white),
                               ),
@@ -150,8 +160,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                           builder: (context) =>
                                               const SignUp()));
                                 },
-                                child: const Text(
-                                  "Create",
+                                child: Text(
+                                  _xmlHandler.getString('create'),
                                   style: TextStyle(
                                       color: Color.fromARGB(225, 184, 166, 6),
                                       fontSize: 20.0,

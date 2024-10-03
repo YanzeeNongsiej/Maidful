@@ -52,7 +52,7 @@ class _MaidListState extends State<MaidList>
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: const Text('Maid Details',
+            title: Text(_xmlHandler.getString('maiddetails'),
                 style: TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,

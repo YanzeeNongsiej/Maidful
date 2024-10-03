@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:multiselect/multiselect.dart';
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
+import 'package:ibitf_app/changelang.dart';
 
 class HireMaid extends StatefulWidget {
   final DocumentSnapshot? itemGlobal;
@@ -11,8 +14,11 @@ class HireMaid extends StatefulWidget {
 }
 
 class _HireMaidState extends State<HireMaid> {
-  List<String> selectedDaysValue = [];
+  List<String> origselectedDaysValue = [];
+  List<String> origselectedCheckBoxValue = [];
   List<String> selectedCheckBoxValue = [];
+  List<String> selectedDaysValue = [];
+  Map<String, String> all = {};
   final ratecontroller = TextEditingController();
   static const IconData rupeeSymbol =
       IconData(0x20B9, fontFamily: 'MaterialIcons');
@@ -21,6 +27,9 @@ class _HireMaidState extends State<HireMaid> {
       timeToValid = false,
       servicesValid = false,
       rateValid = false;
+  final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
+
   List<String> daysList = [
     "Monday",
     "Tuesday",
@@ -45,7 +54,7 @@ class _HireMaidState extends State<HireMaid> {
   MaterialTapTargetSize tapTargetSize = MaterialTapTargetSize.padded;
   bool use24HourTime = false;
   int _selectedWageValue = 1;
-  late int selectedScheduleValue;
+  late int selectedScheduleValue = -1;
   late String selectedScheduleString = "",
       defTimeFrom = "",
       defTimeTo = "",
@@ -57,31 +66,60 @@ class _HireMaidState extends State<HireMaid> {
   @override
   void initState() {
     // TODO: implement initState
-    if (widget.itemGlobal?.get("schedule") == "Live-in") {
-      selectedScheduleValue = 1;
-      selectedScheduleString = "Live-in";
-    } else if (widget.itemGlobal?.get("schedule") == "Daily") {
-      selectedScheduleValue = 2;
-      selectedScheduleString = "Daily";
-    } else {
-      selectedScheduleValue = 3;
-      selectedScheduleString = "Hourly";
-    }
-    if (widget.itemGlobal?.get("wage") == "Weekly") {
-      _selectedWageValue = 1;
-      _selectedWageString = "Weekly";
-    } else {
-      _selectedWageValue = 2;
-      _selectedWageString = "Monthly";
-    }
-    defTimeFrom = widget.itemGlobal?.get("time_from");
-    defTimeTo = widget.itemGlobal?.get("time_to");
-    defRate = widget.itemGlobal?.get("rate");
-    selectedDaysValue = widget.itemGlobal?.get("days").cast<String>();
-    selectedCheckBoxValue = widget.itemGlobal?.get("services").cast<String>();
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      if (widget.itemGlobal?.get("schedule") == "Live-in") {
+        selectedScheduleValue = 1;
+        selectedScheduleString = _xmlHandler.getString('livein');
+      } else if (widget.itemGlobal?.get("schedule") == "Daily") {
+        selectedScheduleValue = 2;
+        selectedScheduleString = _xmlHandler.getString('daily');
+      } else {
+        selectedScheduleValue = 3;
+        selectedScheduleString = _xmlHandler.getString('hourly');
+      }
+      if (widget.itemGlobal?.get("wage") == "Weekly") {
+        _selectedWageValue = 1;
+        _selectedWageString = _xmlHandler.getString('weekly');
+      } else {
+        _selectedWageValue = 2;
+        _selectedWageString = _xmlHandler.getString('monthly');
+      }
+      defTimeFrom = widget.itemGlobal?.get("time_from");
+      defTimeTo = widget.itemGlobal?.get("time_to");
+      defRate = widget.itemGlobal?.get("rate");
+      origselectedDaysValue = widget.itemGlobal?.get("days").cast<String>();
+      origselectedCheckBoxValue =
+          widget.itemGlobal?.get("services").cast<String>();
+
+      daysList[0] = _xmlHandler.getString('Monday');
+      daysList[1] = _xmlHandler.getString('Tuesday');
+      daysList[2] = _xmlHandler.getString('Wednesday');
+      daysList[3] = _xmlHandler.getString('Thursday');
+      daysList[4] = _xmlHandler.getString('Friday');
+      daysList[5] = _xmlHandler.getString('Saturday');
+      daysList[6] = _xmlHandler.getString('Sunday');
+
+      variantsList[0] = _xmlHandler.getString('Housekeeping');
+      variantsList[1] = _xmlHandler.getString('Cooking');
+      variantsList[2] = _xmlHandler.getString('Laundry');
+      variantsList[3] = _xmlHandler.getString('Babysitting');
+      variantsList[4] = _xmlHandler.getString('Elderly Care');
+      variantsList[5] = _xmlHandler.getString('Grocery Shopping');
+      selectedDaysValue = processLang(origselectedDaysValue, _xmlHandler);
+      selectedCheckBoxValue =
+          processLang(origselectedCheckBoxValue, _xmlHandler);
+
+      print(daysList);
+      setState(() {});
+    });
+    super.initState();
+
+    print(_xmlHandler.getString('hourly'));
+
     //  as List<String>;
     // List<String> strlist = dynamiclist.cast<String>();
-    super.initState();
+
+    // super.initState();
   }
 
   @override
@@ -100,7 +138,8 @@ class _HireMaidState extends State<HireMaid> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.name),
-            const Text("Service Details", style: TextStyle(fontSize: 15))
+            Text(_xmlHandler.getString('servdetails'),
+                style: TextStyle(fontSize: 15))
           ],
         ),
       ),
@@ -110,33 +149,32 @@ class _HireMaidState extends State<HireMaid> {
             padding: const EdgeInsets.all(10.0),
             child: Column(
               children: [
-                const Text.rich(
-                    TextSpan(text: '* Click ', children: <InlineSpan>[
+                Text.rich(TextSpan(text: '* Click ', children: <InlineSpan>[
                   TextSpan(
-                    text: 'Change',
+                    text: _xmlHandler.getString('change'),
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.amber),
                   ),
                   TextSpan(
-                    text: ' button to change the service details',
+                    text: _xmlHandler.getString('click'),
                   )
                 ])),
                 ExpansionTile(
                   title: Row(
                     children: [
-                      const Text("Schedule:  ",
+                      Text(_xmlHandler.getString('sched'),
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       Text(selectedScheduleString),
                     ],
                   ),
-                  trailing: const Card(
+                  trailing: Card(
                       color: Colors.amber,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          "Change",
+                          _xmlHandler.getString('change'),
                           style: TextStyle(color: Colors.white),
                         ),
                       )),
@@ -156,13 +194,14 @@ class _HireMaidState extends State<HireMaid> {
                                     // checkPostAvailability();
                                     setState(() {
                                       selectedScheduleValue = value!;
-                                      selectedScheduleString = "Live-in";
+                                      selectedScheduleString =
+                                          _xmlHandler.getString('livein');
                                       //   _selectedTimingValue = value!;
                                       //   toggleTimings(1);
                                     });
                                   }),
-                              const Expanded(
-                                child: Text('Live-in'),
+                              Expanded(
+                                child: Text(_xmlHandler.getString('livein')),
                               )
                             ],
                           ),
@@ -177,12 +216,14 @@ class _HireMaidState extends State<HireMaid> {
                                   onChanged: (value) {
                                     setState(() {
                                       selectedScheduleValue = value!;
-                                      selectedScheduleString = "Daily";
+                                      selectedScheduleString =
+                                          _xmlHandler.getString('daily');
                                       // _selectedTimingValue = value!;
                                       // toggleTimings(2);
                                     });
                                   }),
-                              const Expanded(child: Text('Daily'))
+                              Expanded(
+                                  child: Text(_xmlHandler.getString('daily')))
                             ],
                           ),
                         ),
@@ -202,7 +243,8 @@ class _HireMaidState extends State<HireMaid> {
                                       // toggleTimings(3);
                                     });
                                   }),
-                              const Expanded(child: Text('Hourly'))
+                              Expanded(
+                                  child: Text(_xmlHandler.getString('hourly')))
                             ],
                           ),
                         ),
@@ -215,7 +257,7 @@ class _HireMaidState extends State<HireMaid> {
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("Days:  ",
+                          Text(_xmlHandler.getString('day'),
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < selectedDaysValue.length; i++)
                             Padding(
@@ -232,12 +274,12 @@ class _HireMaidState extends State<HireMaid> {
                             ),
                         ],
                       ),
-                      trailing: const Card(
+                      trailing: Card(
                           color: Colors.amber,
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
-                              "Change",
+                              _xmlHandler.getString('change'),
                               style: TextStyle(color: Colors.white),
                             ),
                           )),
@@ -306,24 +348,25 @@ class _HireMaidState extends State<HireMaid> {
                   ExpansionTile(
                       title: Row(
                         children: [
-                          const Text("Timing:  ",
+                          Text(_xmlHandler.getString('timing'),
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           Text("$defTimeFrom-$defTimeTo"),
                         ],
                       ),
-                      trailing: const Card(
+                      trailing: Card(
                           color: Colors.amber,
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
-                              "Change",
+                              _xmlHandler.getString('change'),
                               style: TextStyle(color: Colors.white),
                             ),
                           )),
                       children: <Widget>[
                         Column(
                           children: [
-                            const Text("Timing", textAlign: TextAlign.center),
+                            Text(_xmlHandler.getString('timing'),
+                                textAlign: TextAlign.center),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
@@ -491,7 +534,7 @@ class _HireMaidState extends State<HireMaid> {
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Services:  ",
+                      Text(_xmlHandler.getString('serv'),
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       for (var i = 0; i < selectedCheckBoxValue.length; i++)
                         Padding(
@@ -508,12 +551,12 @@ class _HireMaidState extends State<HireMaid> {
                         ),
                     ],
                   ),
-                  trailing: const Card(
+                  trailing: Card(
                       color: Colors.amber,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          "Change",
+                          _xmlHandler.getString('change'),
                           style: TextStyle(color: Colors.white),
                         ),
                       )),
@@ -597,7 +640,7 @@ class _HireMaidState extends State<HireMaid> {
                     children: [
                       Row(
                         children: [
-                          const Text("Wage:  ",
+                          Text(_xmlHandler.getString('wage'),
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                           Text(_selectedWageString,
@@ -607,19 +650,20 @@ class _HireMaidState extends State<HireMaid> {
                       ),
                     ],
                   ),
-                  trailing: const Card(
+                  trailing: Card(
                       color: Colors.amber,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          "Change",
+                          _xmlHandler.getString('change'),
                           style: TextStyle(color: Colors.white),
                         ),
                       )),
                   children: [
                     Column(
                       children: [
-                        const Text("Wage", textAlign: TextAlign.center),
+                        Text(_xmlHandler.getString('wage'),
+                            textAlign: TextAlign.center),
                         Column(
                           children: [
                             Row(
@@ -635,12 +679,14 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
-                                              _selectedWageString = "Weekly";
+                                              _selectedWageString = _xmlHandler
+                                                  .getString('weekly');
                                               //toggleWage(1);
                                             });
                                           }),
-                                      const Expanded(
-                                        child: Text('Weekly'),
+                                      Expanded(
+                                        child: Text(
+                                            _xmlHandler.getString('weekly')),
                                       )
                                     ],
                                   ),
@@ -655,11 +701,14 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
-                                              _selectedWageString = "Monthly";
+                                              _selectedWageString = _xmlHandler
+                                                  .getString('monthly');
                                               // toggleWage(2);
                                             });
                                           }),
-                                      const Expanded(child: Text('Monthly'))
+                                      Expanded(
+                                          child: Text(
+                                              _xmlHandler.getString('monthly')))
                                     ],
                                   ),
                                 ),
@@ -674,7 +723,7 @@ class _HireMaidState extends State<HireMaid> {
                 ExpansionTile(
                   title: Row(
                     children: [
-                      const Text("Rate:  ",
+                      Text(_xmlHandler.getString('rate'),
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 25)),
                       Text("\u{20B9}$defRate",
@@ -682,12 +731,12 @@ class _HireMaidState extends State<HireMaid> {
                               fontWeight: FontWeight.bold, fontSize: 25)),
                     ],
                   ),
-                  trailing: const Card(
+                  trailing: Card(
                       color: Colors.amber,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          "Change",
+                          _xmlHandler.getString('change'),
                           style: TextStyle(color: Colors.white),
                         ),
                       )),
@@ -765,8 +814,8 @@ class _HireMaidState extends State<HireMaid> {
                         borderRadius: BorderRadius.all(Radius.circular(20))),
                     child: TextButton(
                       onPressed: sendAck,
-                      child: const Text(
-                        "Send Acknowledgement Request",
+                      child: Text(
+                        _xmlHandler.getString('sendack'),
                         style: TextStyle(color: Colors.white),
                       ),
                     )),

@@ -7,6 +7,8 @@ import 'package:ibitf_app/model/service.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class JobResume extends StatefulWidget {
   const JobResume({Key? key}) : super(key: key);
@@ -51,7 +53,8 @@ class _JobResumeState extends State<JobResume>
     "Saturday",
     "Sunday"
   ];
-
+  final XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
   List<String> workHistory = [];
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
@@ -63,6 +66,12 @@ class _JobResumeState extends State<JobResume>
 
   List<String> selectedCheckBoxValue = [];
   List<String> selectedDaysValue = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _xmlHandler.loadStrings(gv.selected);
+  }
 
   addService() async {
     final User? user = FirebaseAuth.instance.currentUser;
@@ -128,16 +137,16 @@ class _JobResumeState extends State<JobResume>
       await maidDao()
           .addService(uploadService)
           .whenComplete(
-              () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                    "Added Successfully",
+                    _xmlHandler.getString('addedsucc'),
                     style: TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        "Some errors are present",
+        _xmlHandler.getString('error'),
         style: TextStyle(fontSize: 20.0),
       )));
     }
@@ -150,11 +159,11 @@ class _JobResumeState extends State<JobResume>
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Add Work History'),
+            title: Text('Add ' + _xmlHandler.getString('workhist')),
             content: TextFormField(
               controller: whController1,
-              decoration: const InputDecoration(
-                labelText: 'Work History',
+              decoration: InputDecoration(
+                labelText: _xmlHandler.getString('workhist'),
               ),
             ),
             actions: [
@@ -221,9 +230,9 @@ class _JobResumeState extends State<JobResume>
           showDialog(
               context: context,
               builder: (context) {
-                return const AlertDialog(
+                return AlertDialog(
                   title: Text("Warning"),
-                  content: Text("Already available"),
+                  content: Text(_xmlHandler.getString('avail')),
                 );
               });
         } else if (_selectedTimingValue == 2) {
@@ -238,9 +247,9 @@ class _JobResumeState extends State<JobResume>
               showDialog(
                   context: context,
                   builder: (context) {
-                    return const AlertDialog(
+                    return AlertDialog(
                       title: Text("Warning"),
-                      content: Text("Already available"),
+                      content: Text(_xmlHandler.getString('avail')),
                     );
                   });
             }
@@ -265,9 +274,9 @@ class _JobResumeState extends State<JobResume>
                     showDialog(
                         context: context,
                         builder: (context) {
-                          return const AlertDialog(
+                          return AlertDialog(
                             title: Text("Warning"),
-                            content: Text("Already available"),
+                            content: Text(_xmlHandler.getString('avail')),
                           );
                         });
                     break;
@@ -354,7 +363,7 @@ class _JobResumeState extends State<JobResume>
         ),
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: const Text("Add Service"),
+        title: Text(_xmlHandler.getString('addserv')),
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
@@ -404,8 +413,9 @@ class _JobResumeState extends State<JobResume>
                                         });
                                         checkPostAvailability();
                                       }),
-                                  const Expanded(
-                                    child: Text('Live-in'),
+                                  Expanded(
+                                    child:
+                                        Text(_xmlHandler.getString('livein')),
                                   )
                                 ],
                               ),
@@ -424,7 +434,9 @@ class _JobResumeState extends State<JobResume>
                                         });
                                         checkPostAvailability();
                                       }),
-                                  const Expanded(child: Text('Daily'))
+                                  Expanded(
+                                      child:
+                                          Text(_xmlHandler.getString('daily')))
                                 ],
                               ),
                             ),
@@ -444,7 +456,9 @@ class _JobResumeState extends State<JobResume>
                                         });
                                         checkPostAvailability();
                                       }),
-                                  const Expanded(child: Text('Hourly'))
+                                  Expanded(
+                                      child:
+                                          Text(_xmlHandler.getString('hourly')))
                                 ],
                               ),
                             ),
@@ -521,7 +535,8 @@ class _JobResumeState extends State<JobResume>
                           showOptionsHour, // Show the options only if showOptions is true
                       child: Column(
                         children: [
-                          const Text("Timing", textAlign: TextAlign.center),
+                          Text(_xmlHandler.getString('timing'),
+                              textAlign: TextAlign.center),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -726,7 +741,8 @@ class _JobResumeState extends State<JobResume>
                     ),
                     Column(
                       children: [
-                        const Text("Wage", textAlign: TextAlign.center),
+                        Text(_xmlHandler.getString('wage'),
+                            textAlign: TextAlign.center),
                         Column(
                           children: [
                             Row(
@@ -745,8 +761,9 @@ class _JobResumeState extends State<JobResume>
                                               //toggleWage(1);
                                             });
                                           }),
-                                      const Expanded(
-                                        child: Text('Weekly'),
+                                      Expanded(
+                                        child: Text(
+                                            _xmlHandler.getString('weekly')),
                                       )
                                     ],
                                   ),
@@ -764,7 +781,9 @@ class _JobResumeState extends State<JobResume>
                                               // toggleWage(2);
                                             });
                                           }),
-                                      const Expanded(child: Text('Monthly'))
+                                      Expanded(
+                                          child: Text(
+                                              _xmlHandler.getString('monthly')))
                                     ],
                                   ),
                                 ),
@@ -779,8 +798,8 @@ class _JobResumeState extends State<JobResume>
                     ),
                     Column(
                       children: [
-                        const Text(
-                          "Rate",
+                        Text(
+                          _xmlHandler.getString('rate'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -838,8 +857,8 @@ class _JobResumeState extends State<JobResume>
                     ),
                     Column(
                       children: [
-                        const Text(
-                          "Work History",
+                        Text(
+                          _xmlHandler.getString('workhist'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -899,9 +918,9 @@ class _JobResumeState extends State<JobResume>
                           decoration: BoxDecoration(
                               color: const Color(0xFF273671),
                               borderRadius: BorderRadius.circular(30)),
-                          child: const Center(
+                          child: Center(
                               child: Text(
-                            "Post Service",
+                            _xmlHandler.getString('postserv'),
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,
