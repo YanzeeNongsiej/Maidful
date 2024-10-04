@@ -46,7 +46,9 @@ class _MaidHomePageState extends State<MaidHome>
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
-    _xmlHandler.getString(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
   }
 
   @override
@@ -185,7 +187,7 @@ class _MaidHomePageState extends State<MaidHome>
                       ),
                       Text(
                         _xmlHandler.getString('welc'),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20.0,
                           color: Colors.blue,
                         ),

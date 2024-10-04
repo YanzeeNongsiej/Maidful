@@ -17,7 +17,7 @@ class ChatPage extends StatefulWidget {
   final String receiverID;
   final String postType;
   final String postTypeID;
-  ChatPage(
+  const ChatPage(
       {super.key,
       required this.name,
       required this.receiverID,
@@ -106,13 +106,13 @@ class _ChatPageState extends State<ChatPage> {
                           },
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.handshake,
                                 color: Colors.white,
                               ),
                               Text(
                                 _xmlHandler.getString('hire'),
-                                style: TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.white),
                               ),
                             ],
                           ),

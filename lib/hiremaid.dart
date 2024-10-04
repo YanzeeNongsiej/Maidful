@@ -139,7 +139,7 @@ class _HireMaidState extends State<HireMaid> {
           children: [
             Text(widget.name),
             Text(_xmlHandler.getString('servdetails'),
-                style: TextStyle(fontSize: 15))
+                style: const TextStyle(fontSize: 15))
           ],
         ),
       ),
@@ -152,7 +152,7 @@ class _HireMaidState extends State<HireMaid> {
                 Text.rich(TextSpan(text: '* Click ', children: <InlineSpan>[
                   TextSpan(
                     text: _xmlHandler.getString('change'),
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.amber),
@@ -165,17 +165,17 @@ class _HireMaidState extends State<HireMaid> {
                   title: Row(
                     children: [
                       Text(_xmlHandler.getString('sched'),
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(selectedScheduleString),
                     ],
                   ),
                   trailing: Card(
                       color: Colors.amber,
                       child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
                           _xmlHandler.getString('change'),
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       )),
                   children: <Widget>[
@@ -258,7 +258,8 @@ class _HireMaidState extends State<HireMaid> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(_xmlHandler.getString('day'),
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < selectedDaysValue.length; i++)
                             Padding(
                               padding: const EdgeInsets.only(left: 30),
@@ -277,10 +278,10 @@ class _HireMaidState extends State<HireMaid> {
                       trailing: Card(
                           color: Colors.amber,
                           child: Padding(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                             child: Text(
                               _xmlHandler.getString('change'),
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           )),
                       children: <Widget>[
@@ -349,17 +350,18 @@ class _HireMaidState extends State<HireMaid> {
                       title: Row(
                         children: [
                           Text(_xmlHandler.getString('timing'),
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           Text("$defTimeFrom-$defTimeTo"),
                         ],
                       ),
                       trailing: Card(
                           color: Colors.amber,
                           child: Padding(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                             child: Text(
                               _xmlHandler.getString('change'),
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           )),
                       children: <Widget>[
@@ -535,7 +537,7 @@ class _HireMaidState extends State<HireMaid> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(_xmlHandler.getString('serv'),
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       for (var i = 0; i < selectedCheckBoxValue.length; i++)
                         Padding(
                           padding: const EdgeInsets.only(left: 30),
@@ -554,10 +556,10 @@ class _HireMaidState extends State<HireMaid> {
                   trailing: Card(
                       color: Colors.amber,
                       child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
                           _xmlHandler.getString('change'),
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       )),
                   children: [
@@ -641,7 +643,7 @@ class _HireMaidState extends State<HireMaid> {
                       Row(
                         children: [
                           Text(_xmlHandler.getString('wage'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                           Text(_selectedWageString,
                               style: const TextStyle(
@@ -653,10 +655,10 @@ class _HireMaidState extends State<HireMaid> {
                   trailing: Card(
                       color: Colors.amber,
                       child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
                           _xmlHandler.getString('change'),
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       )),
                   children: [
@@ -724,7 +726,7 @@ class _HireMaidState extends State<HireMaid> {
                   title: Row(
                     children: [
                       Text(_xmlHandler.getString('rate'),
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 25)),
                       Text("\u{20B9}$defRate",
                           style: const TextStyle(
@@ -734,10 +736,10 @@ class _HireMaidState extends State<HireMaid> {
                   trailing: Card(
                       color: Colors.amber,
                       child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
                           _xmlHandler.getString('change'),
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       )),
                   children: [
@@ -816,7 +818,7 @@ class _HireMaidState extends State<HireMaid> {
                       onPressed: sendAck,
                       child: Text(
                         _xmlHandler.getString('sendack'),
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     )),
               ],
@@ -829,8 +831,8 @@ class _HireMaidState extends State<HireMaid> {
 
   sendAck() async {
     List<String> res = await english(selectedDaysValue, gv.selected);
-    print("Converted days: ${res}");
+    print("Converted days: $res");
     List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
-    print("Converted services: ${res2}");
+    print("Converted services: $res2");
   }
 }

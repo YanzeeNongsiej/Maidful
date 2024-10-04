@@ -79,7 +79,7 @@ class _LogInState extends State<LogIn> {
           borderRadius: BorderRadius.circular(10),
           borderColor: Colors.grey,
           borderWidth: 0,
-          children: [Text('English'), Text('Khasi')],
+          children: const [Text('English'), Text('Khasi')],
         )),
       ),
       const SizedBox(
@@ -211,7 +211,7 @@ class _LogInState extends State<LogIn> {
                     registerUser(user);
                   } else {
                     Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => Home()));
+                        MaterialPageRoute(builder: (context) => const Home()));
                   }
                 } on FirebaseAuthException catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -292,8 +292,8 @@ class _LogInState extends State<LogIn> {
       "remarks": " ",
     };
     await Usersdao().addUserDetails(uploadUser).whenComplete(() =>
-        Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (context) => Home())));
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const Home())));
   }
 
   userLogin() async {
@@ -308,7 +308,7 @@ class _LogInState extends State<LogIn> {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password)
           .whenComplete(() => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => Home())));
+              MaterialPageRoute(builder: (context) => const Home())));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

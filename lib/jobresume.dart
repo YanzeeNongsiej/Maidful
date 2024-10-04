@@ -70,7 +70,9 @@ class _JobResumeState extends State<JobResume>
   @override
   void initState() {
     super.initState();
-    _xmlHandler.loadStrings(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
   }
 
   addService() async {
@@ -140,14 +142,14 @@ class _JobResumeState extends State<JobResume>
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
                     _xmlHandler.getString('addedsucc'),
-                    style: TextStyle(fontSize: 20.0),
+                    style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
         _xmlHandler.getString('error'),
-        style: TextStyle(fontSize: 20.0),
+        style: const TextStyle(fontSize: 20.0),
       )));
     }
   }
@@ -159,7 +161,7 @@ class _JobResumeState extends State<JobResume>
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Add ' + _xmlHandler.getString('workhist')),
+            title: Text('Add ${_xmlHandler.getString('workhist')}'),
             content: TextFormField(
               controller: whController1,
               decoration: InputDecoration(
@@ -231,7 +233,7 @@ class _JobResumeState extends State<JobResume>
               context: context,
               builder: (context) {
                 return AlertDialog(
-                  title: Text("Warning"),
+                  title: const Text("Warning"),
                   content: Text(_xmlHandler.getString('avail')),
                 );
               });
@@ -248,7 +250,7 @@ class _JobResumeState extends State<JobResume>
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text("Warning"),
+                      title: const Text("Warning"),
                       content: Text(_xmlHandler.getString('avail')),
                     );
                   });
@@ -275,7 +277,7 @@ class _JobResumeState extends State<JobResume>
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text("Warning"),
+                            title: const Text("Warning"),
                             content: Text(_xmlHandler.getString('avail')),
                           );
                         });
@@ -921,7 +923,7 @@ class _JobResumeState extends State<JobResume>
                           child: Center(
                               child: Text(
                             _xmlHandler.getString('postserv'),
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,
                                 fontWeight: FontWeight.w500),

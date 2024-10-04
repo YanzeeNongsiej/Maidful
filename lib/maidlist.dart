@@ -28,7 +28,9 @@ class _MaidListState extends State<MaidList>
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
   }
 
   void handleClick(String value) async {
@@ -53,7 +55,7 @@ class _MaidListState extends State<MaidList>
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
             title: Text(_xmlHandler.getString('maiddetails'),
-                style: TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
               child: Padding(

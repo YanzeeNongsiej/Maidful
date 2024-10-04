@@ -7,4 +7,10 @@ class GlobalVariables {
   set selected(String val) {
     sel = val;
   }
+
+  String uname = "";
+  String get username => uname;
+  set username(String u) {
+    uname = u;
+  }
 }

@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorSchemeSeed: Colors.deepOrange,
         ),
-        home: AuthMethods.user != null ? Home() : const LogIn());
+        home: AuthMethods.user != null ? const Home() : const LogIn());
   }
 }
 

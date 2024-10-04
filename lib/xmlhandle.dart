@@ -4,10 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class XMLHandler {
   Map<String, String> strings = {};
   Future<void> loadStrings(String language) async {
-    if (language.isEmpty ||
-        language == "" ||
-        language == null ||
-        language.trim().isEmpty) {
+    if (language.isEmpty || language == "" || language.trim().isEmpty) {
       language = "English";
     }
 

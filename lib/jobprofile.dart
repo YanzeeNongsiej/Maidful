@@ -71,7 +71,9 @@ class _JobProfileState extends State<JobProfile>
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
   }
 
   addJobProfile() async {
@@ -138,14 +140,14 @@ class _JobProfileState extends State<JobProfile>
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
                     _xmlHandler.getString('addedsucc'),
-                    style: TextStyle(fontSize: 20.0),
+                    style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
         _xmlHandler.getString('error'),
-        style: TextStyle(fontSize: 20.0),
+        style: const TextStyle(fontSize: 20.0),
       )));
     }
   }
@@ -189,7 +191,7 @@ class _JobProfileState extends State<JobProfile>
               context: context,
               builder: (context) {
                 return AlertDialog(
-                  title: Text("Warning"),
+                  title: const Text("Warning"),
                   content: Text(_xmlHandler.getString('avail')),
                 );
               });
@@ -206,7 +208,7 @@ class _JobProfileState extends State<JobProfile>
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text("Warning"),
+                      title: const Text("Warning"),
                       content: Text(_xmlHandler.getString('avail')),
                     );
                   });
@@ -233,7 +235,7 @@ class _JobProfileState extends State<JobProfile>
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text("Warning"),
+                            title: const Text("Warning"),
                             content: Text(_xmlHandler.getString('avail')),
                           );
                         });
@@ -831,7 +833,7 @@ class _JobProfileState extends State<JobProfile>
                           child: Center(
                               child: Text(
                             _xmlHandler.getString('postjob'),
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,
                                 fontWeight: FontWeight.w500),

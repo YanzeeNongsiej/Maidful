@@ -3,7 +3,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 // import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
@@ -18,7 +17,7 @@ import 'package:ibitf_app/maidlist.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
-
+import 'package:ibitf_app/profile.dart';
 // import 'material_design_indicator.dart';
 // XMLHandler? _xmlHandler;
 
@@ -45,6 +44,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String newaddress = "", newname = "", userid = "";
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
+
   final List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
@@ -77,7 +77,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   final _iconTabs = [
     const Tab(icon: Icon(Icons.home)),
     const Tab(icon: Icon(Icons.chat_rounded)),
-    const Tab(icon: Icon(Icons.settings)),
+    const Tab(icon: Icon(Icons.person_2_sharp)),
   ];
 
   ontheload() async {
@@ -93,6 +93,7 @@ class _EmployerHomePageState extends State<EmployerHome>
 
     _xmlHandler.loadStrings(gv.selected).then((val) {
       setState(() {});
+      gv.username = widget.uname.toString();
     });
   }
 
@@ -259,247 +260,6 @@ class _EmployerHomePageState extends State<EmployerHome>
               );
       },
     );
-  }
-
-  Widget _buildServiceList() {
-    return FutureBuilder(
-        future: fetchOwnServices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("loading...");
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data!.docs.isEmpty) {
-              return const Text("No Services Yet");
-            } else {
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                shrinkWrap: true,
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.docs[index];
-                  return Expanded(
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () => {},
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text.rich(TextSpan(
-                                      children: <InlineSpan>[
-                                        const TextSpan(
-                                          text: 'Schedule: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("schedule"),
-                                        ),
-                                        const TextSpan(
-                                          text: '\nTiming: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text:
-                                              "${item.get("time_from")}-${item.get("time_to")}",
-                                        ),
-                                        const TextSpan(
-                                          text: '\nDays: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("days").toString(),
-                                        ),
-                                      ],
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                      ))),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Row(
-                            // mainAxisAlignment: MainAxisAlignment.end,
-
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // Navigator.pop(context);
-                                        // Navigator.push(
-                                        //     context,
-                                        //     MaterialPageRoute(
-                                        //         builder: (context) => ChatPage(
-                                        //             name: item.get("name"),
-                                        //             receiverID: item.get("userid"),
-                                        //             postType: "services",
-                                        //             postTypeID: servItem.id)));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.edit,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Edit',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-
-                  // return GestureDetector(
-                  //   onTap: () => {},
-                  //   child: Text(
-                  //     item.get("rate"),
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // );
-                },
-              );
-            }
-          } else {
-            return const Text("No Services Yet");
-          }
-        });
-  }
-
-  Widget _buildJobProfileList() {
-    return FutureBuilder(
-        future: fetchOwnJobProfile(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("loading...");
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data!.docs.isEmpty) {
-              return const Text("No Services Yet");
-            } else {
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                shrinkWrap: true,
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.docs[index];
-                  return Expanded(
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () => {},
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text.rich(TextSpan(
-                                      children: <InlineSpan>[
-                                        const TextSpan(
-                                          text: 'Schedule: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("schedule"),
-                                        ),
-                                        const TextSpan(
-                                          text: '\nTiming: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text:
-                                              "${item.get("time_from")}-${item.get("time_to")}",
-                                        ),
-                                        const TextSpan(
-                                          text: '\nDays: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("days").toString(),
-                                        ),
-                                      ],
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                      ))),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Card(
-                                // elevation: 10,
-                                color: Colors.blue,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Navigator.pop(context);
-                                      // Navigator.push(
-                                      //     context,
-                                      //     MaterialPageRoute(
-                                      //         builder: (context) => ChatPage(
-                                      //             name: item.get("name"),
-                                      //             receiverID: item.get("userid"),
-                                      //             postType: "services",
-                                      //             postTypeID: servItem.id)));
-                                    },
-                                    child: const Row(
-                                      children: [
-                                        Icon(
-                                          Icons.edit,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          'Edit',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            }
-          } else {
-            return const Text("No Services Yet");
-          }
-        });
   }
 
   Future<QuerySnapshot> getUserinfo(String usrId) async {
@@ -676,143 +436,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              (_xmlHandler.getString('active')).toString(),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.blueAccent[100],
-                      elevation: 10,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              ((_xmlHandler.getString('myserv')).toString()),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            _buildServiceList(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const JobResume()));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.add,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Add',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.blueAccent[100],
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              (_xmlHandler.getString('posted')).toString(),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            _buildJobProfileList(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const JobProfile()));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.add,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Add',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
             ],
           ),
           _buildChatList(),
-          const Center(
-            child: Text("This is the settings pages"),
+          Center(
+            child: ProfilePage(),
           ),
         ],
       ),

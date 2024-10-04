@@ -86,7 +86,9 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
-    _xmlHandler.loadStrings(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((val) {
+      setState(() {});
+    });
   }
 
   @override

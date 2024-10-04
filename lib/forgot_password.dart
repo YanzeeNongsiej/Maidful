@@ -22,7 +22,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected);
+    _xmlHandler.loadStrings(gv.selected).then((a) {
+      setState(() {});
+    });
   }
 
   resetPassword() async {
@@ -31,14 +33,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
         _xmlHandler.getString('resetpass'),
-        style: TextStyle(fontSize: 20.0),
+        style: const TextStyle(fontSize: 20.0),
       )));
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
           _xmlHandler.getString('nouser'),
-          style: TextStyle(fontSize: 20.0),
+          style: const TextStyle(fontSize: 20.0),
         )));
       }
     }
@@ -58,7 +60,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               alignment: Alignment.topCenter,
               child: Text(
                 _xmlHandler.getString('passrec'),
-                style: TextStyle(
+                style: const TextStyle(
                     color: Colors.white,
                     fontSize: 30.0,
                     fontWeight: FontWeight.bold),
@@ -69,7 +71,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             ),
             Text(
               _xmlHandler.getString('enterem'),
-              style: TextStyle(
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20.0,
                   fontWeight: FontWeight.bold),
@@ -130,7 +132,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               child: Center(
                                 child: Text(
                                   _xmlHandler.getString('sendem'),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.black,
                                       fontSize: 18.0,
                                       fontWeight: FontWeight.bold),
@@ -146,7 +148,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             children: [
                               Text(
                                 _xmlHandler.getString('noac'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 18.0, color: Colors.white),
                               ),
                               const SizedBox(
@@ -162,7 +164,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                 },
                                 child: Text(
                                   _xmlHandler.getString('create'),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Color.fromARGB(225, 184, 166, 6),
                                       fontSize: 20.0,
                                       fontWeight: FontWeight.w500),
