@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
@@ -371,71 +372,96 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MaidList()))
-                      },
-                      child: Card(
-                        semanticContainer: true,
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        color: Colors.blueAccent[100],
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        elevation: 10,
-                        // margin: EdgeInsets.all(10),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.person_search_sharp,
-                              size: 100,
-                              color: Colors.white,
-                            ),
-                            // Image.asset(
-                            //   "assets/user.png",
-                            //   fit: BoxFit.scaleDown,
-                            // ),
-                            Text(
-                              (_xmlHandler.getString('maid')).toString(),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
+              const DefaultTabController(
+                length: 2,
+                child: TabBar(
+                    dividerColor: Colors.transparent,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20)),
+                        color: Colors.blue,
+                        gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            // transform: GradientRotation(90),
+                            colors: [Colors.lightBlue, Colors.white])),
+                    tabs: [
+                      Tab(
+                        child: Text("maids"),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Card(
-                      semanticContainer: true,
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      color: Colors.blueAccent[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      elevation: 5,
-
-                      // margin: EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.manage_search_outlined,
-                              size: 100, color: Colors.white),
-                          Text(
-                            (_xmlHandler.getString('job')).toString(),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                      Tab(child: Text("Job Profiles"))
+                    ]),
               ),
+              Container(
+                child: Text("maids"),
+              )
+              // Row(
+              //   children: [
+              //     Expanded(
+              //       child: GestureDetector(
+              //         onTap: () => {
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => const MaidList()))
+              //         },
+              //         child: Card(
+              //           semanticContainer: true,
+              //           clipBehavior: Clip.antiAliasWithSaveLayer,
+              //           color: Colors.blueAccent[100],
+
+              //           shape: RoundedRectangleBorder(
+              //             borderRadius: BorderRadius.circular(10.0),
+              //           ),
+              //           elevation: 10,
+              //           // margin: EdgeInsets.all(10),
+              //           child: Column(
+              //             children: [
+              //               const Icon(
+              //                 Icons.person_search_sharp,
+              //                 size: 100,
+              //                 color: Colors.white,
+              //               ),
+              //               // Image.asset(
+              //               //   "assets/user.png",
+              //               //   fit: BoxFit.scaleDown,
+              //               // ),
+              //               Text(
+              //                 (_xmlHandler.getString('maid')).toString(),
+              //                 style: const TextStyle(color: Colors.white),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //     Expanded(
+              //       child: Card(
+              //         semanticContainer: true,
+              //         clipBehavior: Clip.antiAliasWithSaveLayer,
+              //         color: Colors.blueAccent[100],
+              //         shape: RoundedRectangleBorder(
+              //           borderRadius: BorderRadius.circular(10.0),
+              //         ),
+              //         elevation: 5,
+
+              //         // margin: EdgeInsets.all(10),
+              //         child: Column(
+              //           children: [
+              //             const Icon(Icons.manage_search_outlined,
+              //                 size: 100, color: Colors.white),
+              //             Text(
+              //               (_xmlHandler.getString('job')).toString(),
+              //               style: const TextStyle(color: Colors.white),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
           _buildChatList(),

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:ibitf_app/xmlhandle.dart';
@@ -830,6 +831,50 @@ class _HireMaidState extends State<HireMaid> {
   }
 
   sendAck() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    Map<String, dynamic> uploadAck = {};
+    if (selectedScheduleValue == 1) {
+      uploadAck = {
+        "sender": user?.uid,
+        "receiver": widget.itemGlobal?.get("user"),
+        "schedule": "Live-in",
+        "days": daysList,
+        "time_from": "12:00 AM",
+        "time_to": "11:59 PM",
+        "services": selectedCheckBoxValue,
+        // "wage": wageBasis,
+        "rate": ratecontroller.text,
+        // "work_history": workHistory,
+      };
+      // isOK = true;
+    } else if (selectedScheduleValue == 2) {
+      uploadAck = {
+        "userid": user?.uid,
+        "schedule": "Daily",
+        "days": daysList,
+        "time_from": fromTimeController.text,
+        "time_to": toTimeController.text,
+        "services": selectedCheckBoxValue,
+        // "wage": wageBasis,
+        "rate": ratecontroller.text,
+        // "work_history": workHistory,
+      };
+      // isOK = true;
+    } else {
+      uploadAck = {
+        "userid": user?.uid,
+        "schedule": "Hourly",
+        "days": selectedDaysValue,
+        "time_from": fromTimeController.text,
+        "time_to": toTimeController.text,
+        "services": selectedCheckBoxValue,
+        // "wage": wageBasis,
+        "rate": ratecontroller.text,
+        // "work_history": workHistory,
+      };
+      // isOK = true;
+    }
+
     List<String> res = await english(selectedDaysValue, gv.selected);
     print("Converted days: $res");
     List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
