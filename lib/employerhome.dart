@@ -18,7 +18,7 @@ import 'package:ibitf_app/maidlist.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
-import 'package:ibitf_app/profile.dart';
+
 // import 'material_design_indicator.dart';
 // XMLHandler? _xmlHandler;
 
@@ -45,7 +45,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String newaddress = "", newname = "", userid = "";
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
-
+  String? usrname;
   final List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
@@ -103,6 +103,7 @@ class _EmployerHomePageState extends State<EmployerHome>
     _xmlHandler.loadStrings(gv.selected).then((val) {
       setState(() {});
       gv.username = widget.uname.toString();
+      usrname = gv.username;
     });
   }
 
@@ -237,7 +238,10 @@ class _EmployerHomePageState extends State<EmployerHome>
                                     child: ListTile(
                                       leading: CircleAvatar(
                                         foregroundImage: NetworkImage(
-                                            AuthMethods.user?.photoURL ?? ''),
+                                            AuthMethods.user?.photoURL ??
+                                                (FirebaseAuth.instance
+                                                        .currentUser?.photoURL)
+                                                    .toString()),
                                       ),
                                       title: Text(item.get("name")),
                                       subtitle: Text(
@@ -271,6 +275,412 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
   }
 
+  Widget ProfilePage() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const CircleAvatar(
+                radius: 50,
+                backgroundImage: NetworkImage('(link unavailable)'),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                usrname ?? "Usernsme",
+                style: const TextStyle(fontSize: 24),
+              ),
+              const Text(
+                'User Bio',
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              (_xmlHandler.getString('active')).toString(),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Colors.blueAccent[100],
+                      elevation: 10,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              ((_xmlHandler.getString('myserv')).toString()),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            _buildServiceList(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const JobResume()));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Add',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Colors.blueAccent[100],
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              (_xmlHandler.getString('posted')).toString(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            _buildJobProfileList(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const JobProfile()));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Add',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildServiceList() {
+    return FutureBuilder(
+        future: fetchOwnServices(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("loading...");
+          }
+          if (snapshot.hasData) {
+            if (snapshot.data!.docs.isEmpty) {
+              return const Text("No Services Yet");
+            } else {
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final item = snapshot.data!.docs[index];
+                  return Expanded(
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () => {},
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(
+                                      children: <InlineSpan>[
+                                        const TextSpan(
+                                          text: 'Schedule: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("schedule"),
+                                        ),
+                                        const TextSpan(
+                                          text: '\nTiming: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ),
+                                        const TextSpan(
+                                          text: '\nDays: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("days").toString(),
+                                        ),
+                                      ],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                      ))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            // mainAxisAlignment: MainAxisAlignment.end,
+
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigator.pop(context);
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) => ChatPage(
+                                        //             name: item.get("name"),
+                                        //             receiverID: item.get("userid"),
+                                        //             postType: "services",
+                                        //             postTypeID: servItem.id)));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Edit',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  // return GestureDetector(
+                  //   onTap: () => {},
+                  //   child: Text(
+                  //     item.get("rate"),
+                  //     textAlign: TextAlign.center,
+                  //   ),
+                  // );
+                },
+              );
+            }
+          } else {
+            return const Text("No Services Yet");
+          }
+        });
+  }
+
+  Widget _buildJobProfileList() {
+    return FutureBuilder(
+        future: fetchOwnJobProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("loading...");
+          }
+          if (snapshot.hasData) {
+            if (snapshot.data!.docs.isEmpty) {
+              return const Text("No Services Yet");
+            } else {
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final item = snapshot.data!.docs[index];
+                  return Expanded(
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () => {},
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(
+                                      children: <InlineSpan>[
+                                        const TextSpan(
+                                          text: 'Schedule: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("schedule"),
+                                        ),
+                                        const TextSpan(
+                                          text: '\nTiming: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ),
+                                        const TextSpan(
+                                          text: '\nDays: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("days").toString(),
+                                        ),
+                                      ],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                      ))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.blue,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Navigator.pop(context);
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) => ChatPage(
+                                      //             name: item.get("name"),
+                                      //             receiverID: item.get("userid"),
+                                      //             postType: "services",
+                                      //             postTypeID: servItem.id)));
+                                    },
+                                    child: const Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          'Edit',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+          } else {
+            return const Text("No Services Yet");
+          }
+        });
+  }
+
   Future<QuerySnapshot> getUserinfo(String usrId) async {
     userid = usrId.replaceAll("_", "").replaceAll(userID, "");
     Future<QuerySnapshot<Object?>> qs = Usersdao().getUserDetails(userid);
@@ -301,7 +711,8 @@ class _EmployerHomePageState extends State<EmployerHome>
         actions: <Widget>[
           PopupMenuButton(
             icon: CircleAvatar(
-              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
+              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ??
+                  (FirebaseAuth.instance.currentUser?.photoURL).toString()),
             ),
             onSelected: handleClick,
             itemBuilder: (BuildContext context) {
@@ -574,7 +985,7 @@ class _FABState extends State<FAB> {
 }
 
 class NestedTabBar extends StatefulWidget {
-  NestedTabBar({super.key});
+  const NestedTabBar({super.key});
 
   @override
   _NestedTabBarState createState() => _NestedTabBarState();
@@ -592,7 +1003,7 @@ class _NestedTabBarState extends State<NestedTabBar>
       setState(() {});
       // gv.username = widget.uname.toString();
     });
-    _nestedTabController = new TabController(length: 2, vsync: this);
+    _nestedTabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -929,7 +1340,7 @@ class _NestedTabBarState extends State<NestedTabBar>
         ),
         Container(
           height: screenHeight * 0.70,
-          margin: EdgeInsets.only(left: 16.0, right: 16.0),
+          margin: const EdgeInsets.only(left: 16.0, right: 16.0),
           child: TabBarView(
             controller: _nestedTabController,
             children: <Widget>[
@@ -977,7 +1388,11 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                         NetworkImage(AuthMethods
                                                                 .user
                                                                 ?.photoURL ??
-                                                            ''),
+                                                            (FirebaseAuth
+                                                                    .instance
+                                                                    .currentUser
+                                                                    ?.photoURL)
+                                                                .toString()),
                                                   ),
                                                   title: Text(item.get("name")),
                                                   subtitle: Row(
@@ -1047,7 +1462,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                 //   borderRadius: BorderRadius.circular(8.0),
                 //   color: Colors.blueGrey[300],
                 // ),
-                child: Text("Job Profiles"),
+                child: const Text("Job Profiles"),
               ),
             ],
           ),
