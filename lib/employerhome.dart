@@ -71,6 +71,14 @@ class _EmployerHomePageState extends State<EmployerHome>
     return qs;
   }
 
+  bool showMaids = true, showJobProfiles = false;
+  void toggleMaids() {
+    setState(() {
+      showMaids = !showMaids;
+      showJobProfiles = !showJobProfiles;
+    });
+  }
+
   late TabController _tabController;
 
   final _selectedColor = const Color(0xff1a73e8);
@@ -372,31 +380,42 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ),
               ),
-              const DefaultTabController(
-                length: 2,
-                child: TabBar(
-                    dividerColor: Colors.transparent,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicator: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20)),
-                        color: Colors.blue,
-                        gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            // transform: GradientRotation(90),
-                            colors: [Colors.lightBlue, Colors.white])),
-                    tabs: [
-                      Tab(
-                        child: Text("maids"),
-                      ),
-                      Tab(child: Text("Job Profiles"))
-                    ]),
-              ),
-              Container(
-                child: Text("maids"),
-              )
+              NestedTabBar(),
+
+              // const DefaultTabController(
+              //   length: 2,
+              //   child: TabBar(
+              //       dividerColor: Colors.transparent,
+              //       indicatorSize: TabBarIndicatorSize.tab,
+              //       indicator: BoxDecoration(
+              //           borderRadius: const BorderRadius.only(
+              //               topLeft: Radius.circular(20),
+              //               topRight: Radius.circular(20)),
+              //           color: Colors.blue,
+              //           gradient: LinearGradient(
+              //               begin: Alignment.topCenter,
+              //               end: Alignment.bottomCenter,
+              //               // transform: GradientRotation(90),
+              //               colors: [Colors.lightBlue, Colors.white])),
+              //       tabs: [
+              //         Tab(
+              //           child: Text("maids"),
+              //         ),
+              //         Tab(child: Text("Job Profiles"))
+              //       ]),
+              // ),
+              // Visibility(
+              //     visible:
+              //         showMaids, // Show the options only if showOptions is true
+              //     child: Container(
+              //       child: Text("maids"),
+              //     )),
+              // Visibility(
+              //     visible: showJobProfiles,
+              //     child: Container(
+              //       child: Text("Job Profiles"),
+              //     ))
+
               // Row(
               //   children: [
               //     Expanded(
@@ -549,6 +568,490 @@ class _FABState extends State<FAB> {
           foregroundColor: Colors.white,
           child: showOptions ? const Icon(Icons.close) : const Icon(Icons.add),
         ),
+      ],
+    );
+  }
+}
+
+class NestedTabBar extends StatefulWidget {
+  NestedTabBar({super.key});
+
+  @override
+  _NestedTabBarState createState() => _NestedTabBarState();
+}
+
+class _NestedTabBarState extends State<NestedTabBar>
+    with TickerProviderStateMixin {
+  final XMLHandler _xmlHandler = XMLHandler();
+
+  late TabController _nestedTabController;
+  @override
+  void initState() {
+    super.initState();
+    _xmlHandler.loadStrings(gv.selected).then((val) {
+      setState(() {});
+      // gv.username = widget.uname.toString();
+    });
+    _nestedTabController = new TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _nestedTabController.dispose();
+  }
+
+  Future<QuerySnapshot> fetchServices() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getAllServices(userID);
+    return qs;
+  }
+
+  Future<QuerySnapshot> fetchUserData(String userId) async {
+    QuerySnapshot qs = await Usersdao().getUserDetails(userId);
+    return qs;
+  }
+
+  getServiceDetail(item, servItem) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            scrollable: true,
+            insetPadding: const EdgeInsets.only(left: 8, right: 8),
+            title: Text(_xmlHandler.getString('maiddetails'),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            content: Card(
+              elevation: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('nam'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(item.get("name")),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('addr'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(item.get("address")),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('sched'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(servItem.get("schedule")),
+                      ],
+                    ),
+                    if (servItem.get("schedule") == 'Hourly')
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_xmlHandler.getString('day'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          for (var i = 0; i < servItem.get("days").length; i++)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 30),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("${i + 1}. "),
+                                  Expanded(
+                                    child: Text("${servItem.get("days")[i]}"),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (servItem.get("schedule") == 'Daily' ||
+                        servItem.get("schedule") == 'Hourly')
+                      Row(
+                        children: [
+                          Text(_xmlHandler.getString('timing'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                              "${servItem.get("time_from")}-${servItem.get("time_to")}"),
+                        ],
+                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_xmlHandler.getString('serv'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        for (var i = 0;
+                            i < servItem.get("services").length;
+                            i++)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("${i + 1}. "),
+                                Expanded(
+                                  child: Text("${servItem.get("services")[i]}"),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_xmlHandler.getString('workhist'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        for (var i = 0;
+                            i < servItem.get("work_history").length;
+                            i++)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("${i + 1}. "),
+                                Expanded(
+                                  child: Text(
+                                      "${servItem.get("work_history")[i]}"),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Text(_xmlHandler.getString('wage'),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                              Text(servItem.get("wage"),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(_xmlHandler.getString('rate'),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25)),
+                              Text("\u{20B9}${servItem.get("rate")}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.green,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) => ChatPage(
+                                      //             name: item.get("name"),
+                                      //             receiverID: item.get("userid"),
+                                      //             postType: "services",
+                                      //             postTypeID: servItem.id)));
+                                    },
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.handshake,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          _xmlHandler.getString('hire'),
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              //     Card(
+                              //       // elevation: 10,
+                              //       color: Colors.amber[600],
+                              //       child: Padding(
+                              //         padding: const EdgeInsets.all(5.0),
+                              //         child: GestureDetector(
+                              //           onTap: () {
+                              //             // Navigator.pop(context);
+                              //           },
+                              //           child: const Row(
+                              //             children: [
+                              //               Icon(Icons.threesixty_sharp),
+                              //               Text('Counter'),
+                              //             ],
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Card(
+                    // elevation: 10,
+                    color: Colors.green,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                      name: item.get("name"),
+                                      receiverID: item.get("userid"),
+                                      postType: "services",
+                                      postTypeID: servItem.id)));
+                        },
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.chat,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Chat',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    // elevation: 10,
+                    color: Colors.orange,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Row(
+                          children: [
+                            Icon(Icons.cancel, color: Colors.white),
+                            Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // TextButton(
+                  //   onPressed: () {
+                  //     Navigator.pop(context);
+                  //   },
+                  //   child: Row(
+                  //     children: [const Icon(Icons.chat), Text("chat")],
+                  //   ),
+                  // ),
+                ],
+              ),
+            ],
+          );
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        TabBar(
+          controller: _nestedTabController,
+          dividerColor: Colors.grey,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: const BoxDecoration(
+              border: Border(
+                  left: BorderSide(color: Colors.grey),
+                  top: BorderSide(color: Colors.grey),
+                  right: BorderSide(color: Colors.grey)),
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+              color: Colors.blue,
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.lightBlue, Colors.white])),
+          unselectedLabelColor: Colors.black54,
+          tabs: const [
+            Tab(
+              text: "Maids(for Home Owners)",
+            ),
+            Tab(
+              text: "Job Profiles(For Maids)",
+            ),
+          ],
+        ),
+        Container(
+          height: screenHeight * 0.70,
+          margin: EdgeInsets.only(left: 16.0, right: 16.0),
+          child: TabBarView(
+            controller: _nestedTabController,
+            children: <Widget>[
+              Column(
+                children: [
+                  FutureBuilder(
+                      // StreamBuilder(
+                      future: fetchServices(),
+                      // stream: fetchChats(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                final servitem = snapshot.data!.docs[index];
+                                // print("Service ID: ${servitem.id}");
+                                return FutureBuilder(
+                                    future:
+                                        fetchUserData(servitem.get("userid")),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        final item = snapshot.data!.docs.first;
+                                        return Column(
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () {
+                                                getServiceDetail(
+                                                    item, servitem);
+                                              },
+                                              child: Card(
+                                                semanticContainer: true,
+                                                clipBehavior:
+                                                    Clip.antiAliasWithSaveLayer,
+                                                color: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.0),
+                                                ),
+                                                // elevation: 10,
+                                                child: ListTile(
+                                                  leading: CircleAvatar(
+                                                    foregroundImage:
+                                                        NetworkImage(AuthMethods
+                                                                .user
+                                                                ?.photoURL ??
+                                                            ''),
+                                                  ),
+                                                  title: Text(item.get("name")),
+                                                  subtitle: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.location_pin,
+                                                        size: 15,
+                                                      ),
+                                                      Text(item.get("address")),
+                                                    ],
+                                                  ),
+                                                  trailing: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      IconButton(
+                                                        onPressed: () async {
+                                                          Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                  builder: (context) => ChatPage(
+                                                                      name: item
+                                                                          .get(
+                                                                              "name"),
+                                                                      receiverID:
+                                                                          item.get(
+                                                                              "userid"),
+                                                                      postType:
+                                                                          "services",
+                                                                      postTypeID:
+                                                                          servitem
+                                                                              .id)));
+                                                        },
+                                                        icon: const Icon(
+                                                            Icons.chat_rounded),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return Center(
+                                            child: Text(
+                                                snapshot.error.toString()));
+                                      } else {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    });
+                              });
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text(snapshot.error.toString()));
+                        } else {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      }),
+                ],
+              ),
+              Container(
+                // decoration: BoxDecoration(
+                //   borderRadius: BorderRadius.circular(8.0),
+                //   color: Colors.blueGrey[300],
+                // ),
+                child: Text("Job Profiles"),
+              ),
+            ],
+          ),
+        )
       ],
     );
   }
