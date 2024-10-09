@@ -81,6 +81,31 @@ class _EmployerHomePageState extends State<EmployerHome>
     });
   }
 
+  //for the profilepic
+  Future<void> profilepic() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      // Query the user's document
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("users")
+          .where("userid", isEqualTo: currentUser.uid) // Adjust as needed
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Assuming there's only one matching document
+        DocumentSnapshot userDoc = querySnapshot.docs.first;
+        setState(() {
+          try {
+            _downloadUrl = userDoc['url'];
+          } catch (e) {
+            print("No profileimage yet");
+          } // Fetch the URL field
+        });
+      }
+    }
+  }
+
   late TabController _tabController;
 
   final _selectedColor = const Color(0xff1a73e8);
@@ -107,6 +132,7 @@ class _EmployerHomePageState extends State<EmployerHome>
       gv.username = widget.uname.toString();
       usrname = gv.username;
     });
+    profilepic();
   }
 
   @override
@@ -239,10 +265,8 @@ class _EmployerHomePageState extends State<EmployerHome>
                                     },
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        foregroundImage: _downloadUrl != null
-                                            ? NetworkImage(_downloadUrl!)
-                                            : loadImage()
-                                                as ImageProvider<Object>,
+                                        foregroundImage: loadImage()
+                                            as ImageProvider<Object>,
                                       ),
                                       title: Text(item.get("name")),
                                       subtitle: Text(
@@ -309,18 +333,33 @@ class _EmployerHomePageState extends State<EmployerHome>
                         File file = File(image.path);
                         try {
                           String fileName = image.name;
+                          List<String> separate = fileName.split('.');
+                          String filetype = separate[1];
                           final ref = FirebaseStorage.instance
                               .ref()
-                              .child('${gv.username}/$fileName');
+                              .child('${gv.username}/profile.${filetype}');
                           await ref.putFile(file);
                           String downloadUrl = await ref.getDownloadURL();
 
                           // Store URL in Firestore
-                          await FirebaseFirestore.instance
-                              .collection('images')
-                              .add({
-                            'url': downloadUrl,
-                          });
+
+                          QuerySnapshot querySnapshot = await FirebaseFirestore
+                              .instance
+                              .collection("users")
+                              .where("userid", isEqualTo: userID)
+                              .get();
+
+                          // Check if we found any documents
+                          if (querySnapshot.docs.isNotEmpty) {
+                            // Assuming we want to update the first matching document
+                            DocumentSnapshot userDoc = querySnapshot.docs.first;
+
+                            // Update the document with the new URL
+                            await userDoc.reference.set(
+                              {'url': downloadUrl},
+                              SetOptions(merge: true),
+                            );
+                          }
 
                           setState(() {
                             // Update state with the new URL
@@ -1435,15 +1474,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                 // elevation: 10,
                                                 child: ListTile(
                                                   leading: CircleAvatar(
-                                                    foregroundImage:
-                                                        NetworkImage(AuthMethods
-                                                                .user
-                                                                ?.photoURL ??
-                                                            (FirebaseAuth
-                                                                    .instance
-                                                                    .currentUser
-                                                                    ?.photoURL)
-                                                                .toString()),
+                                                    foregroundImage: AssetImage(
+                                                        "assets/profile.png"),
                                                   ),
                                                   title: Text(item.get("name")),
                                                   subtitle: Row(
