@@ -18,9 +18,11 @@ import 'package:ibitf_app/maidlist.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
-
 // import 'material_design_indicator.dart';
 // XMLHandler? _xmlHandler;
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -53,7 +55,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   //   // Stream<QuerySnapshot<Object?>> qs = Chatdao().getChats(widget.uid as String);
   //   // return qs;
   // }
-
+  String? _downloadUrl;
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -237,11 +239,10 @@ class _EmployerHomePageState extends State<EmployerHome>
                                     },
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        foregroundImage: NetworkImage(
-                                            AuthMethods.user?.photoURL ??
-                                                (FirebaseAuth.instance
-                                                        .currentUser?.photoURL)
-                                                    .toString()),
+                                        foregroundImage: _downloadUrl != null
+                                            ? NetworkImage(_downloadUrl!)
+                                            : loadImage()
+                                                as ImageProvider<Object>,
                                       ),
                                       title: Text(item.get("name")),
                                       subtitle: Text(
@@ -275,168 +276,217 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
   }
 
+  AssetImage loadImage() {
+    return AssetImage("assets/profile.png");
+  }
+
   Widget ProfilePage() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage('(link unavailable)'),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                usrname ?? "Usernsme",
-                style: const TextStyle(fontSize: 24),
-              ),
-              const Text(
-                'User Bio',
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _downloadUrl != null
+                      ? NetworkImage(_downloadUrl!)
+                      : loadImage() as ImageProvider<Object>,
+                  child: Align(
+                    alignment:
+                        Alignment.bottomRight, // Align icon to bottom right
+                    child: IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue, size: 40),
+                      onPressed: () async {
+                        // Your edit action here
+                        ImagePicker _picker = ImagePicker();
+                        final XFile? image = await _picker.pickImage(
+                            source: ImageSource.gallery);
+                        if (image == null) return; // No image selected
+
+                        // Upload to Firebase Storage
+                        File file = File(image.path);
+                        try {
+                          String fileName = image.name;
+                          final ref = FirebaseStorage.instance
+                              .ref()
+                              .child('${gv.username}/$fileName');
+                          await ref.putFile(file);
+                          String downloadUrl = await ref.getDownloadURL();
+
+                          // Store URL in Firestore
+                          await FirebaseFirestore.instance
+                              .collection('images')
+                              .add({
+                            'url': downloadUrl,
+                          });
+
+                          setState(() {
+                            // Update state with the new URL
+                            _downloadUrl = downloadUrl;
+                          });
+                        } catch (e) {
+                          print('Error uploadingggggggggggggggggggggg${e}');
+                        }
+                      },
+                      padding: EdgeInsets.zero, // No padding
+                      constraints: BoxConstraints(), // No constraints
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  usrname ?? "Usernsme",
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const Text(
+                  'User Bio',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
           ),
-        ),
-        Container(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              (_xmlHandler.getString('active')).toString(),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+          Container(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                (_xmlHandler.getString('active')).toString(),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.blueAccent[100],
-                      elevation: 10,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              ((_xmlHandler.getString('myserv')).toString()),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            _buildServiceList(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const JobResume()));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.add,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Add',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
+                    )
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Card(
+                        color: Colors.blueAccent[100],
+                        elevation: 10,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                ((_xmlHandler.getString('myserv')).toString()),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              _buildServiceList(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Card(
+                                    // elevation: 10,
+                                    color: Colors.blue,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const JobResume()));
+                                        },
+                                        child: const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.add,
+                                              color: Colors.white,
+                                            ),
+                                            Text(
+                                              'Add',
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.blueAccent[100],
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              (_xmlHandler.getString('posted')).toString(),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            _buildJobProfileList(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const JobProfile()));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.add,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Add',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
+                    )
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Card(
+                        color: Colors.blueAccent[100],
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                (_xmlHandler.getString('posted')).toString(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              _buildJobProfileList(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Card(
+                                    // elevation: 10,
+                                    color: Colors.blue,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const JobProfile()));
+                                        },
+                                        child: const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.add,
+                                              color: Colors.white,
+                                            ),
+                                            Text(
+                                              'Add',
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-            ],
-          ),
-        )
-      ],
+                    )
+                  ],
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -711,8 +761,9 @@ class _EmployerHomePageState extends State<EmployerHome>
         actions: <Widget>[
           PopupMenuButton(
             icon: CircleAvatar(
-              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ??
-                  (FirebaseAuth.instance.currentUser?.photoURL).toString()),
+              foregroundImage: _downloadUrl != null
+                  ? NetworkImage(_downloadUrl!)
+                  : loadImage() as ImageProvider<Object>,
             ),
             onSelected: handleClick,
             itemBuilder: (BuildContext context) {
