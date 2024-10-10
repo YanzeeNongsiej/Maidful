@@ -265,8 +265,10 @@ class _EmployerHomePageState extends State<EmployerHome>
                                     },
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        foregroundImage: loadImage()
-                                            as ImageProvider<Object>,
+                                        foregroundImage: item.get('url') == ''
+                                            ? loadImage()
+                                                as ImageProvider<Object>
+                                            : NetworkImage(item.get('url')),
                                       ),
                                       title: Text(item.get("name")),
                                       subtitle: Text(
@@ -1430,116 +1432,227 @@ class _NestedTabBarState extends State<NestedTabBar>
         ),
         Container(
           height: screenHeight * 0.70,
-          margin: const EdgeInsets.only(left: 16.0, right: 16.0),
+          margin: const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
           child: TabBarView(
             controller: _nestedTabController,
             children: <Widget>[
-              Column(
-                children: [
-                  FutureBuilder(
-                      // StreamBuilder(
-                      future: fetchServices(),
-                      // stream: fetchChats(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: snapshot.data!.docs.length,
-                              itemBuilder: (context, index) {
-                                final servitem = snapshot.data!.docs[index];
-                                // print("Service ID: ${servitem.id}");
-                                return FutureBuilder(
-                                    future:
-                                        fetchUserData(servitem.get("userid")),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        final item = snapshot.data!.docs.first;
-                                        return Column(
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () {
-                                                getServiceDetail(
-                                                    item, servitem);
-                                              },
-                                              child: Card(
-                                                semanticContainer: true,
-                                                clipBehavior:
-                                                    Clip.antiAliasWithSaveLayer,
-                                                color: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10.0),
-                                                ),
-                                                // elevation: 10,
-                                                child: ListTile(
-                                                  leading: CircleAvatar(
-                                                    foregroundImage: AssetImage(
-                                                        "assets/profile.png"),
-                                                  ),
-                                                  title: Text(item.get("name")),
-                                                  subtitle: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.location_pin,
-                                                        size: 15,
-                                                      ),
-                                                      Text(item.get("address")),
-                                                    ],
-                                                  ),
-                                                  trailing: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      IconButton(
-                                                        onPressed: () async {
-                                                          Navigator.push(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                  builder: (context) => ChatPage(
-                                                                      name: item
-                                                                          .get(
-                                                                              "name"),
-                                                                      receiverID:
-                                                                          item.get(
-                                                                              "userid"),
-                                                                      postType:
-                                                                          "services",
-                                                                      postTypeID:
-                                                                          servitem
-                                                                              .id)));
-                                                        },
-                                                        icon: const Icon(
-                                                            Icons.chat_rounded),
-                                                      ),
-                                                    ],
-                                                  ),
+              FutureBuilder(
+                  // StreamBuilder(
+                  future: fetchServices(),
+                  // stream: fetchChats(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2, childAspectRatio: 0.85),
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            final servitem = snapshot.data!.docs[index];
+                            return FutureBuilder(
+                                future: fetchUserData(servitem.get("userid")),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final item = snapshot.data!.docs.first;
+                                    return Column(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            getServiceDetail(item, servitem);
+                                          },
+                                          child: Card(
+                                            semanticContainer: true,
+                                            clipBehavior:
+                                                Clip.antiAliasWithSaveLayer,
+                                            color: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                            ),
+                                            // elevation: 10,
+                                            child: GridTile(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 8.0),
+                                                child: Column(
+                                                  children: [
+                                                    CircleAvatar(
+                                                      foregroundImage: item
+                                                                  .get('url') ==
+                                                              null
+                                                          ? AssetImage(
+                                                                  "assets/profile.png")
+                                                              as ImageProvider<
+                                                                  Object>
+                                                          : NetworkImage(
+                                                              item.get('url')),
+                                                    ),
+                                                    Text(item.get("name")),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.location_pin,
+                                                          size: 15,
+                                                        ),
+                                                        Text(item
+                                                            .get("address")),
+                                                      ],
+                                                    ),
+                                                    const Text(
+                                                      "Services offered:",
+                                                    ),
+                                                    for (var a in servitem
+                                                        .get("services"))
+                                                      Text(a),
+                                                    // Text(
+                                                    //     servitem.get("services")
+                                                    //         as String),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        IconButton(
+                                                          onPressed: () async {
+                                                            Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder: (context) => ChatPage(
+                                                                        name: item.get(
+                                                                            "name"),
+                                                                        receiverID:
+                                                                            item.get(
+                                                                                "userid"),
+                                                                        postType:
+                                                                            "services",
+                                                                        postTypeID:
+                                                                            servitem.id)));
+                                                          },
+                                                          icon: const Icon(Icons
+                                                              .chat_rounded),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
-                                          ],
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        return Center(
-                                            child: Text(
-                                                snapshot.error.toString()));
-                                      } else {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                    });
-                              });
-                        } else if (snapshot.hasError) {
-                          return Center(child: Text(snapshot.error.toString()));
-                        } else {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      }),
-                ],
-              ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Center(
+                                        child: Text(snapshot.error.toString()));
+                                  } else {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                });
+                          });
+                      // return ListView.builder(
+                      //     shrinkWrap: true,
+                      //     itemCount: snapshot.data!.docs.length,
+                      //     itemBuilder: (context, index) {
+                      //       final servitem = snapshot.data!.docs[index];
+                      //       // print("Service ID: ${servitem.id}");
+                      //       return FutureBuilder(
+                      //           future:
+                      //               fetchUserData(servitem.get("userid")),
+                      //           builder: (context, snapshot) {
+                      //             if (snapshot.hasData) {
+                      //               final item = snapshot.data!.docs.first;
+                      //               return Column(
+                      //                 children: [
+                      //                   GestureDetector(
+                      //                     onTap: () {
+                      //                       getServiceDetail(
+                      //                           item, servitem);
+                      //                     },
+                      //                     child: Card(
+                      //                       semanticContainer: true,
+                      //                       clipBehavior:
+                      //                           Clip.antiAliasWithSaveLayer,
+                      //                       color: Colors.white,
+                      //                       shape: RoundedRectangleBorder(
+                      //                         borderRadius:
+                      //                             BorderRadius.circular(
+                      //                                 10.0),
+                      //                       ),
+                      //                       // elevation: 10,
+                      //                       child: ListTile(
+                      //                         leading: CircleAvatar(
+                      //                           foregroundImage:
+                      //                               NetworkImage(AuthMethods
+                      //                                       .user
+                      //                                       ?.photoURL ??
+                      //                                   ''),
+                      //                         ),
+                      //                         title: Text(item.get("name")),
+                      //                         subtitle: Row(
+                      //                           children: [
+                      //                             const Icon(
+                      //                               Icons.location_pin,
+                      //                               size: 15,
+                      //                             ),
+                      //                             Text(item.get("address")),
+                      //                           ],
+                      //                         ),
+                      //                         trailing: Row(
+                      //                           mainAxisSize:
+                      //                               MainAxisSize.min,
+                      //                           children: [
+                      //                             IconButton(
+                      //                               onPressed: () async {
+                      //                                 Navigator.push(
+                      //                                     context,
+                      //                                     MaterialPageRoute(
+                      //                                         builder: (context) => ChatPage(
+                      //                                             name: item
+                      //                                                 .get(
+                      //                                                     "name"),
+                      //                                             receiverID:
+                      //                                                 item.get(
+                      //                                                     "userid"),
+                      //                                             postType:
+                      //                                                 "services",
+                      //                                             postTypeID:
+                      //                                                 servitem
+                      //                                                     .id)));
+                      //                               },
+                      //                               icon: const Icon(
+                      //                                   Icons.chat_rounded),
+                      //                             ),
+                      //                           ],
+                      //                         ),
+                      //                       ),
+                      //                     ),
+                      //                   ),
+                      //                 ],
+                      //               );
+                      //             } else if (snapshot.hasError) {
+                      //               return Center(
+                      //                   child: Text(
+                      //                       snapshot.error.toString()));
+                      //             } else {
+                      //               return const Center(
+                      //                 child: CircularProgressIndicator(),
+                      //               );
+                      //             }
+                      //           });
+                      //     });
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString()));
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  }),
               Container(
                 // decoration: BoxDecoration(
                 //   borderRadius: BorderRadius.circular(8.0),
