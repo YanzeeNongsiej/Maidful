@@ -56,6 +56,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   //   // return qs;
   // }
   String? _downloadUrl;
+  List<String>? selectedskills;
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -303,7 +304,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   }
 
   AssetImage loadImage() {
-    return AssetImage("assets/profile.png");
+    return const AssetImage("assets/profile.png");
   }
 
   Widget ProfilePage() {
@@ -323,12 +324,13 @@ class _EmployerHomePageState extends State<EmployerHome>
                     alignment:
                         Alignment.bottomRight, // Align icon to bottom right
                     child: IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue, size: 40),
+                      icon:
+                          const Icon(Icons.edit, color: Colors.blue, size: 40),
                       onPressed: () async {
                         // Your edit action here
-                        ImagePicker _picker = ImagePicker();
-                        final XFile? image = await _picker.pickImage(
-                            source: ImageSource.gallery);
+                        ImagePicker picker = ImagePicker();
+                        final XFile? image =
+                            await picker.pickImage(source: ImageSource.gallery);
                         if (image == null) return; // No image selected
 
                         // Upload to Firebase Storage
@@ -339,7 +341,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                           String filetype = separate[1];
                           final ref = FirebaseStorage.instance
                               .ref()
-                              .child('${gv.username}/profile.${filetype}');
+                              .child('${gv.username}/profile.$filetype');
                           await ref.putFile(file);
                           String downloadUrl = await ref.getDownloadURL();
 
@@ -368,17 +370,17 @@ class _EmployerHomePageState extends State<EmployerHome>
                             _downloadUrl = downloadUrl;
                           });
                         } catch (e) {
-                          print('Error uploadingggggggggggggggggggggg${e}');
+                          print('Error uploadingggggggggggggggggggggg$e');
                         }
                       },
                       padding: EdgeInsets.zero, // No padding
-                      constraints: BoxConstraints(), // No constraints
+                      constraints: const BoxConstraints(), // No constraints
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  usrname ?? "Usernsme",
+                  usrname ?? "Username",
                   style: const TextStyle(fontSize: 24),
                 ),
                 const Text(
@@ -387,6 +389,134 @@ class _EmployerHomePageState extends State<EmployerHome>
                 ),
               ],
             ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Card(
+                  color: Colors.blueAccent[100],
+                  elevation: 10,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          ((_xmlHandler.getString('skills')).toString()),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        // _buildServiceList(),
+                        showSkills(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Card(
+                              // elevation: 10,
+                              color: Colors.blue,
+                              child: Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    List<String> options = [];
+
+                                    // Fetch skills from Firestore
+                                    QuerySnapshot snapshot =
+                                        await FirebaseFirestore.instance
+                                            .collection('skills')
+                                            .get();
+                                    for (var doc in snapshot.docs) {
+                                      // Get the skill for the selected language
+                                      if (doc[gv.selected] != null) {
+                                        options.add(doc[gv.selected]);
+                                      }
+                                    }
+                                    List<String> selectedOptions = [];
+
+                                    await showDialog<List<String>>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text("Select Options"),
+                                          content: SingleChildScrollView(
+                                            child: ListBody(
+                                              children: options.map((option) {
+                                                return CheckboxListTile(
+                                                  title: Text(option),
+                                                  value: selectedOptions
+                                                      .contains(option),
+                                                  onChanged: (bool? value) {
+                                                    if (value == true) {
+                                                      selectedOptions
+                                                          .add(option);
+                                                    } else {
+                                                      selectedOptions
+                                                          .remove(option);
+                                                    }
+                                                    // Update the UI
+                                                    (context as Element)
+                                                        .markNeedsBuild();
+                                                  },
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              child: Text("Cancel"),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: Text("Done"),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                selectedskills =
+                                                    selectedOptions;
+                                                print(
+                                                    "Selected skills: $selectedskills");
+                                                setState(() {});
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ).then((result) {
+                                      if (result != null) {
+                                        // Handle the selected options
+                                        print("Selected options: $result");
+                                        selectedskills = result;
+                                      }
+                                    });
+                                    // Navigator.push(
+                                    //     context,
+                                    //     MaterialPageRoute(
+                                    //         builder: (context) =>
+                                    //             const JobResume()));
+                                  },
+                                  child: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                      ),
+                                      Text(
+                                        'Add',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
           ),
           Container(
             child: Column(
@@ -529,6 +659,30 @@ class _EmployerHomePageState extends State<EmployerHome>
         ],
       ),
     );
+  }
+
+  Widget showSkills() {
+    if (selectedskills == null) {
+      return Text(
+          'Selected Skills is nullllll LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+    } else {
+      List<String> res = selectedskills!.toList();
+      // return Text('Ladep LAAAAA:$res');
+
+      return Container(
+        height: 100,
+        child: Expanded(
+          child: ListView(
+            children: res.map((skill) {
+              return ListTile(
+                contentPadding: EdgeInsets.all(0),
+                title: Text(skill),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildServiceList() {
@@ -883,7 +1037,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ),
               ),
-              NestedTabBar(),
+              const NestedTabBar(),
 
               // const DefaultTabController(
               //   length: 2,
@@ -1481,7 +1635,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                       foregroundImage: item
                                                                   .get('url') ==
                                                               null
-                                                          ? AssetImage(
+                                                          ? const AssetImage(
                                                                   "assets/profile.png")
                                                               as ImageProvider<
                                                                   Object>
