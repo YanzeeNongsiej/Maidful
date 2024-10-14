@@ -7,19 +7,32 @@ import 'package:ibitf_app/DAO/chatdao.dart';
 class ChatController extends ChangeNotifier {
   final User? user = FirebaseAuth.instance.currentUser;
 
-  Future<void> sendMessage(String receiverID, message) async {
+  Future<void> sendMessage(String receiverID, message, ackid) async {
     //get current user info
     final String currentUserID = user!.uid;
     final String currentUserEmail = user!.email as String;
     final Timestamp timestamp = Timestamp.now();
 
     //create new message
-    Chat chat = Chat(
-        senderID: currentUserID,
-        senderEmail: currentUserEmail,
-        message: message,
-        receiverID: receiverID,
-        timestamp: timestamp);
+
+    Chat chat;
+    if (ackid == "") {
+      chat = Chat(
+          senderID: currentUserID,
+          senderEmail: currentUserEmail,
+          message: message,
+          receiverID: receiverID,
+          timestamp: timestamp,
+          ackID: "");
+    } else {
+      chat = Chat(
+          senderID: currentUserID,
+          senderEmail: currentUserEmail,
+          message: message,
+          receiverID: receiverID,
+          timestamp: timestamp,
+          ackID: ackid);
+    }
 
     //construct chatroom ID for two users(sorted)
     List<String> ids = [currentUserID, receiverID];

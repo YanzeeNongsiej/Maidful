@@ -6,13 +6,15 @@ class Chat {
   final String message;
   final String receiverID;
   final Timestamp timestamp;
+  final String ackID;
 
   Chat(
       {required this.senderID,
       required this.senderEmail,
       required this.message,
       required this.receiverID,
-      required this.timestamp});
+      required this.timestamp,
+      required this.ackID});
 
   Map<String, dynamic> toMap() {
     return {
@@ -20,7 +22,8 @@ class Chat {
       'senderEmail': senderEmail,
       'message': message,
       'receiverID': receiverID,
-      'timestamp': timestamp
+      'timestamp': timestamp,
+      'ackID': ackID
     };
   }
 }

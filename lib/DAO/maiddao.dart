@@ -61,13 +61,29 @@ class maidDao {
   }
 
   Future addService(Map<String, dynamic> serviceInfoMap) async {
-    // print("user id = $userId");
     return await FirebaseFirestore.instance
-        // .collection("users")
-        // .doc(userId)
         .collection("services")
         .doc()
         .set(serviceInfoMap);
+  }
+
+  // Future addAck(Map<String, dynamic> ackInfoMap) async {
+  //   return await FirebaseFirestore.instance
+  //       .collection("acknowledgements")
+  //       .doc()
+  //       .set(ackInfoMap);
+  // }
+
+  Future<String> addAck(Map<String, dynamic> ackInfoMap) async {
+    try {
+      final newDoc =
+          FirebaseFirestore.instance.collection("acknowledgements").doc();
+      await newDoc.set(ackInfoMap);
+      return newDoc.id;
+    } catch (e) {
+      print("Error adding acknowledgement: $e");
+      return "null"; // or throw the error
+    }
   }
 
   Future addJobProfile(Map<String, dynamic> jobProfileInfoMap) async {

@@ -49,7 +49,7 @@ class _ChatPageState extends State<ChatPage> {
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await chatcontroller.sendMessage(
-          widget.receiverID, _messageController.text);
+          widget.receiverID, _messageController.text, "");
       _messageController.clear();
     }
   }

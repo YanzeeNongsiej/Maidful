@@ -99,6 +99,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
 
   getRole() async {
     String role;
+    print(user);
     QuerySnapshot qs = await Usersdao().getUserDetails(user?.uid as String);
     if (qs.docs.isNotEmpty) {
       name = "${qs.docs[0]["name"]}";

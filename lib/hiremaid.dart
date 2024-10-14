@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
+import 'package:ibitf_app/controller/chat_controller.dart';
 
 class HireMaid extends StatefulWidget {
   final DocumentSnapshot? itemGlobal;
@@ -15,6 +17,7 @@ class HireMaid extends StatefulWidget {
 }
 
 class _HireMaidState extends State<HireMaid> {
+  final ChatController chatcontroller = ChatController();
   List<String> origselectedDaysValue = [];
   List<String> origselectedCheckBoxValue = [];
   List<String> selectedCheckBoxValue = [];
@@ -63,10 +66,10 @@ class _HireMaidState extends State<HireMaid> {
       defRate = "";
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
+  bool showOptionsDay = false, showOptionsHour = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     _xmlHandler.loadStrings(gv.selected).then((a) {
       if (widget.itemGlobal?.get("schedule") == "Live-in") {
         selectedScheduleValue = 1;
@@ -74,9 +77,12 @@ class _HireMaidState extends State<HireMaid> {
       } else if (widget.itemGlobal?.get("schedule") == "Daily") {
         selectedScheduleValue = 2;
         selectedScheduleString = _xmlHandler.getString('daily');
+        showOptionsHour = true;
       } else {
         selectedScheduleValue = 3;
         selectedScheduleString = _xmlHandler.getString('hourly');
+        showOptionsHour = true;
+        showOptionsDay = true;
       }
       if (widget.itemGlobal?.get("wage") == "Weekly") {
         _selectedWageValue = 1;
@@ -121,6 +127,25 @@ class _HireMaidState extends State<HireMaid> {
     // List<String> strlist = dynamiclist.cast<String>();
 
     // super.initState();
+  }
+
+  void toggleTimings(int i) {
+    if (i == 2) {
+      setState(() {
+        showOptionsHour = true;
+        showOptionsDay = false;
+      });
+    } else if (i == 3) {
+      setState(() {
+        showOptionsHour = true;
+        showOptionsDay = true;
+      });
+    } else {
+      setState(() {
+        showOptionsDay = false;
+        showOptionsHour = false;
+      });
+    }
   }
 
   @override
@@ -197,8 +222,7 @@ class _HireMaidState extends State<HireMaid> {
                                       selectedScheduleValue = value!;
                                       selectedScheduleString =
                                           _xmlHandler.getString('livein');
-                                      //   _selectedTimingValue = value!;
-                                      //   toggleTimings(1);
+                                      toggleTimings(1);
                                     });
                                   }),
                               Expanded(
@@ -219,8 +243,7 @@ class _HireMaidState extends State<HireMaid> {
                                       selectedScheduleValue = value!;
                                       selectedScheduleString =
                                           _xmlHandler.getString('daily');
-                                      // _selectedTimingValue = value!;
-                                      // toggleTimings(2);
+                                      toggleTimings(2);
                                     });
                                   }),
                               Expanded(
@@ -240,8 +263,7 @@ class _HireMaidState extends State<HireMaid> {
                                     setState(() {
                                       selectedScheduleValue = value!;
                                       selectedScheduleString = "Hourly";
-                                      // _selectedTimingValue = value!;
-                                      // toggleTimings(3);
+                                      toggleTimings(3);
                                     });
                                   }),
                               Expanded(
@@ -253,8 +275,10 @@ class _HireMaidState extends State<HireMaid> {
                     ),
                   ],
                 ),
-                if (widget.itemGlobal?.get("schedule") == 'Hourly')
-                  ExpansionTile(
+                // if (widget.itemGlobal?.get("schedule") == 'Hourly')
+                Visibility(
+                  visible: showOptionsDay,
+                  child: ExpansionTile(
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -345,9 +369,12 @@ class _HireMaidState extends State<HireMaid> {
                           ],
                         ),
                       ]),
-                if (widget.itemGlobal?.get("schedule") == 'Daily' ||
-                    widget.itemGlobal?.get("schedule") == 'Hourly')
-                  ExpansionTile(
+                ),
+                // if (widget.itemGlobal?.get("schedule") == 'Daily' ||
+                //     widget.itemGlobal?.get("schedule") == 'Hourly')
+                Visibility(
+                  visible: showOptionsHour,
+                  child: ExpansionTile(
                       title: Row(
                         children: [
                           Text(_xmlHandler.getString('timing'),
@@ -533,6 +560,7 @@ class _HireMaidState extends State<HireMaid> {
                           ],
                         ),
                       ]),
+                ),
                 ExpansionTile(
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,48 +861,72 @@ class _HireMaidState extends State<HireMaid> {
   sendAck() async {
     final User? user = FirebaseAuth.instance.currentUser;
     Map<String, dynamic> uploadAck = {};
+    bool isOK = false;
     if (selectedScheduleValue == 1) {
       uploadAck = {
         "sender": user?.uid,
-        "receiver": widget.itemGlobal?.get("user"),
+        "receiver": widget.itemGlobal?.get("userid"),
         "schedule": "Live-in",
         "days": daysList,
         "time_from": "12:00 AM",
         "time_to": "11:59 PM",
         "services": selectedCheckBoxValue,
-        // "wage": wageBasis,
-        "rate": ratecontroller.text,
+        "wage": _selectedWageValue,
+        "rate": defRate,
         // "work_history": workHistory,
       };
-      // isOK = true;
+      isOK = true;
     } else if (selectedScheduleValue == 2) {
       uploadAck = {
         "userid": user?.uid,
+        "receiver": widget.itemGlobal?.get("user"),
         "schedule": "Daily",
         "days": daysList,
         "time_from": fromTimeController.text,
         "time_to": toTimeController.text,
         "services": selectedCheckBoxValue,
-        // "wage": wageBasis,
-        "rate": ratecontroller.text,
+        "wage": _selectedWageValue,
+        "rate": defRate,
         // "work_history": workHistory,
       };
-      // isOK = true;
+      isOK = true;
     } else {
       uploadAck = {
         "userid": user?.uid,
+        "receiver": widget.itemGlobal?.get("user"),
         "schedule": "Hourly",
         "days": selectedDaysValue,
         "time_from": fromTimeController.text,
         "time_to": toTimeController.text,
         "services": selectedCheckBoxValue,
-        // "wage": wageBasis,
-        "rate": ratecontroller.text,
+        "wage": _selectedWageValue,
+        "rate": defRate,
         // "work_history": workHistory,
       };
-      // isOK = true;
+      isOK = true;
     }
 
+    if (isOK == true) {
+      String ackid;
+      ackid = await maidDao()
+          .addAck(uploadAck)
+          .whenComplete(
+              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                    _xmlHandler.getString('addedsucc'),
+                    style: const TextStyle(fontSize: 20.0),
+                  ))))
+          .whenComplete(() => Navigator.pop(context));
+      print(ackid);
+      await chatcontroller.sendMessage(
+          widget.itemGlobal?.get("userid"), "ack", ackid);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+        _xmlHandler.getString('error'),
+        style: const TextStyle(fontSize: 20.0),
+      )));
+    }
     List<String> res = await english(selectedDaysValue, gv.selected);
     print("Converted days: $res");
     List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
