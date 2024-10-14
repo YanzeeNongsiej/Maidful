@@ -60,4 +60,5 @@
 <string name="setting">This is the settings page</string>
 <string name="click"> to change the service details</string>
 <string name="skills">Skills</string>
+<string name="noskills">No skills added yet</string>
 </strings>

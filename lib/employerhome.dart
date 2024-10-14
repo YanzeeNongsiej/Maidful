@@ -23,6 +23,7 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:ibitf_app/assessment.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -398,120 +399,122 @@ class _EmployerHomePageState extends State<EmployerHome>
                   elevation: 10,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          ((_xmlHandler.getString('skills')).toString()),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        // _buildServiceList(),
-                        showSkills(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Card(
-                              // elevation: 10,
-                              color: Colors.blue,
-                              child: Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    List<String> options = [];
+                    child: Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            ((_xmlHandler.getString('skills')).toString()),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          // _buildServiceList(),
+                          showSkills(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.blue,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      List<String> options = [];
 
-                                    // Fetch skills from Firestore
-                                    QuerySnapshot snapshot =
-                                        await FirebaseFirestore.instance
-                                            .collection('skills')
-                                            .get();
-                                    for (var doc in snapshot.docs) {
-                                      // Get the skill for the selected language
-                                      if (doc[gv.selected] != null) {
-                                        options.add(doc[gv.selected]);
+                                      // Fetch skills from Firestore
+                                      QuerySnapshot snapshot =
+                                          await FirebaseFirestore.instance
+                                              .collection('skills')
+                                              .get();
+                                      for (var doc in snapshot.docs) {
+                                        // Get the skill for the selected language
+                                        if (doc[gv.selected] != null) {
+                                          options.add(doc[gv.selected]);
+                                        }
                                       }
-                                    }
-                                    List<String> selectedOptions = [];
+                                      List<String> selectedOptions = [];
 
-                                    await showDialog<List<String>>(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text("Select Options"),
-                                          content: SingleChildScrollView(
-                                            child: ListBody(
-                                              children: options.map((option) {
-                                                return CheckboxListTile(
-                                                  title: Text(option),
-                                                  value: selectedOptions
-                                                      .contains(option),
-                                                  onChanged: (bool? value) {
-                                                    if (value == true) {
-                                                      selectedOptions
-                                                          .add(option);
-                                                    } else {
-                                                      selectedOptions
-                                                          .remove(option);
-                                                    }
-                                                    // Update the UI
-                                                    (context as Element)
-                                                        .markNeedsBuild();
-                                                  },
-                                                );
-                                              }).toList(),
+                                      await showDialog<List<String>>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text("Select Options"),
+                                            content: SingleChildScrollView(
+                                              child: ListBody(
+                                                children: options.map((option) {
+                                                  return CheckboxListTile(
+                                                    title: Text(option),
+                                                    value: selectedOptions
+                                                        .contains(option),
+                                                    onChanged: (bool? value) {
+                                                      if (value == true) {
+                                                        selectedOptions
+                                                            .add(option);
+                                                      } else {
+                                                        selectedOptions
+                                                            .remove(option);
+                                                      }
+                                                      // Update the UI
+                                                      (context as Element)
+                                                          .markNeedsBuild();
+                                                    },
+                                                  );
+                                                }).toList(),
+                                              ),
                                             ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              child: Text("Cancel"),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
-                                            TextButton(
-                                              child: Text("Done"),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                selectedskills =
-                                                    selectedOptions;
-                                                print(
-                                                    "Selected skills: $selectedskills");
-                                                setState(() {});
-                                              },
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ).then((result) {
-                                      if (result != null) {
-                                        // Handle the selected options
-                                        print("Selected options: $result");
-                                        selectedskills = result;
-                                      }
-                                    });
-                                    // Navigator.push(
-                                    //     context,
-                                    //     MaterialPageRoute(
-                                    //         builder: (context) =>
-                                    //             const JobResume()));
-                                  },
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.add,
-                                        color: Colors.white,
-                                      ),
-                                      Text(
-                                        'Add',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ],
+                                            actions: [
+                                              TextButton(
+                                                child: Text("Cancel"),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text("Done"),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  selectedskills =
+                                                      selectedOptions;
+                                                  print(
+                                                      "Selected skills: $selectedskills");
+                                                  setState(() {});
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ).then((result) {
+                                        if (result != null) {
+                                          // Handle the selected options
+                                          print("Selected options: $result");
+                                          selectedskills = result;
+                                        }
+                                      });
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) =>
+                                      //             const JobResume()));
+                                    },
+                                    child: const Row(
+                                      children: [
+                                        Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          'Add',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -663,23 +666,34 @@ class _EmployerHomePageState extends State<EmployerHome>
 
   Widget showSkills() {
     if (selectedskills == null) {
-      return Text(
-          'Selected Skills is nullllll LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+      return Text(_xmlHandler.getString('noskills'));
     } else {
       List<String> res = selectedskills!.toList();
       // return Text('Ladep LAAAAA:$res');
 
-      return Container(
-        height: 100,
-        child: Expanded(
-          child: ListView(
-            children: res.map((skill) {
-              return ListTile(
-                contentPadding: EdgeInsets.all(0),
-                title: Text(skill),
-              );
-            }).toList(),
-          ),
+      return SingleChildScrollView(
+        child: Column(
+          children: res.map((skill) {
+            return ListTile(
+              contentPadding: EdgeInsets.all(0),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(skill),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Add your assessment logic here
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const Assessment()));
+                    },
+                    child: Text('Assessment'),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ),
       );
     }
