@@ -61,4 +61,11 @@
 <string name="click"> to change the service details</string>
 <string name="skills">Skills</string>
 <string name="noskills">No skills added yet</string>
+<string name="assessment">Assessment</string>
+<string name="confirmassess">You will be required to take an assessment in order to verify your skill. Please answer within the provided time limit. 
+
+Do you want to take the assessment now? </string>
+<string name="assfor">Assessment for</string>
+<string name="yes">Yes</string>
+<string name="no"> No</string>
 </strings>

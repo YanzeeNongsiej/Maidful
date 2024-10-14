@@ -59,6 +59,14 @@
 <string name="postserv">Post Ka Kam</string>
 <string name="setting">Kane kadei ka settings page</string>
 <string name="click"> ban pynkylla ia kine harum</string>
-<string name="skills">Ki jait kam ba tbit</string>
+<string name="skills">Ki jait kam ba phi tbit</string>
 <string name="noskills">Ym pat add ki kam ba tbit</string>
+<string name="assessment">Pynshisha</string>
+<string name="confirmassess">Phin hap ban pynshisha ia kane ka kam ba phi tbit da kaba jubab katto katne ki jingkylli hapoh ka por bala ai.
+
+Phi kwah ban jubab ia ki jingkylli mynta?</string>
+<string name="assfor">Jingpynshisha iaka jingnang jong phi ban</string>
+<string name="yes">Hooid</string>
+<string name="no"> Em</string>
+
 </strings>

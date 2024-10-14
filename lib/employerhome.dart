@@ -402,11 +402,6 @@ class _EmployerHomePageState extends State<EmployerHome>
                     child: Expanded(
                       child: Column(
                         children: [
-                          Text(
-                            ((_xmlHandler.getString('skills')).toString()),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white),
-                          ),
                           // _buildServiceList(),
                           showSkills(),
                           Row(
@@ -672,29 +667,70 @@ class _EmployerHomePageState extends State<EmployerHome>
       // return Text('Ladep LAAAAA:$res');
 
       return SingleChildScrollView(
-        child: Column(
-          children: res.map((skill) {
-            return ListTile(
-              contentPadding: EdgeInsets.all(0),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(skill),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Add your assessment logic here
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const Assessment()));
-                    },
-                    child: Text('Assessment'),
-                  ),
-                ],
+        child: ExpansionTile(
+            title: Text(_xmlHandler.getString('skills').toString()),
+            children: [
+              Column(
+                children: res.map((skill) {
+                  return ListTile(
+                    minVerticalPadding: 0,
+                    contentPadding: EdgeInsets.all(0),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            skill,
+                          ),
+                        ),
+                        ElevatedButton(
+                            onPressed: () {
+                              // Add your assessment logic here
+
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text(
+                                        '${_xmlHandler.getString('assfor')} $skill'),
+                                    content: Text(
+                                        _xmlHandler.getString('confirmassess')),
+                                    actions: [
+                                      TextButton.icon(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          icon: Icon(Icons.close),
+                                          label: Text(
+                                              _xmlHandler.getString('no'))),
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          // Add your confirm logic here
+                                          Navigator.of(context).pop();
+                                          Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                  builder: (context) => Assessment(
+                                                      skill))); // Close the dialog
+                                        },
+                                        icon: Icon(Icons
+                                            .check), // Icon for confirmation
+                                        label:
+                                            Text(_xmlHandler.getString('yes')),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            child: Text(
+                              _xmlHandler.getString('assessment'),
+                            )),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        ),
+            ]),
       );
     }
   }
