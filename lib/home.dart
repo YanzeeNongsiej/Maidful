@@ -18,7 +18,7 @@ import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({super.key});
   @override
   _HomePageState createState() => _HomePageState();
 }

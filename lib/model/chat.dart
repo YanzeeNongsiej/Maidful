@@ -7,6 +7,8 @@ class Chat {
   final String receiverID;
   final Timestamp timestamp;
   final String ackID;
+  final String post_Type;
+  final String post_TypeID;
 
   Chat(
       {required this.senderID,
@@ -14,7 +16,9 @@ class Chat {
       required this.message,
       required this.receiverID,
       required this.timestamp,
-      required this.ackID});
+      required this.ackID,
+      required this.post_Type,
+      required this.post_TypeID});
 
   Map<String, dynamic> toMap() {
     return {
@@ -23,7 +27,9 @@ class Chat {
       'message': message,
       'receiverID': receiverID,
       'timestamp': timestamp,
-      'ackID': ackID
+      'ackID': ackID,
+      'post_Type': post_Type,
+      'post_TypeID': post_TypeID
     };
   }
 }

@@ -29,6 +29,8 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  bool ownServ = false;
+  String userID = FirebaseAuth.instance.currentUser!.uid;
 // textController
   final TextEditingController _messageController = TextEditingController();
 
@@ -41,16 +43,30 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
+
+    checkOwnServ().then((a) {
+      print("${widget.postTypeID},  $ownServ");
+      _xmlHandler.loadStrings(gv.selected).then((a) {});
       setState(() {});
     });
   }
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await chatcontroller.sendMessage(
-          widget.receiverID, _messageController.text, "");
+      await chatcontroller.sendMessage(widget.receiverID,
+          _messageController.text, "", widget.postType, widget.postTypeID);
       _messageController.clear();
+    }
+  }
+
+  Future<void> checkOwnServ() async {
+    DocumentSnapshot ds = await maidDao().getService(widget.postTypeID);
+    // var item = ds.data();
+    print("${ds.get("userid")}, $userID");
+    if (userID == ds.get("userid")) {
+      ownServ = false;
+    } else {
+      ownServ = true;
     }
   }
 
@@ -61,7 +77,14 @@ class _ChatPageState extends State<ChatPage> {
         appBar: AppBar(
           title: Row(
             children: [
-              Text(widget.name),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 4,
+                child: Text(
+                    // overflow: TextOverflow.ellipsis,
+                    widget.name,
+                    style: TextStyle(fontSize: 15),
+                    softWrap: true),
+              ),
               const SizedBox(width: 5),
               Flexible(
                 child: Card(
@@ -89,32 +112,35 @@ class _ChatPageState extends State<ChatPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Card(
-                      // elevation: 10,
-                      color: Colors.green[500],
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            // Navigator.pop(context);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => HireMaid(
-                                        itemGlobal: itemglobal,
-                                        name: widget.name)));
-                          },
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.handshake,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                _xmlHandler.getString('hire'),
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ],
+                    Visibility(
+                      visible: ownServ,
+                      child: Card(
+                        // elevation: 10,
+                        color: Colors.green[500],
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              // Navigator.pop(context);
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HireMaid(
+                                          itemGlobal: itemglobal,
+                                          name: widget.name)));
+                            },
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.handshake,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  _xmlHandler.getString('hire'),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -170,7 +196,8 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageList() {
     String senderID = FirebaseAuth.instance.currentUser!.uid;
     return StreamBuilder(
-      stream: chatcontroller.getMessages(widget.receiverID, senderID),
+      stream: chatcontroller.getMessages(
+          widget.receiverID, senderID, widget.postType, widget.postTypeID),
       builder: (context, snapshot) {
         //errors
         if (snapshot.hasError) {

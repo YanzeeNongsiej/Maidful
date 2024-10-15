@@ -14,6 +14,8 @@ class Chatdao {
       Map<String, dynamic> chatDetails = {
         "lastSender": newMessage.senderID,
         "lastMessage": newMessage.message,
+        "postType": newMessage.post_Type,
+        "postTypeID": newMessage.post_TypeID,
         "users": users,
         "timestamp": newMessage.timestamp,
       };

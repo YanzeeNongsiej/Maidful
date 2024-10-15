@@ -11,7 +11,7 @@ import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 
 class JobResume extends StatefulWidget {
-  const JobResume({Key? key}) : super(key: key);
+  const JobResume({super.key});
 
   @override
   _JobResumeState createState() => _JobResumeState();

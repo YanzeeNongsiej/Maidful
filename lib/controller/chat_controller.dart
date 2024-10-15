@@ -7,7 +7,8 @@ import 'package:ibitf_app/DAO/chatdao.dart';
 class ChatController extends ChangeNotifier {
   final User? user = FirebaseAuth.instance.currentUser;
 
-  Future<void> sendMessage(String receiverID, message, ackid) async {
+  Future<void> sendMessage(
+      String receiverID, message, ackid, postType, postTypeID) async {
     //get current user info
     final String currentUserID = user!.uid;
     final String currentUserEmail = user!.email as String;
@@ -23,7 +24,9 @@ class ChatController extends ChangeNotifier {
           message: message,
           receiverID: receiverID,
           timestamp: timestamp,
-          ackID: "");
+          ackID: "",
+          post_Type: postType,
+          post_TypeID: postTypeID);
     } else {
       chat = Chat(
           senderID: currentUserID,
@@ -31,11 +34,13 @@ class ChatController extends ChangeNotifier {
           message: message,
           receiverID: receiverID,
           timestamp: timestamp,
-          ackID: ackid);
+          ackID: ackid,
+          post_Type: postType,
+          post_TypeID: postTypeID);
     }
 
     //construct chatroom ID for two users(sorted)
-    List<String> ids = [currentUserID, receiverID];
+    List<String> ids = [currentUserID, receiverID, postTypeID];
     ids.sort();
     String chatRoomID = ids.join('_');
 
@@ -44,10 +49,12 @@ class ChatController extends ChangeNotifier {
   }
 
   // get messages
-  Stream<QuerySnapshot> getMessages(String userID, otherUserID) {
-    List<String> ids = [userID, otherUserID];
+  Stream<QuerySnapshot> getMessages(
+      String userID, otherUserID, postType, postTypeID) {
+    List<String> ids = [userID, otherUserID, postTypeID];
     ids.sort();
     String chatRoomID = ids.join('_');
+    print(chatRoomID);
     return Chatdao().getMessages(chatRoomID);
   }
 

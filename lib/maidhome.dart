@@ -13,7 +13,7 @@ import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
 class MaidHome extends StatefulWidget {
-  const MaidHome({Key? key}) : super(key: key);
+  const MaidHome({super.key});
 
   @override
   _MaidHomePageState createState() => _MaidHomePageState();

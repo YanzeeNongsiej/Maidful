@@ -10,7 +10,7 @@ import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 
 class MaidList extends StatefulWidget {
-  const MaidList({Key? key}) : super(key: key);
+  const MaidList({super.key});
 
   @override
   _MaidListState createState() => _MaidListState();

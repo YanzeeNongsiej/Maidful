@@ -6,7 +6,7 @@ import 'package:ibitf_app/xmlhandle.dart';
 String? skill;
 
 class Assessment extends StatefulWidget {
-  Assessment(String? s) {
+  Assessment(String? s, {super.key}) {
     skill = s;
   }
 
@@ -16,8 +16,9 @@ class Assessment extends StatefulWidget {
 
 class _MyWidgetState extends State<Assessment> {
   @override
-  XMLHandler _xmlHandler = XMLHandler();
+  final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
+  @override
   void initState() {
     // TODO: implement initState
     super.initState();
@@ -67,8 +68,8 @@ class _MyWidgetState extends State<Assessment> {
   }
 
   Future<String?> getQuestion() async {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    QuerySnapshot snapshot = await _firestore
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    QuerySnapshot snapshot = await firestore
         .collection('skills')
         .where(gv.selected, isEqualTo: skill.toString()) // Use the passed skill
         .get();
