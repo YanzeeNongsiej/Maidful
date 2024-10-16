@@ -68,5 +68,9 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="assfor">Jingpynshisha iaka jingnang jong phi ban</string>
 <string name="yes">Hooid</string>
 <string name="no"> Em</string>
-
+<string name="timeup">Ka Por ka lah kut!</string>
+<string name="timeleft">Ka Por Ba Sah:</string>
+<string name="completeass">Phi lah dep Jubab lut</string>
+<string name="noquest">Ym pat don jingkylli</string>
+<string name="quest">Jingkylli</string>
 </strings>

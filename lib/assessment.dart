@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -9,11 +7,12 @@ import 'dart:async';
 
 String? skill;
 int currentQuestionIndex = 0;
-int timerDuration = 180; // 3 minutes in seconds
+int timerDuration = 120; // 2 minutes in seconds
 Timer? timer;
 ValueNotifier<int>? timerNotifier;
 List<int> random = [];
 List<bool> ans = [];
+bool canBack = false;
 
 class Assessment extends StatefulWidget {
   Assessment(String? s) {
@@ -32,6 +31,10 @@ class _MyWidgetState extends State<Assessment> {
     super.initState();
     timerNotifier = ValueNotifier<int>(timerDuration);
     ans = [false, false, false, false, false];
+    _xmlHandler.loadStrings(gv.selected).then((onValue) {
+      setState(() {});
+    });
+    canBack = false;
   }
 
   Future<List<Map<String, dynamic>>> loadAllQuestions() async {
@@ -114,16 +117,18 @@ class _MyWidgetState extends State<Assessment> {
 
   void showTimeUpDialog() {
     if (mounted) {
+      canBack = true;
+      Navigator.pop(context);
       showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("Time's Up!"),
-            content: Text("You've run out of time for this assessment."),
+            title: Text(_xmlHandler.getString('timeup')),
+            content: Text("Score:${calcPercent()}%"),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.pop(context);
                   // Optionally, navigate back or handle the end of assessment
                 },
                 child: Text("OK"),
@@ -143,10 +148,23 @@ class _MyWidgetState extends State<Assessment> {
     selOpt = null;
   }
 
+  double calcPercent() {
+    int correct = 0;
+    double percentage;
+    for (int i = 0; i < ans.length; i++) {
+      if (ans[i] == true) {
+        correct++;
+      }
+    }
+
+    percentage = (correct / random.length) * 100;
+    return percentage;
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: canBack,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -160,7 +178,7 @@ class _MyWidgetState extends State<Assessment> {
                   valueListenable: timerNotifier!,
                   builder: (context, remainingTime, child) {
                     return Text(
-                      "Time Left: ${remainingTime ~/ 60}:${(remainingTime % 60).toString().padLeft(2, '0')}",
+                      "${_xmlHandler.getString('timeleft')}: ${remainingTime ~/ 60}:${(remainingTime % 60).toString().padLeft(2, '0')}",
                       style: TextStyle(fontSize: 16),
                     );
                   },
@@ -177,7 +195,8 @@ class _MyWidgetState extends State<Assessment> {
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No questions available.'));
+              canBack = true;
+              return Center(child: Text(_xmlHandler.getString('noquest')));
             }
 
             // Use the loaded questions to display in the UI
@@ -191,7 +210,6 @@ class _MyWidgetState extends State<Assessment> {
                     topRight: Radius.circular(20)),
                 color: Colors.blueAccent[100],
               ),
-
               width: MediaQuery.of(context).size.width,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -203,7 +221,7 @@ class _MyWidgetState extends State<Assessment> {
                       // Text('ID: ${questions[0]['id']}'),
 
                       Text(
-                        'Question: ${questions[random[currentQuestionIndex]]['question']}',
+                        '${_xmlHandler.getString('quest')}: ${questions[random[currentQuestionIndex]]['question']}',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -232,22 +250,15 @@ class _MyWidgetState extends State<Assessment> {
                                 } else {
                                   // Handle end of questions (e.g., show results)
                                   // For now, just show a dialog
-                                  int correct = 0;
-                                  double percentage;
-                                  for (int i = 0; i < ans.length; i++) {
-                                    if (ans[i] == true) {
-                                      correct++;
-                                    }
-                                  }
 
-                                  percentage = (correct / random.length) * 100;
+                                  double percentage = calcPercent();
                                   Navigator.pop(context);
                                   showDialog(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text(
-                                            "You've completed the assessment"),
+                                        title: Text(_xmlHandler
+                                            .getString('completeass')),
                                         content: Text("Score:$percentage%"),
                                         actions: [
                                           TextButton(
@@ -264,34 +275,13 @@ class _MyWidgetState extends State<Assessment> {
                               });
                             }
                           },
-                          child: Text('Submit'),
+                          child: Text('OK'),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // child: ListView.builder(
-              //   itemCount: questions.length,
-              //   itemBuilder: (context, index) {
-              //     return Card(
-              //       color: Colors.blueAccent[100],
-              //       elevation: 10,
-              //       child: Padding(
-              //         padding: const EdgeInsets.all(8.0),
-              //         child: Column(
-              //           crossAxisAlignment: CrossAxisAlignment.start,
-              //           children: [
-              //             Text('ID: ${questions[index]['id']}'),
-              //             Text('Question: ${questions[index]['question']}'),
-              // You can also display options and answer if needed
-              // ],
-              //           ),
-              //         ),
-              //       );
-              //     },
-              //   ),
             );
           },
         ),

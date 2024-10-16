@@ -68,4 +68,9 @@ Do you want to take the assessment now? </string>
 <string name="assfor">Assessment for</string>
 <string name="yes">Yes</string>
 <string name="no"> No</string>
+<string name="timeup">Time's Up!</string>
+<string name="timeleft">Time Left</string>
+<string name="completeass">You've completed the assessment</string>
+<string name="noquest">No questions available</string>
+<string name="quest">Question</string>
 </strings>
