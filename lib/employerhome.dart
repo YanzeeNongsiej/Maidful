@@ -2,7 +2,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
@@ -13,7 +12,6 @@ import 'package:ibitf_app/jobprofile.dart';
 import 'package:ibitf_app/jobresume.dart';
 //pages
 import 'package:ibitf_app/login.dart';
-import 'package:ibitf_app/maidlist.dart';
 // import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
