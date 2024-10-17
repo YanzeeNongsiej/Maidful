@@ -67,12 +67,12 @@ class maidDao {
         .set(serviceInfoMap);
   }
 
-  // Future addAck(Map<String, dynamic> ackInfoMap) async {
-  //   return await FirebaseFirestore.instance
-  //       .collection("acknowledgements")
-  //       .doc()
-  //       .set(ackInfoMap);
-  // }
+  Future<DocumentSnapshot> getAck(String ackID) async {
+    return await FirebaseFirestore.instance
+        .collection("acknowledgements")
+        .doc(ackID)
+        .get();
+  }
 
   Future<String> addAck(Map<String, dynamic> ackInfoMap) async {
     try {

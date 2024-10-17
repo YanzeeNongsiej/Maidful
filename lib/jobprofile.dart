@@ -11,7 +11,7 @@ import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 
 class JobProfile extends StatefulWidget {
-  const JobProfile({Key? key}) : super(key: key);
+  const JobProfile({super.key});
 
   @override
   _JobProfileState createState() => _JobProfileState();

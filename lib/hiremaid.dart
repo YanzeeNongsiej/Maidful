@@ -873,7 +873,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     } else if (selectedScheduleValue == 2) {
@@ -887,7 +887,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     } else {
@@ -901,7 +901,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     }
@@ -918,8 +918,8 @@ class _HireMaidState extends State<HireMaid> {
                   ))))
           .whenComplete(() => Navigator.pop(context));
       print(ackid);
-      await chatcontroller.sendMessage(
-          widget.itemGlobal?.get("userid"), "ack", ackid);
+      await chatcontroller.sendMessage(widget.itemGlobal?.get("userid"), "ack",
+          ackid, "services", widget.itemGlobal?.id);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(

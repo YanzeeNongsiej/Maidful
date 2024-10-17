@@ -2,7 +2,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
@@ -13,7 +12,6 @@ import 'package:ibitf_app/jobprofile.dart';
 import 'package:ibitf_app/jobresume.dart';
 //pages
 import 'package:ibitf_app/login.dart';
-import 'package:ibitf_app/maidlist.dart';
 // import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/xmlhandle.dart';
@@ -29,8 +27,7 @@ class EmployerHome extends StatefulWidget {
   final String? uname;
   final String? uid;
 
-  const EmployerHome({Key? key, @required this.uname, @required this.uid})
-      : super(key: key);
+  const EmployerHome({super.key, @required this.uname, @required this.uid});
   @override
   _EmployerHomePageState createState() => _EmployerHomePageState();
 }
@@ -120,6 +117,7 @@ class _EmployerHomePageState extends State<EmployerHome>
 
   ontheload() async {
     ChatroomStream = await chatcontroller.getChats(userID);
+    print("CHatroom Data: ${ChatroomStream?.first}");
     setState(() {});
   }
 
@@ -169,6 +167,7 @@ class _EmployerHomePageState extends State<EmployerHome>
     return StreamBuilder(
       stream: ChatroomStream,
       builder: (context, AsyncSnapshot snapshot) {
+        print("chat snaps: ${snapshot.data}");
         //errors
         if (snapshot.hasError) {
           return Text("Error ${snapshot.error}");
@@ -243,7 +242,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                     lastTime = "${getDate.day} $monthstr";
                   }
                   return FutureBuilder(
-                      future: getUserinfo(chatRoomItem.id),
+                      future: getUserinfo(chatRoomItem),
                       builder: (context, snapshot) {
                         return snapshot.hasData
                             ? ListView.builder(
@@ -261,9 +260,9 @@ class _EmployerHomePageState extends State<EmployerHome>
                                                   receiverID:
                                                       item.get("userid"),
                                                   postType: chatRoomItem
-                                                      .get("post_type"),
+                                                      .get("postType"),
                                                   postTypeID: chatRoomItem
-                                                      .get("post_type_id"))))
+                                                      .get("postTypeID"))))
                                     },
                                     child: ListTile(
                                       leading: CircleAvatar(
@@ -982,8 +981,11 @@ class _EmployerHomePageState extends State<EmployerHome>
         });
   }
 
-  Future<QuerySnapshot> getUserinfo(String usrId) async {
-    userid = usrId.replaceAll("_", "").replaceAll(userID, "");
+  Future<QuerySnapshot> getUserinfo(DocumentSnapshot chatroomItem) async {
+    userid = chatroomItem.id
+        .replaceAll("_", "")
+        .replaceAll(userID, "")
+        .replaceAll(chatroomItem.get("postTypeID"), "");
     Future<QuerySnapshot<Object?>> qs = Usersdao().getUserDetails(userid);
     return qs;
   }

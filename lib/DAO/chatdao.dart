@@ -14,6 +14,8 @@ class Chatdao {
       Map<String, dynamic> chatDetails = {
         "lastSender": newMessage.senderID,
         "lastMessage": newMessage.message,
+        "postType": newMessage.post_Type,
+        "postTypeID": newMessage.post_TypeID,
         "users": users,
         "timestamp": newMessage.timestamp,
       };
@@ -58,5 +60,14 @@ class Chatdao {
         .orderBy("timestamp", descending: true)
         .where("users", arrayContains: userID)
         .snapshots();
+  }
+
+  Future setAckStatus(String ackID, int stat) async {
+    return await FirebaseFirestore.instance
+        .collection("acknowledgements")
+        .doc(ackID)
+        .update({
+      "status": stat,
+    });
   }
 }

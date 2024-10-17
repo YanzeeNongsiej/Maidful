@@ -10,7 +10,7 @@ import 'package:ibitf_app/service/auth.dart';
 // import 'material_design_indicator.dart';
 
 class AdminHome extends StatefulWidget {
-  const AdminHome({Key? key}) : super(key: key);
+  const AdminHome({super.key});
 
   @override
   _AdminHomePageState createState() => _AdminHomePageState();

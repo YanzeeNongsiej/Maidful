@@ -17,7 +17,7 @@ List<bool> ans = [];
 bool canBack = false;
 
 class Assessment extends StatefulWidget {
-  Assessment(String? s) {
+  Assessment(String? s, {super.key}) {
     skill = s;
   }
 
