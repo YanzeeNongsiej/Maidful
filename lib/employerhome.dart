@@ -55,6 +55,11 @@ class _EmployerHomePageState extends State<EmployerHome>
   // }
   String? _downloadUrl;
   List<String>? selectedskills;
+  List<String> myskills = [];
+
+  List<int>? myscores;
+  List<Map<String, dynamic>> skillsWithScores = [];
+  List<List<dynamic>> skillsWithNames = [];
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -133,6 +138,7 @@ class _EmployerHomePageState extends State<EmployerHome>
       usrname = gv.username;
     });
     profilepic();
+    fetchSkills();
   }
 
   @override
@@ -420,6 +426,13 @@ class _EmployerHomePageState extends State<EmployerHome>
                                           await FirebaseFirestore.instance
                                               .collection('skills')
                                               .get();
+
+                                      //fetch only skills from the user
+                                      List<String> allskills = snapshot.docs
+                                          .map((doc) => doc.id)
+                                          .toList();
+                                      print(allskills);
+                                      // print(myskills);
                                       for (var doc in snapshot.docs) {
                                         // Get the skill for the selected language
                                         if (doc[gv.selected] != null) {
@@ -658,12 +671,126 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
   }
 
+  Future<void> fetchSkills() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        // Reference to the user's skills subcollection
+        QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
+            .collection("users")
+            .where("userid", isEqualTo: currentUser.uid) // Adjust as needed
+            .get();
+        String myid = querySnapshot1.docs.first.id;
+        CollectionReference skillsCollection = FirebaseFirestore.instance
+            .collection('users')
+            .doc(myid)
+            .collection('skills');
+
+        // Get all documents in the skills subcollection
+        QuerySnapshot querySnapshot = await skillsCollection.get();
+        // Get all documents in the skills subcollection
+
+        final sc = FirebaseFirestore.instance.collection('skills');
+        final qs = await skillsCollection.get();
+
+        skillsWithNames = querySnapshot.docs.map((doc) {
+          return [doc.id, doc[gv.selected]]; // Get skill ID and English name
+        }).toList();
+        setState(() {
+          myskills = querySnapshot.docs.map((doc) => doc.id).toList();
+          skillsWithScores = querySnapshot.docs.map((doc) {
+            return {
+              'skill': doc.id, // Document ID (e.g., Skill1)
+              'score': doc['score'], // Get the score field
+            };
+          }).toList();
+          // Get skill document IDs
+          //isLoading = false; // Update loading state
+        });
+      } else {
+        print('No user is currently logged in.');
+        setState(() {
+          //isLoading = false; // Update loading state
+        });
+      }
+    } catch (e) {
+      print('Error fetching skills: $e');
+      setState(() {
+        //isLoading = false; // Update loading state
+      });
+    }
+  }
+
+  Color _getColor(double level) {
+    if (level >= 75) {
+      return Colors.green; // High skill
+    } else if (level >= 50) {
+      return Colors.orange; // Medium skill
+    } else {
+      return Colors.red; // Low skill
+    }
+  }
+
+  String getSkillName(String sName) {
+    String s = "Skill1";
+    for (var skill in skillsWithNames) {
+      if (skill[1] == sName) {
+        // Check if the English name matches
+        s = skill[0]; // Return the corresponding skill name (e.g., Skill1)
+      }
+    }
+    return s;
+  }
+
+  Widget showLevels(currentSkill) {
+    double level = 0;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == currentSkill) {
+        level = s['score']; // Return the score if found
+      }
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 300,
+          height: 20,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.grey[300],
+          ),
+          child: Stack(
+            children: [
+              Container(
+                width: level * 3, // Scale the width according to level (0-300)
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _getColor(level),
+                ),
+              ),
+              Center(
+                child: Text(
+                  '${level.toInt()}%',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget showSkills() {
-    if (selectedskills == null) {
+    if (selectedskills == null && myskills == null) {
       return Text(_xmlHandler.getString('noskills'));
+    } else if (selectedskills == null) {
+      return Text('Jaktung');
     } else {
       List<String> res = selectedskills!.toList();
       // return Text('Ladep LAAAAA:$res');
+      //checkExistingSkills();
 
       return SingleChildScrollView(
         child: Theme(
@@ -686,49 +813,51 @@ class _EmployerHomePageState extends State<EmployerHome>
                               skill,
                             ),
                           ),
-                          ElevatedButton(
-                              onPressed: () {
-                                // Add your assessment logic here
+                          myskills.contains(getSkillName(skill))
+                              ? showLevels(getSkillName(skill))
+                              : ElevatedButton(
+                                  onPressed: () {
+                                    // Add assessment
 
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                          '${_xmlHandler.getString('assfor')} $skill'),
-                                      content: Text(_xmlHandler
-                                          .getString('confirmassess')),
-                                      actions: [
-                                        TextButton.icon(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            icon: Icon(Icons.close),
-                                            label: Text(
-                                                _xmlHandler.getString('no'))),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            // Add your confirm logic here
-                                            Navigator.of(context).pop();
-                                            Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        Assessment(
-                                                            skill))); // Close the dialog
-                                          },
-                                          icon: Icon(Icons
-                                              .check), // Icon for confirmation
-                                          label: Text(
-                                              _xmlHandler.getString('yes')),
-                                        ),
-                                      ],
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text(
+                                              '${_xmlHandler.getString('assfor')} $skill'),
+                                          content: Text(_xmlHandler
+                                              .getString('confirmassess')),
+                                          actions: [
+                                            TextButton.icon(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                icon: Icon(Icons.close),
+                                                label: Text(_xmlHandler
+                                                    .getString('no'))),
+                                            TextButton.icon(
+                                              onPressed: () {
+                                                // Add your confirm logic here
+                                                Navigator.of(context).pop();
+                                                Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            Assessment(
+                                                                skill))); // Close the dialog
+                                              },
+                                              icon: Icon(Icons
+                                                  .check), // Icon for confirmation
+                                              label: Text(
+                                                  _xmlHandler.getString('yes')),
+                                            ),
+                                          ],
+                                        );
+                                      },
                                     );
                                   },
-                                );
-                              },
-                              child: Text(
-                                _xmlHandler.getString('assessment'),
-                              )),
+                                  child: Text(
+                                    _xmlHandler.getString('assessment'),
+                                  )),
                         ],
                       ),
                     );

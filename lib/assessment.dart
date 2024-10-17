@@ -15,6 +15,7 @@ ValueNotifier<int>? timerNotifier;
 List<int> random = [];
 List<bool> ans = [];
 bool canBack = false;
+double percentage = 0;
 
 class Assessment extends StatefulWidget {
   Assessment(String? s, {super.key}) {
@@ -28,7 +29,7 @@ class Assessment extends StatefulWidget {
 class _MyWidgetState extends State<Assessment> {
   XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
-  int correct = 0;
+
   @override
   void initState() {
     super.initState();
@@ -153,7 +154,8 @@ class _MyWidgetState extends State<Assessment> {
   }
 
   double calcPercent() {
-    double percentage;
+    int correct = 0;
+
     for (int i = 0; i < ans.length; i++) {
       if (ans[i] == true) {
         correct++;
@@ -190,7 +192,7 @@ class _MyWidgetState extends State<Assessment> {
           .doc(myskillid);
 
       // Add the score
-      await skillDocRef.set({'score': correct});
+      await skillDocRef.set({'score': percentage.toInt()});
     }
   }
 
