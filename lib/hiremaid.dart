@@ -873,7 +873,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     } else if (selectedScheduleValue == 2) {
@@ -887,7 +887,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     } else {
@@ -901,7 +901,7 @@ class _HireMaidState extends State<HireMaid> {
         "services": selectedCheckBoxValue,
         "wage": _selectedWageValue,
         "rate": defRate,
-        // "work_history": workHistory,
+        "status": 1,
       };
       isOK = true;
     }

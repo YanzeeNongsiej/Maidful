@@ -61,4 +61,13 @@ class Chatdao {
         .where("users", arrayContains: userID)
         .snapshots();
   }
+
+  Future setAckStatus(String ackID, int stat) async {
+    return await FirebaseFirestore.instance
+        .collection("acknowledgements")
+        .doc(ackID)
+        .update({
+      "status": stat,
+    });
+  }
 }
