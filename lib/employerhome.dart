@@ -78,6 +78,12 @@ class _EmployerHomePageState extends State<EmployerHome>
     return qs;
   }
 
+  Future<QuerySnapshot> getActiveServices() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getActiveServices(userID);
+    return qs;
+  }
+
   bool showMaids = true, showJobProfiles = false;
   void toggleMaids() {
     setState(() {
@@ -543,6 +549,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                   children: [
                     Expanded(
                       child: Card(
+                        color: Colors.blueAccent[100],
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
@@ -551,6 +558,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                                 (_xmlHandler.getString('active')).toString(),
                                 textAlign: TextAlign.center,
                               ),
+                              _buildActiveServiceList(),
                             ],
                           ),
                         ),
@@ -910,6 +918,133 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
 
     //
+  }
+
+  Widget _buildActiveServiceList() {
+    return FutureBuilder(
+        future: getActiveServices(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("loading...");
+          }
+          if (snapshot.hasData) {
+            if (snapshot.data!.docs.isEmpty) {
+              return const Text("No Services Yet");
+            } else {
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final item = snapshot.data!.docs[index];
+                  return Expanded(
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () => {},
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(
+                                      children: <InlineSpan>[
+                                        const TextSpan(
+                                          text: 'Schedule: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("schedule"),
+                                        ),
+                                        const TextSpan(
+                                          text: '\nTiming: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ),
+                                        const TextSpan(
+                                          text: '\nDays: ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: item.get("days").toString(),
+                                        ),
+                                      ],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                      ))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            // mainAxisAlignment: MainAxisAlignment.end,
+
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigator.pop(context);
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) => ChatPage(
+                                        //             name: item.get("name"),
+                                        //             receiverID: item.get("userid"),
+                                        //             postType: "services",
+                                        //             postTypeID: servItem.id)));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'View',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  // return GestureDetector(
+                  //   onTap: () => {},
+                  //   child: Text(
+                  //     item.get("rate"),
+                  //     textAlign: TextAlign.center,
+                  //   ),
+                  // );
+                },
+              );
+            }
+          } else {
+            return const Text("No Services Yet");
+          }
+        });
   }
 
   Widget _buildServiceList() {

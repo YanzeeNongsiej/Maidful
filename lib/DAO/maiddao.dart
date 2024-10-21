@@ -41,8 +41,43 @@ class maidDao {
     return ser;
   }
 
-  Future<List<Service>> getActiveServices(String curUser) async {
-    QuerySnapshot qs = await FirebaseFirestore.instance
+  // Future<List<Service>> getActiveServices(String curUser) async {
+  //   QuerySnapshot qs = await FirebaseFirestore.instance
+  //       .collection("acknowledgements")
+  //       .where(Filter.or(
+  //         Filter("receiver", isEqualTo: curUser),
+  //         Filter("sender", isEqualTo: curUser),
+  //       ))
+  //       .where("status", isEqualTo: 2)
+  //       .get();
+
+  //   List<Service> ser = [];
+  //   for (var qss in qs.docs) {
+  //     QuerySnapshot qs = await FirebaseFirestore.instance
+  //         .collection("chat_rooms")
+  //         .doc()
+  //         .collection("messages")
+  //         .where("ackID", isEqualTo: qss.id)
+  //         .get();
+  //     Service serv = Service(
+  //         days: List<String>.from(qss.get("days")),
+  //         rate: qss.get("rate"),
+  //         schedule: qss.get("schedule"),
+  //         services: List<String>.from(qss.get("services")),
+  //         time_from: qss.get("time_from"),
+  //         time_to: qss.get("time_to"),
+  //         userid: qss.get("userid"),
+  //         wage: qss.get("wage"),
+  //         work_history: List<String>.from(qss.get("work_history")),
+  //         ack: qss.get("ack"));
+  //     ser.add(serv);
+  //   }
+  //   return ser;
+  // }
+
+  Future<QuerySnapshot> getActiveServices(String curUser) async {
+    // Query acknowledgements
+    QuerySnapshot ackSnapshot = await FirebaseFirestore.instance
         .collection("acknowledgements")
         .where(Filter.or(
           Filter("receiver", isEqualTo: curUser),
@@ -51,28 +86,25 @@ class maidDao {
         .where("status", isEqualTo: 2)
         .get();
 
-    List<Service> ser = [];
-    for (var qss in qs.docs) {
-      QuerySnapshot qs = await FirebaseFirestore.instance
+    // Collect ack IDs to fetch messages in a batch
+    List<String> ackIDs = ackSnapshot.docs.map((doc) => doc.id).toList();
+
+    // Fetch messages for each ack ID in parallel
+    List<QuerySnapshot> messagesSnapshots =
+        await Future.wait(ackIDs.map((ackID) async {
+      return await FirebaseFirestore.instance
           .collection("chat_rooms")
-          .doc()
+          .doc(ackID) // Adjust based on how your chat rooms are structured
           .collection("messages")
-          .where("ackID", isEqualTo: qss.id)
+          .where("ackID", isEqualTo: ackID)
           .get();
-      Service serv = Service(
-          days: List<String>.from(qss.get("days")),
-          rate: qss.get("rate"),
-          schedule: qss.get("schedule"),
-          services: List<String>.from(qss.get("services")),
-          time_from: qss.get("time_from"),
-          time_to: qss.get("time_to"),
-          userid: qss.get("userid"),
-          wage: qss.get("wage"),
-          work_history: List<String>.from(qss.get("work_history")),
-          ack: qss.get("ack"));
-      ser.add(serv);
-    }
-    return ser;
+    }));
+
+    // Here you can process the messagesSnapshots as needed
+    // For example, you could log or aggregate the data
+
+    // Return the acknowledgements snapshot
+    return ackSnapshot;
   }
 
   Future<QuerySnapshot> getOwnServices1(String curUser) async {
