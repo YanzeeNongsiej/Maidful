@@ -890,21 +890,24 @@ class _EmployerHomePageState extends State<EmployerHome>
   }
 
   Widget showSkills() {
-    return ExpansionTile(
-        title: Text(_xmlHandler.getString('skills').toString()),
-        children: [
-          if (selectedskills == null && myskills.isEmpty)
-            Text(_xmlHandler.getString('noskills')),
-          if (selectedskills == null && myskills.isNotEmpty)
-            createSkillsFirst(myskills),
-          if (selectedskills != null && myskills.isNotEmpty)
-            Column(
-              children: [
-                createSkillsFirst(myskills),
-                createSkillsFirst(selectedskills!.toList()),
-              ],
-            ),
-        ]);
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+          title: Text(_xmlHandler.getString('skills').toString()),
+          children: [
+            if (selectedskills == null && myskills.isEmpty)
+              Text(_xmlHandler.getString('noskills')),
+            if (selectedskills == null && myskills.isNotEmpty)
+              createSkillsFirst(myskills),
+            if (selectedskills != null && myskills.isNotEmpty)
+              Column(
+                children: [
+                  createSkillsFirst(myskills),
+                  createSkillsFirst(selectedskills!.toList()),
+                ],
+              ),
+          ]),
+    );
 
     //
   }
