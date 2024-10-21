@@ -4,8 +4,7 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'dart:math';
 import 'dart:async';
-import 'package:ibitf_app/DAO/usersdao.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ibitf_app/DAO/skilldao.dart';
 
 String? skill;
 int currentQuestionIndex = 0;
@@ -15,9 +14,11 @@ ValueNotifier<int>? timerNotifier;
 List<int> random = [];
 List<bool> ans = [];
 bool canBack = false;
+double percentage = 0;
 
 class Assessment extends StatefulWidget {
-  Assessment(String? s, {super.key}) {
+  final VoidCallback onComplete;
+  Assessment(String? s, {super.key, required this.onComplete}) {
     skill = s;
   }
 
@@ -28,7 +29,7 @@ class Assessment extends StatefulWidget {
 class _MyWidgetState extends State<Assessment> {
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
-  int correct = 0;
+
   @override
   void initState() {
     super.initState();
@@ -125,7 +126,7 @@ class _MyWidgetState extends State<Assessment> {
       showDialog(
         context: context,
         builder: (context) {
-          updateScoreToDB();
+          updateScoreToDB(gv.selected, skill, percentage);
           return AlertDialog(
             title: Text(_xmlHandler.getString('timeup')),
             content: Text("Score:${calcPercent()}%"),
@@ -153,7 +154,8 @@ class _MyWidgetState extends State<Assessment> {
   }
 
   double calcPercent() {
-    double percentage;
+    int correct = 0;
+
     for (int i = 0; i < ans.length; i++) {
       if (ans[i] == true) {
         correct++;
@@ -162,36 +164,6 @@ class _MyWidgetState extends State<Assessment> {
 
     percentage = (correct / random.length) * 100;
     return percentage;
-  }
-
-  void updateScoreToDB() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      // Query the user's document
-      QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
-          .collection("users")
-          .where("userid", isEqualTo: currentUser.uid) // Adjust as needed
-          .get();
-      String myid = querySnapshot1.docs.first.id;
-
-      //Query the skills document
-      // Query the user's document
-      QuerySnapshot querySnapshot2 = await FirebaseFirestore.instance
-          .collection("skills")
-          .where(gv.selected, isEqualTo: skill) // Adjust as needed
-          .get();
-      String myskillid = querySnapshot2.docs.first.id;
-
-      //now setting the score
-      DocumentReference skillDocRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(myid)
-          .collection('skills')
-          .doc(myskillid);
-
-      // Add the score
-      await skillDocRef.set({'score': correct});
-    }
   }
 
   @override
@@ -285,7 +257,8 @@ class _MyWidgetState extends State<Assessment> {
                                   // For now, just show a dialog
 
                                   double percentage = calcPercent();
-                                  updateScoreToDB();
+                                  updateScoreToDB(
+                                      gv.selected, skill, percentage);
                                   Navigator.pop(context);
                                   showDialog(
                                     context: context,
@@ -297,6 +270,7 @@ class _MyWidgetState extends State<Assessment> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
+                                              widget.onComplete();
                                               Navigator.of(context).pop();
                                             },
                                             child: Text("OK"),

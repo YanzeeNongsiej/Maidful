@@ -22,6 +22,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:ibitf_app/assessment.dart';
+import 'package:ibitf_app/DAO/skilldao.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -55,6 +56,11 @@ class _EmployerHomePageState extends State<EmployerHome>
   // }
   String? _downloadUrl;
   List<String>? selectedskills;
+  List<String> myskills = [];
+
+  List<int>? myscores;
+  List<Map<String, dynamic>> skillsWithScores = [];
+  List<List<dynamic>> skillsWithNames = [];
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -133,6 +139,7 @@ class _EmployerHomePageState extends State<EmployerHome>
       usrname = gv.username;
     });
     profilepic();
+    fetchSkills();
   }
 
   @override
@@ -420,9 +427,18 @@ class _EmployerHomePageState extends State<EmployerHome>
                                           await FirebaseFirestore.instance
                                               .collection('skills')
                                               .get();
+
+                                      //fetch only skills from the user
+                                      List<String> allskills = snapshot.docs
+                                          .map((doc) => doc.id)
+                                          .toList();
+                                      print(snapshot.docs.first.id);
+                                      // print(myskills);
                                       for (var doc in snapshot.docs) {
                                         // Get the skill for the selected language
-                                        if (doc[gv.selected] != null) {
+
+                                        if (doc[gv.selected] != null &&
+                                            !myskills.contains(doc.id)) {
                                           options.add(doc[gv.selected]);
                                         }
                                       }
@@ -469,6 +485,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                                                   Navigator.of(context).pop();
                                                   selectedskills =
                                                       selectedOptions;
+                                                  for (var s in selectedskills!
+                                                      .toList()) {
+                                                    updateScoreToDB(
+                                                        gv.selected, s, -1);
+                                                  }
                                                   print(
                                                       "Selected skills: $selectedskills");
                                                   setState(() {});
@@ -658,86 +679,237 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
   }
 
-  Widget showSkills() {
-    if (selectedskills == null) {
-      return Text(_xmlHandler.getString('noskills'));
+  Future<void> fetchSkills() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        // Reference to the user's skills subcollection
+        QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
+            .collection("users")
+            .where("userid", isEqualTo: currentUser.uid) // Adjust as needed
+            .get();
+        String myid = querySnapshot1.docs.first.id;
+        CollectionReference skillsCollection = FirebaseFirestore.instance
+            .collection('users')
+            .doc(myid)
+            .collection('skills');
+
+        // Get all documents in the skills subcollection
+        QuerySnapshot querySnapshot = await skillsCollection.get();
+        // Get all documents in the skills subcollection
+
+        final sc = FirebaseFirestore.instance.collection('skills');
+        final qs = await sc.get();
+
+        skillsWithNames = qs.docs.map((doc) {
+          return [doc.id, doc[gv.selected]]; // Get skill ID and English name
+        }).toList();
+        setState(() {
+          myskills = querySnapshot.docs.map((doc) => doc.id).toList();
+          skillsWithScores = querySnapshot.docs.map((doc) {
+            return {
+              'skill': doc.id, // Document ID (e.g., Skill1)
+              'score': doc['score'], // Get the score field
+            };
+          }).toList();
+
+          // Get skill document IDs
+          //isLoading = false; // Update loading state
+        });
+      } else {
+        print('No user is currently logged in.');
+        setState(() {
+          //isLoading = false; // Update loading state
+        });
+      }
+    } catch (e) {
+      print('Error fetching skills: $e');
+      setState(() {
+        //isLoading = false; // Update loading state
+      });
+    }
+  }
+
+  Color _getColor(double level) {
+    if (level >= 75) {
+      return Colors.green; // High skill
+    } else if (level >= 50) {
+      return Colors.orange; // Medium skill
     } else {
-      List<String> res = selectedskills!.toList();
-      // return Text('Ladep LAAAAA:$res');
+      return Colors.red; // Low skill
+    }
+  }
 
-      return SingleChildScrollView(
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            dividerColor: Colors.transparent, // Removes the divider line
+  String getSkillName(String sName) {
+    String s = sName;
+    for (var skill in skillsWithNames) {
+      if (skill[1] == sName) {
+        // Check if the English name matches
+        s = skill[0]; // Return the corresponding skill name (e.g., Skill1)
+      }
+    }
+    return s;
+  }
+
+  bool checkVerified(String skil) {
+    bool res = true;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == skil && s['score'] == -1) {
+        res = false;
+        // Return the score if found
+      }
+    }
+    return res;
+  }
+
+  Widget showLevels(currentSkill) {
+    double level = 0;
+    int res = 0;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == currentSkill) {
+        res = s['score'];
+        // Return the score if found
+      }
+      level = res.toDouble().abs();
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 150,
+          height: 20,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.grey[300],
           ),
-          child: ExpansionTile(
-              title: Text(_xmlHandler.getString('skills').toString()),
-              children: [
-                Column(
-                  children: res.map((skill) {
-                    return ListTile(
-                      minVerticalPadding: 0,
-                      contentPadding: EdgeInsets.all(0),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              skill,
-                            ),
-                          ),
-                          ElevatedButton(
-                              onPressed: () {
-                                // Add your assessment logic here
+          child: Stack(
+            children: [
+              Container(
+                width:
+                    level * 1.5, // Scale the width according to level (0-300)
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _getColor(level),
+                ),
+              ),
+              Center(
+                child: Text(
+                  '${level.toInt()}%',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                          '${_xmlHandler.getString('assfor')} $skill'),
-                                      content: Text(_xmlHandler
-                                          .getString('confirmassess')),
-                                      actions: [
-                                        TextButton.icon(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            icon: Icon(Icons.close),
-                                            label: Text(
-                                                _xmlHandler.getString('no'))),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            // Add your confirm logic here
-                                            Navigator.of(context).pop();
-                                            Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        Assessment(
-                                                            skill))); // Close the dialog
-                                          },
-                                          icon: Icon(Icons
-                                              .check), // Icon for confirmation
-                                          label: Text(
-                                              _xmlHandler.getString('yes')),
-                                        ),
-                                      ],
-                                    );
-                                  },
+  Widget createSkillsFirst(List<String> res) {
+    return SingleChildScrollView(
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent, // Removes the divider line
+        ),
+        child: Column(
+          children: res.map((skill) {
+            // print("My skills is:$myskills");
+            // print("Current skill is$skill");
+            // print("$skillsWithScores is skills with scores");
+            // print(
+            //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
+            // print(
+            //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
+
+            return ListTile(
+              minVerticalPadding: 0,
+              contentPadding: EdgeInsets.all(0),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      skill == getSkillName(skill)
+                          ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
+                          : skill,
+                    ),
+                  ),
+                  myskills.contains(getSkillName(skill)) && checkVerified(skill)
+                      ? showLevels(getSkillName(skill))
+                      : ElevatedButton(
+                          onPressed: () {
+                            // Add assessment
+
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                      '${_xmlHandler.getString('assfor')} $skill'),
+                                  content: Text(
+                                      _xmlHandler.getString('confirmassess')),
+                                  actions: [
+                                    TextButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        icon: Icon(Icons.close),
+                                        label:
+                                            Text(_xmlHandler.getString('no'))),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        // Add your confirm logic here
+                                        selectedskills = [];
+                                        Navigator.of(context).pop();
+                                        Navigator.of(context).push(MaterialPageRoute(
+                                            builder: (context) => Assessment(
+                                                skill,
+                                                onComplete:
+                                                    updateParentState))); // Close the dialog
+                                      },
+                                      icon: Icon(
+                                          Icons.check), // Icon for confirmation
+                                      label: Text(_xmlHandler.getString('yes')),
+                                    ),
+                                  ],
                                 );
                               },
-                              child: Text(
-                                _xmlHandler.getString('assessment'),
-                              )),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ]),
+                            );
+                          },
+                          child: Text(
+                            _xmlHandler.getString('assessment'),
+                          )),
+                ],
+              ),
+            );
+          }).toList(),
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  Widget showSkills() {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+          title: Text(_xmlHandler.getString('skills').toString()),
+          children: [
+            if (selectedskills == null && myskills.isEmpty)
+              Text(_xmlHandler.getString('noskills')),
+            if (selectedskills == null && myskills.isNotEmpty)
+              createSkillsFirst(myskills),
+            if (selectedskills != null && myskills.isNotEmpty)
+              Column(
+                children: [
+                  createSkillsFirst(myskills),
+                  createSkillsFirst(selectedskills!.toList()),
+                ],
+              ),
+          ]),
+    );
+
+    //
   }
 
   Widget _buildServiceList() {
@@ -1209,7 +1381,9 @@ class _EmployerHomePageState extends State<EmployerHome>
   }
 
   void updateParentState() {
-    setState(() {});
+    setState(() {
+      fetchSkills();
+    });
   }
 }
 
