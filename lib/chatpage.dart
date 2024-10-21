@@ -45,7 +45,6 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
 
     checkOwnServ().then((a) {
-      print("${widget.postTypeID},  $ownServ");
       _xmlHandler.loadStrings(gv.selected).then((a) {});
       setState(() {});
     });
@@ -62,11 +61,14 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> checkOwnServ() async {
     DocumentSnapshot ds = await maidDao().getService(widget.postTypeID);
     // var item = ds.data();
-    print("${ds.get("userid")}, $userID");
     if (userID == ds.get("userid")) {
       ownServ = false;
     } else {
-      ownServ = true;
+      if (ds.get("ack") == true) {
+        ownServ = false;
+      } else {
+        ownServ = true;
+      }
     }
   }
 

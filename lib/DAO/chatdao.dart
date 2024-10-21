@@ -62,7 +62,15 @@ class Chatdao {
         .snapshots();
   }
 
-  Future setAckStatus(String ackID, int stat) async {
+  Future setAckStatus(String servID, String ackID, int stat) async {
+    if (stat == 2) {
+      await FirebaseFirestore.instance
+          .collection("services")
+          .doc(servID)
+          .update({
+        "ack": true,
+      });
+    }
     return await FirebaseFirestore.instance
         .collection("acknowledgements")
         .doc(ackID)

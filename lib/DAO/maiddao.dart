@@ -12,6 +12,7 @@ class maidDao {
   Future<QuerySnapshot> getAllServices(String curUser) async {
     return await FirebaseFirestore.instance
         .collection("services")
+        .where("ack", isEqualTo: false)
         .where("userid", isNotEqualTo: curUser)
         .get();
   }
@@ -33,7 +34,42 @@ class maidDao {
           time_to: qss.get("time_to"),
           userid: qss.get("userid"),
           wage: qss.get("wage"),
-          work_history: List<String>.from(qss.get("work_history")));
+          work_history: List<String>.from(qss.get("work_history")),
+          ack: qss.get("ack"));
+      ser.add(serv);
+    }
+    return ser;
+  }
+
+  Future<List<Service>> getActiveServices(String curUser) async {
+    QuerySnapshot qs = await FirebaseFirestore.instance
+        .collection("acknowledgements")
+        .where(Filter.or(
+          Filter("receiver", isEqualTo: curUser),
+          Filter("sender", isEqualTo: curUser),
+        ))
+        .where("status", isEqualTo: 2)
+        .get();
+
+    List<Service> ser = [];
+    for (var qss in qs.docs) {
+      QuerySnapshot qs = await FirebaseFirestore.instance
+          .collection("chat_rooms")
+          .doc()
+          .collection("messages")
+          .where("ackID", isEqualTo: qss.id)
+          .get();
+      Service serv = Service(
+          days: List<String>.from(qss.get("days")),
+          rate: qss.get("rate"),
+          schedule: qss.get("schedule"),
+          services: List<String>.from(qss.get("services")),
+          time_from: qss.get("time_from"),
+          time_to: qss.get("time_to"),
+          userid: qss.get("userid"),
+          wage: qss.get("wage"),
+          work_history: List<String>.from(qss.get("work_history")),
+          ack: qss.get("ack"));
       ser.add(serv);
     }
     return ser;

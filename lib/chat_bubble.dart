@@ -316,7 +316,9 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   agreeAckDetail(ackID, stat) async {
-    await Chatdao().setAckStatus(ackID, stat).then((a) {
+    await Chatdao()
+        .setAckStatus(widget.data['post_TypeID'], ackID, stat)
+        .then((a) {
       setState(() {});
     });
   }

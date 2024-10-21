@@ -97,6 +97,7 @@ class _JobResumeState extends State<JobResume>
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
+          "ack": false,
         };
         isOK = true;
       }
@@ -112,6 +113,7 @@ class _JobResumeState extends State<JobResume>
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
+          "ack": false,
         };
         isOK = true;
       }
@@ -131,6 +133,7 @@ class _JobResumeState extends State<JobResume>
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
+          "ack": false,
         };
         isOK = true;
       }

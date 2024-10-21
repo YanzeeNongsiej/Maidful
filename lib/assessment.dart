@@ -26,7 +26,7 @@ class Assessment extends StatefulWidget {
 }
 
 class _MyWidgetState extends State<Assessment> {
-  XMLHandler _xmlHandler = XMLHandler();
+  final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
   int correct = 0;
   @override
@@ -42,10 +42,10 @@ class _MyWidgetState extends State<Assessment> {
   }
 
   Future<List<Map<String, dynamic>>> loadAllQuestions() async {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     // Get the specific skill document
-    QuerySnapshot snapshot = await _firestore
+    QuerySnapshot snapshot = await firestore
         .collection('skills')
         .where(gv.selected, isEqualTo: skill.toString())
         .get();
@@ -55,14 +55,14 @@ class _MyWidgetState extends State<Assessment> {
     }
 
     DocumentSnapshot skillDoc =
-        await _firestore.collection('skills').doc(snapshot.docs.first.id).get();
+        await firestore.collection('skills').doc(snapshot.docs.first.id).get();
 
     if (!skillDoc.exists) {
       throw Exception('No data found for the specified skill.');
     }
 
     // Query the Questions subcollection
-    QuerySnapshot questionsSnapshot = await _firestore
+    QuerySnapshot questionsSnapshot = await firestore
         .collection('skills')
         .doc(snapshot.docs.first.id)
         .collection('questions')

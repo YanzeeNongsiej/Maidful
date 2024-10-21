@@ -8,6 +8,7 @@ class Service {
   final String userid;
   final String wage;
   final List<String> work_history;
+  final bool ack;
 
   Service(
       {required this.days,
@@ -18,7 +19,8 @@ class Service {
       required this.time_to,
       required this.userid,
       required this.wage,
-      required this.work_history});
+      required this.work_history,
+      required this.ack});
 
   Map<String, dynamic> toMap() {
     return {
@@ -31,6 +33,7 @@ class Service {
       'userid': userid,
       'wage': wage,
       'work_history': work_history,
+      'ack': ack
     };
   }
 }
