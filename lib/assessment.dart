@@ -4,8 +4,7 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'dart:math';
 import 'dart:async';
-import 'package:ibitf_app/DAO/usersdao.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ibitf_app/DAO/skilldao.dart';
 
 String? skill;
 int currentQuestionIndex = 0;
@@ -18,7 +17,8 @@ bool canBack = false;
 double percentage = 0;
 
 class Assessment extends StatefulWidget {
-  Assessment(String? s, {super.key}) {
+  final VoidCallback onComplete;
+  Assessment(String? s, {super.key, required this.onComplete}) {
     skill = s;
   }
 
@@ -27,7 +27,7 @@ class Assessment extends StatefulWidget {
 }
 
 class _MyWidgetState extends State<Assessment> {
-  XMLHandler _xmlHandler = XMLHandler();
+  final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
 
   @override
@@ -43,10 +43,10 @@ class _MyWidgetState extends State<Assessment> {
   }
 
   Future<List<Map<String, dynamic>>> loadAllQuestions() async {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     // Get the specific skill document
-    QuerySnapshot snapshot = await _firestore
+    QuerySnapshot snapshot = await firestore
         .collection('skills')
         .where(gv.selected, isEqualTo: skill.toString())
         .get();
@@ -56,14 +56,14 @@ class _MyWidgetState extends State<Assessment> {
     }
 
     DocumentSnapshot skillDoc =
-        await _firestore.collection('skills').doc(snapshot.docs.first.id).get();
+        await firestore.collection('skills').doc(snapshot.docs.first.id).get();
 
     if (!skillDoc.exists) {
       throw Exception('No data found for the specified skill.');
     }
 
     // Query the Questions subcollection
-    QuerySnapshot questionsSnapshot = await _firestore
+    QuerySnapshot questionsSnapshot = await firestore
         .collection('skills')
         .doc(snapshot.docs.first.id)
         .collection('questions')
@@ -126,7 +126,7 @@ class _MyWidgetState extends State<Assessment> {
       showDialog(
         context: context,
         builder: (context) {
-          updateScoreToDB();
+          updateScoreToDB(gv.selected, skill, percentage);
           return AlertDialog(
             title: Text(_xmlHandler.getString('timeup')),
             content: Text("Score:${calcPercent()}%"),
@@ -164,36 +164,6 @@ class _MyWidgetState extends State<Assessment> {
 
     percentage = (correct / random.length) * 100;
     return percentage;
-  }
-
-  void updateScoreToDB() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      // Query the user's document
-      QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
-          .collection("users")
-          .where("userid", isEqualTo: currentUser.uid) // Adjust as needed
-          .get();
-      String myid = querySnapshot1.docs.first.id;
-
-      //Query the skills document
-      // Query the user's document
-      QuerySnapshot querySnapshot2 = await FirebaseFirestore.instance
-          .collection("skills")
-          .where(gv.selected, isEqualTo: skill) // Adjust as needed
-          .get();
-      String myskillid = querySnapshot2.docs.first.id;
-
-      //now setting the score
-      DocumentReference skillDocRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(myid)
-          .collection('skills')
-          .doc(myskillid);
-
-      // Add the score
-      await skillDocRef.set({'score': percentage.toInt()});
-    }
   }
 
   @override
@@ -287,7 +257,8 @@ class _MyWidgetState extends State<Assessment> {
                                   // For now, just show a dialog
 
                                   double percentage = calcPercent();
-                                  updateScoreToDB();
+                                  updateScoreToDB(
+                                      gv.selected, skill, percentage);
                                   Navigator.pop(context);
                                   showDialog(
                                     context: context,
@@ -299,6 +270,7 @@ class _MyWidgetState extends State<Assessment> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
+                                              widget.onComplete();
                                               Navigator.of(context).pop();
                                             },
                                             child: Text("OK"),

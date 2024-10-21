@@ -22,6 +22,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:ibitf_app/assessment.dart';
+import 'package:ibitf_app/DAO/skilldao.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -431,11 +432,13 @@ class _EmployerHomePageState extends State<EmployerHome>
                                       List<String> allskills = snapshot.docs
                                           .map((doc) => doc.id)
                                           .toList();
-                                      print(allskills);
+                                      print(snapshot.docs.first.id);
                                       // print(myskills);
                                       for (var doc in snapshot.docs) {
                                         // Get the skill for the selected language
-                                        if (doc[gv.selected] != null) {
+
+                                        if (doc[gv.selected] != null &&
+                                            !myskills.contains(doc.id)) {
                                           options.add(doc[gv.selected]);
                                         }
                                       }
@@ -482,6 +485,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                                                   Navigator.of(context).pop();
                                                   selectedskills =
                                                       selectedOptions;
+                                                  for (var s in selectedskills!
+                                                      .toList()) {
+                                                    updateScoreToDB(
+                                                        gv.selected, s, -1);
+                                                  }
                                                   print(
                                                       "Selected skills: $selectedskills");
                                                   setState(() {});
@@ -692,9 +700,9 @@ class _EmployerHomePageState extends State<EmployerHome>
         // Get all documents in the skills subcollection
 
         final sc = FirebaseFirestore.instance.collection('skills');
-        final qs = await skillsCollection.get();
+        final qs = await sc.get();
 
-        skillsWithNames = querySnapshot.docs.map((doc) {
+        skillsWithNames = qs.docs.map((doc) {
           return [doc.id, doc[gv.selected]]; // Get skill ID and English name
         }).toList();
         setState(() {
@@ -705,6 +713,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               'score': doc['score'], // Get the score field
             };
           }).toList();
+
           // Get skill document IDs
           //isLoading = false; // Update loading state
         });
@@ -733,7 +742,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   }
 
   String getSkillName(String sName) {
-    String s = "Skill1";
+    String s = sName;
     for (var skill in skillsWithNames) {
       if (skill[1] == sName) {
         // Check if the English name matches
@@ -743,18 +752,32 @@ class _EmployerHomePageState extends State<EmployerHome>
     return s;
   }
 
+  bool checkVerified(String skil) {
+    bool res = true;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == skil && s['score'] == -1) {
+        res = false;
+        // Return the score if found
+      }
+    }
+    return res;
+  }
+
   Widget showLevels(currentSkill) {
     double level = 0;
+    int res = 0;
     for (var s in skillsWithScores) {
       if (s['skill'] == currentSkill) {
-        level = s['score']; // Return the score if found
+        res = s['score'];
+        // Return the score if found
       }
+      level = res.toDouble().abs();
     }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 300,
+          width: 150,
           height: 20,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
@@ -763,7 +786,8 @@ class _EmployerHomePageState extends State<EmployerHome>
           child: Stack(
             children: [
               Container(
-                width: level * 3, // Scale the width according to level (0-300)
+                width:
+                    level * 1.5, // Scale the width according to level (0-300)
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color: _getColor(level),
@@ -772,7 +796,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               Center(
                 child: Text(
                   '${level.toInt()}%',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.black),
                 ),
               ),
             ],
@@ -782,91 +806,107 @@ class _EmployerHomePageState extends State<EmployerHome>
     );
   }
 
-  Widget showSkills() {
-    if (selectedskills == null && myskills == null) {
-      return Text(_xmlHandler.getString('noskills'));
-    } else if (selectedskills == null) {
-      return Text('Jaktung');
-    } else {
-      List<String> res = selectedskills!.toList();
-      // return Text('Ladep LAAAAA:$res');
-      //checkExistingSkills();
-
-      return SingleChildScrollView(
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            dividerColor: Colors.transparent, // Removes the divider line
-          ),
-          child: ExpansionTile(
-              title: Text(_xmlHandler.getString('skills').toString()),
-              children: [
-                Column(
-                  children: res.map((skill) {
-                    return ListTile(
-                      minVerticalPadding: 0,
-                      contentPadding: EdgeInsets.all(0),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              skill,
-                            ),
-                          ),
-                          myskills.contains(getSkillName(skill))
-                              ? showLevels(getSkillName(skill))
-                              : ElevatedButton(
-                                  onPressed: () {
-                                    // Add assessment
-
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text(
-                                              '${_xmlHandler.getString('assfor')} $skill'),
-                                          content: Text(_xmlHandler
-                                              .getString('confirmassess')),
-                                          actions: [
-                                            TextButton.icon(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                icon: Icon(Icons.close),
-                                                label: Text(_xmlHandler
-                                                    .getString('no'))),
-                                            TextButton.icon(
-                                              onPressed: () {
-                                                // Add your confirm logic here
-                                                Navigator.of(context).pop();
-                                                Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            Assessment(
-                                                                skill))); // Close the dialog
-                                              },
-                                              icon: Icon(Icons
-                                                  .check), // Icon for confirmation
-                                              label: Text(
-                                                  _xmlHandler.getString('yes')),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Text(
-                                    _xmlHandler.getString('assessment'),
-                                  )),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ]),
+  Widget createSkillsFirst(List<String> res) {
+    return SingleChildScrollView(
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent, // Removes the divider line
         ),
-      );
-    }
+        child: Column(
+          children: res.map((skill) {
+            // print("My skills is:$myskills");
+            // print("Current skill is$skill");
+            // print("$skillsWithScores is skills with scores");
+            // print(
+            //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
+            // print(
+            //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
+
+            return ListTile(
+              minVerticalPadding: 0,
+              contentPadding: EdgeInsets.all(0),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      skill == getSkillName(skill)
+                          ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
+                          : skill,
+                    ),
+                  ),
+                  myskills.contains(getSkillName(skill)) && checkVerified(skill)
+                      ? showLevels(getSkillName(skill))
+                      : ElevatedButton(
+                          onPressed: () {
+                            // Add assessment
+
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                      '${_xmlHandler.getString('assfor')} $skill'),
+                                  content: Text(
+                                      _xmlHandler.getString('confirmassess')),
+                                  actions: [
+                                    TextButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        icon: Icon(Icons.close),
+                                        label:
+                                            Text(_xmlHandler.getString('no'))),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        // Add your confirm logic here
+                                        selectedskills = [];
+                                        Navigator.of(context).pop();
+                                        Navigator.of(context).push(MaterialPageRoute(
+                                            builder: (context) => Assessment(
+                                                skill,
+                                                onComplete:
+                                                    updateParentState))); // Close the dialog
+                                      },
+                                      icon: Icon(
+                                          Icons.check), // Icon for confirmation
+                                      label: Text(_xmlHandler.getString('yes')),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: Text(
+                            _xmlHandler.getString('assessment'),
+                          )),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget showSkills() {
+    return ExpansionTile(
+        title: Text(_xmlHandler.getString('skills').toString()),
+        children: [
+          if (selectedskills == null && myskills.isEmpty)
+            Text(_xmlHandler.getString('noskills')),
+          if (selectedskills == null && myskills.isNotEmpty)
+            createSkillsFirst(myskills),
+          if (selectedskills != null && myskills.isNotEmpty)
+            Column(
+              children: [
+                createSkillsFirst(myskills),
+                createSkillsFirst(selectedskills!.toList()),
+              ],
+            ),
+        ]);
+
+    //
   }
 
   Widget _buildServiceList() {
@@ -1338,7 +1378,9 @@ class _EmployerHomePageState extends State<EmployerHome>
   }
 
   void updateParentState() {
-    setState(() {});
+    setState(() {
+      fetchSkills();
+    });
   }
 }
 
