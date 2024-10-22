@@ -15,11 +15,13 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
   final bool isCurrentUser;
+  final String messageID;
 
   const ChatBubble({
     super.key,
     required this.data,
     required this.isCurrentUser,
+    required this.messageID,
   });
 
   @override
@@ -31,7 +33,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   // late DocumentSnapshot ds;
   @override
   Widget build(BuildContext context) {
-    if (widget.data['message'] == "ack") {
+    if (widget.data['ackID'] != "") {
       return FutureBuilder<DocumentSnapshot>(
           future: getAcknomledgement(widget.data['ackID']),
           builder: (context, snapshot) {
@@ -83,7 +85,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                           Row(
                             children: [
                               Text(
-                                "Agreed",
+                                // "Agreed"
+                                widget.data['message'],
                                 style: TextStyle(color: Colors.white),
                               ),
                               Icon(Icons.check, color: Colors.white),
@@ -93,7 +96,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                           Row(
                             children: [
                               Text(
-                                "Rejected",
+                                // "Rejected"
+                                widget.data['message'],
                                 style: TextStyle(color: Colors.white),
                               ),
                               Icon(Icons.close, color: Colors.white),
@@ -161,7 +165,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               Row(
                                 children: [
                                   Text(
-                                    "Agreed",
+                                    // "Agreed"
+                                    widget.data['message'],
                                     style: TextStyle(color: Colors.white),
                                   ),
                                   Icon(Icons.check, color: Colors.white),
@@ -171,7 +176,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               Row(
                                 children: [
                                   Text(
-                                    "Rejected",
+                                    // "Rejected"
+                                    widget.data['message'],
                                     style: TextStyle(color: Colors.white),
                                   ),
                                   Icon(Icons.close, color: Colors.white),
@@ -317,7 +323,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   agreeAckDetail(ackID, stat) async {
     await Chatdao()
-        .setAckStatus(widget.data['post_TypeID'], ackID, stat)
+        .setAckStatus(widget.data, ackID, stat, widget.messageID)
         .then((a) {
       setState(() {});
     });
