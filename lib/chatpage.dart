@@ -229,7 +229,8 @@ class _ChatPageState extends State<ChatPage> {
 
     return Container(
         alignment: alignment,
-        child: ChatBubble(data: data, isCurrentUser: isCurrentUser));
+        child: ChatBubble(
+            data: data, isCurrentUser: isCurrentUser, messageID: doc.id));
   }
 
   //build message input

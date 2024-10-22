@@ -62,13 +62,39 @@ class Chatdao {
         .snapshots();
   }
 
-  Future setAckStatus(String servID, String ackID, int stat) async {
-    if (stat == 2) {
+  Future setAckStatus(Map<String, dynamic> serv, String ackID, int stat,
+      String messageID) async {
+    bool ackn = false;
+    List<String> ids = [
+      serv['senderID'],
+      serv['receiverID'],
+      serv['post_TypeID']
+    ];
+    ids.sort();
+    String chatRoomID = ids.join('_'), msg = "";
+
+    if (stat == 2 || stat == 3) {
+      if (stat == 2) {
+        ackn = true;
+        msg = "Agreed";
+      }
+      if (stat == 3) {
+        msg = "Rejected";
+      }
       await FirebaseFirestore.instance
           .collection("services")
-          .doc(servID)
+          .doc(serv['post_TypeID'])
           .update({
-        "ack": true,
+        "ack": ackn,
+      });
+
+      await FirebaseFirestore.instance
+          .collection("chat_rooms")
+          .doc(chatRoomID)
+          .collection("message")
+          .doc(messageID)
+          .update({
+        "message": msg,
       });
     }
     return await FirebaseFirestore.instance

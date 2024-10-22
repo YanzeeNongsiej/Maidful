@@ -54,7 +54,6 @@ class ChatController extends ChangeNotifier {
     List<String> ids = [userID, otherUserID, postTypeID];
     ids.sort();
     String chatRoomID = ids.join('_');
-    print(chatRoomID);
     return Chatdao().getMessages(chatRoomID);
   }
 
