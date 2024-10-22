@@ -55,9 +55,12 @@ class _EmployerHomePageState extends State<EmployerHome>
   //   // return qs;
   // }
   String? _downloadUrl;
+  String? _myaddr;
+  String? _mybio;
   List<String>? selectedskills;
   List<String> myskills = [];
-
+  List<File> _documentImages = [];
+  final ImagePicker _picker = ImagePicker();
   List<int>? myscores;
   List<Map<String, dynamic>> skillsWithScores = [];
   List<List<dynamic>> skillsWithNames = [];
@@ -109,6 +112,8 @@ class _EmployerHomePageState extends State<EmployerHome>
         setState(() {
           try {
             _downloadUrl = userDoc['url'];
+            _myaddr = userDoc['address'];
+            _mybio = userDoc['remarks'];
           } catch (e) {
             print("No profileimage yet");
           } // Fetch the URL field
@@ -320,6 +325,84 @@ class _EmployerHomePageState extends State<EmployerHome>
     return const AssetImage("assets/profile.png");
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedImage = await _picker.pickImage(
+        source: ImageSource.gallery); // or ImageSource.camera
+
+    if (pickedImage != null) {
+      setState(() {
+        _documentImages.add(File(pickedImage.path));
+      });
+    }
+  }
+
+  Widget _buildGridView() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics:
+          NeverScrollableScrollPhysics(), // To disable scrolling inside grid
+      itemCount: _documentImages.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3, crossAxisSpacing: 4.0, mainAxisSpacing: 4.0),
+      itemBuilder: (context, index) {
+        return Stack(
+          children: [
+            Image.file(
+              _documentImages[index],
+              fit: BoxFit.cover,
+              width: double.infinity,
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: Icon(Icons.remove_circle, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    _documentImages.removeAt(index);
+                  });
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget showDocuments() {
+    return Card(
+      color: Colors.blueAccent[100],
+      elevation: 5, // Adding some elevation to the card for a shadow effect
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _documentImages.isNotEmpty
+                ? _buildGridView()
+                : Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      'No documents uploaded.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+            SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: Icon(Icons.upload),
+              label: Text('Upload Document'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget ProfilePage() {
     return SingleChildScrollView(
       child: Column(
@@ -392,17 +475,49 @@ class _EmployerHomePageState extends State<EmployerHome>
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  usrname ?? "Username",
-                  style: const TextStyle(fontSize: 24),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.person_3_rounded,
+                      color: Colors.blue,
+                    ),
+                    Text(
+                      usrname ?? "Username",
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ],
                 ),
-                const Text(
-                  'User Bio',
-                  style: TextStyle(fontSize: 16),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_on_sharp,
+                      color: Colors.blue,
+                    ),
+                    Text(
+                      _myaddr ?? "Address",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.edit_note,
+                      color: Colors.blue,
+                    ),
+                    Text(
+                      _mybio ?? "Bio",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          Row(children: [Expanded(child: showDocuments())]),
           Row(
             children: [
               Expanded(
@@ -415,6 +530,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                       child: Column(
                         children: [
                           // _buildServiceList(),
+
                           showSkills(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -1850,6 +1966,28 @@ class _NestedTabBarState extends State<NestedTabBar>
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  Card(
+                    // elevation: 10,
+                    color: Colors.blue,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.person_3_rounded,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Profile',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   Card(
                     // elevation: 10,
                     color: Colors.green,
