@@ -57,6 +57,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String? _downloadUrl;
   String? _myaddr;
   String? _mybio;
+  bool isEditing = false;
   List<String>? selectedskills;
   List<String> myskills = [];
   List<File> _documentImages = [];
@@ -64,6 +65,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   List<int>? myscores;
   List<Map<String, dynamic>> skillsWithScores = [];
   List<List<dynamic>> skillsWithNames = [];
+  String? userDocId;
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -151,6 +153,7 @@ class _EmployerHomePageState extends State<EmployerHome>
     });
     profilepic();
     fetchSkills();
+    _fetchUserDocId();
   }
 
   @override
@@ -402,6 +405,27 @@ class _EmployerHomePageState extends State<EmployerHome>
       ),
     );
   }
+  // Document ID for the user in Firestore
+
+  // Fetch the document ID based on the current user's UID
+  Future<void> _fetchUserDocId() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Query Firestore to get the document ID where 'uid' matches the current user's UID
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('userid',
+              isEqualTo:
+                  user.uid) // Assuming you store the UID in each user document
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+          userDocId = snapshot.docs.first.id; // Store the random document ID
+        });
+      }
+    }
+  }
 
   Widget ProfilePage() {
     return SingleChildScrollView(
@@ -486,6 +510,61 @@ class _EmployerHomePageState extends State<EmployerHome>
                       usrname ?? "Username",
                       style: const TextStyle(fontSize: 24),
                     ),
+                    IconButton(
+                      icon: Icon(
+                        isEditing ? Icons.check : Icons.edit,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            String newUsername =
+                                usrname.toString(); // Use existing username
+                            return AlertDialog(
+                              title: Text('Edit Username'),
+                              content: TextField(
+                                onChanged: (value) {
+                                  newUsername =
+                                      value; // Update username from input
+                                },
+                                controller:
+                                    TextEditingController(text: usrname),
+                                decoration: InputDecoration(
+                                    hintText: "Enter new username"),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Save'),
+                                  onPressed: () {
+                                    setState(() {
+                                      usrname = newUsername;
+                                      gv.username = newUsername;
+                                      // Update username in UI
+                                    });
+                                    if (userDocId!.isNotEmpty) {
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(userDocId)
+                                          .update({
+                                        'name': newUsername
+                                      }); // Update Firebase
+                                    }
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
                 Row(
@@ -497,7 +576,61 @@ class _EmployerHomePageState extends State<EmployerHome>
                     ),
                     Text(
                       _myaddr ?? "Address",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isEditing ? Icons.check : Icons.edit,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            String newaddr =
+                                _myaddr.toString(); // Use existing username
+                            return AlertDialog(
+                              title: Text('Edit Address'),
+                              content: TextField(
+                                onChanged: (value) {
+                                  newaddr = value; // Update username from input
+                                },
+                                controller:
+                                    TextEditingController(text: _myaddr),
+                                decoration: InputDecoration(
+                                    hintText: "Enter new Address"),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Save'),
+                                  onPressed: () {
+                                    setState(() {
+                                      _myaddr = newaddr;
+
+                                      // Update username in UI
+                                    });
+                                    if (userDocId!.isNotEmpty) {
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(userDocId)
+                                          .update({
+                                        'address': newaddr
+                                      }); // Update Firebase
+                                    }
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -510,7 +643,60 @@ class _EmployerHomePageState extends State<EmployerHome>
                     ),
                     Text(
                       _mybio ?? "Bio",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isEditing ? Icons.check : Icons.edit,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            String newbio =
+                                _mybio.toString(); // Use existing username
+                            return AlertDialog(
+                              title: Text('Edit Bio'),
+                              content: TextField(
+                                onChanged: (value) {
+                                  newbio = value; // Update username from input
+                                },
+                                controller: TextEditingController(text: _mybio),
+                                decoration:
+                                    InputDecoration(hintText: "Enter new Bio"),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Save'),
+                                  onPressed: () {
+                                    setState(() {
+                                      _mybio = newbio;
+
+                                      // Update username in UI
+                                    });
+                                    if (userDocId!.isNotEmpty) {
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(userDocId)
+                                          .update({
+                                        'remarks': newbio
+                                      }); // Update Firebase
+                                    }
+                                    Navigator.of(context).pop(); // Close dialog
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -970,7 +1156,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: Text(
-                                      '${_xmlHandler.getString('assfor')} $skill'),
+                                      '${_xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
                                   content: Text(
                                       _xmlHandler.getString('confirmassess')),
                                   actions: [
@@ -985,10 +1171,12 @@ class _EmployerHomePageState extends State<EmployerHome>
                                       onPressed: () {
                                         // Add your confirm logic here
                                         selectedskills = [];
+
                                         Navigator.of(context).pop();
                                         Navigator.of(context).push(MaterialPageRoute(
                                             builder: (context) => Assessment(
-                                                skill,
+                                                skillsWithNames.firstWhere(
+                                                    (s) => s[0] == skill)[1],
                                                 onComplete:
                                                     updateParentState))); // Close the dialog
                                       },

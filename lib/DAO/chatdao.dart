@@ -91,7 +91,7 @@ class Chatdao {
       await FirebaseFirestore.instance
           .collection("chat_rooms")
           .doc(chatRoomID)
-          .collection("message")
+          .collection("messages")
           .doc(messageID)
           .update({
         "message": msg,

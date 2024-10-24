@@ -35,7 +35,7 @@
 <string name="Friday">Sngi Thohdieng</string>
 <string name="Saturday">Sngi SaitJain</string>
 <string name="Sunday">Sngi U Blei</string>
-<string name="Housekeeping">Trei KamIing</string>
+<string name="Housekeeping">Trei Kam Iing</string>
 <string name="Cooking">Shet Jingshet</string>
 <string name="Laundry">Saitjain</string>
 <string name="Babysitting">Peit Khyllung</string>
@@ -73,4 +73,9 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="completeass">Phi lah dep Jubab lut</string>
 <string name="noquest">Ym pat don jingkylli</string>
 <string name="quest">Jingkylli</string>
+<string name="selectserv">Sngewbha jied ki kam</string>
+<string name="selectdays">Sngewbha jied ki sngi</string>
+<string name="from">Naduh</string>
+<string name="to">Haduh</string>
+<string name="nowork">Ym pat don ki kam barim</string>
 </strings>

@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
+import 'package:ibitf_app/changelang.dart';
 
 class JobResume extends StatefulWidget {
   const JobResume({super.key});
@@ -71,14 +72,67 @@ class _JobResumeState extends State<JobResume>
   void initState() {
     super.initState();
     _xmlHandler.loadStrings(gv.selected).then((a) {
+      daysList[0] = _xmlHandler.getString('Monday');
+      daysList[1] = _xmlHandler.getString('Tuesday');
+      daysList[2] = _xmlHandler.getString('Wednesday');
+      daysList[3] = _xmlHandler.getString('Thursday');
+      daysList[4] = _xmlHandler.getString('Friday');
+      daysList[5] = _xmlHandler.getString('Saturday');
+      daysList[6] = _xmlHandler.getString('Sunday');
+      getSkills();
       setState(() {});
     });
+  }
+
+  void getSkills() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('skills').get();
+    int i = 0;
+    //fetch only skills from the user
+    for (var doc in snapshot.docs) {
+      // Get the skill for the selected language
+
+      if (doc[gv.selected] != null) {
+        print('Prev${variantsList[i]}');
+        variantsList[i] = doc[gv.selected];
+        print(variantsList[i]);
+        i = i + 1;
+      }
+    }
+    setState(() {});
+  }
+
+  toEnglish() async {
+    List<String> res = await english(selectedDaysValue, gv.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    selectedDaysValue = res;
+    if (gv.selected == 'Khasi') {
+      List<String> englishSkills = [];
+      final firestoreInstance = FirebaseFirestore.instance;
+      for (String skill in selectedCheckBoxValue) {
+        // Query Firebase to find the document where 'Khasi' equals the native skill
+        QuerySnapshot query = await firestoreInstance
+            .collection('skills')
+            .where('Khasi', isEqualTo: skill)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          // Extract the 'English' field from the document
+          String englishSkill = query.docs.first.get('English');
+          englishSkills.add(englishSkill);
+        } else {
+          print('No matching skill found for $skill');
+        }
+      }
+      selectedCheckBoxValue = englishSkills;
+    }
   }
 
   addService() async {
     final User? user = FirebaseAuth.instance.currentUser;
     bool isOK = false;
     String wageBasis;
+    await toEnglish();
     if (_selectedWageValue == 1) {
       wageBasis = "Weekly";
     } else {
@@ -483,7 +537,7 @@ class _JobResumeState extends State<JobResume>
                           DropDownMultiSelect(
                             validator: ($selectedDaysValue) {
                               if (selectedDaysValue.isEmpty) {
-                                return 'Please Select Working Days';
+                                return _xmlHandler.getString('selectdays');
                               } else {
                                 dayValid = true;
                                 return '';
@@ -527,7 +581,7 @@ class _JobResumeState extends State<JobResume>
                               value = selectedDaysValue;
                               checkPostAvailability();
                             },
-                            whenEmpty: 'Select Working Days',
+                            whenEmpty: _xmlHandler.getString('selectdays'),
                           ),
                           const SizedBox(
                             height: 30.0,
@@ -562,9 +616,9 @@ class _JobResumeState extends State<JobResume>
                                       }
                                     },
                                     controller: fromTimeController,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        hintText: "From",
+                                        hintText: _xmlHandler.getString('from'),
                                         hintStyle: TextStyle(
                                             color: Color(0xFFb2b7bf),
                                             fontSize: 18.0)),
@@ -639,9 +693,9 @@ class _JobResumeState extends State<JobResume>
                                       }
                                     },
                                     controller: toTimeController,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        hintText: "To",
+                                        hintText: _xmlHandler.getString('to'),
                                         hintStyle: TextStyle(
                                             color: Color(0xFFb2b7bf),
                                             fontSize: 18.0)),
@@ -702,7 +756,7 @@ class _JobResumeState extends State<JobResume>
                     DropDownMultiSelect(
                       validator: ($selectedCheckBoxValue) {
                         if (selectedCheckBoxValue.isEmpty) {
-                          return 'Please Select Service(s)';
+                          return _xmlHandler.getString('selectserv');
                         } else {
                           servicesValid = true;
                           return '';
@@ -739,7 +793,7 @@ class _JobResumeState extends State<JobResume>
                       onChanged: (List<String> value) {
                         value = selectedCheckBoxValue;
                       },
-                      whenEmpty: 'Select Service(s)',
+                      whenEmpty: _xmlHandler.getString('selectserv'),
                     ),
                     const SizedBox(
                       height: 30.0,
@@ -836,7 +890,7 @@ class _JobResumeState extends State<JobResume>
                                 child: TextFormField(
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please Enter Rate';
+                                      return _xmlHandler.getString('rate');
                                     } else {
                                       rateValid = true;
                                       return null;
@@ -844,9 +898,9 @@ class _JobResumeState extends State<JobResume>
                                   },
                                   controller: ratecontroller,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: "Rate",
+                                      hintText: _xmlHandler.getString('rate'),
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
@@ -878,9 +932,9 @@ class _JobResumeState extends State<JobResume>
                                 child: TextFormField(
                                   maxLines: maxlinevalue,
                                   controller: whcontroller,
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: "No Work History Yet",
+                                      hintText: _xmlHandler.getString('nowork'),
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),

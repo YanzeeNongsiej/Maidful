@@ -73,4 +73,9 @@ Do you want to take the assessment now? </string>
 <string name="completeass">You've completed the assessment</string>
 <string name="noquest">No questions available</string>
 <string name="quest">Question</string>
+<string name="selectserv">Please Select Service(s)</string>
+<string name="selectdays">Please Select Days</string>
+<string name="from">From</string>
+<string name="to">To</string>
+<string name="nowork">No work History Yet</string>
 </strings>

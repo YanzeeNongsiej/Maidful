@@ -879,7 +879,7 @@ class _HireMaidState extends State<HireMaid> {
     } else if (selectedScheduleValue == 2) {
       uploadAck = {
         "userid": user?.uid,
-        "receiver": widget.itemGlobal?.get("user"),
+        "receiver": widget.itemGlobal?.get("userid"),
         "schedule": "Daily",
         "days": daysList,
         "time_from": fromTimeController.text,
@@ -893,7 +893,7 @@ class _HireMaidState extends State<HireMaid> {
     } else {
       uploadAck = {
         "userid": user?.uid,
-        "receiver": widget.itemGlobal?.get("user"),
+        "receiver": widget.itemGlobal?.get("userid"),
         "schedule": "Hourly",
         "days": selectedDaysValue,
         "time_from": fromTimeController.text,
