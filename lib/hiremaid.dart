@@ -858,10 +858,40 @@ class _HireMaidState extends State<HireMaid> {
     );
   }
 
+  toEnglish() async {
+    List<String> res = await english(selectedDaysValue, gv.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    selectedDaysValue = res;
+    List<String> res2 = await english(daysList, gv.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    daysList = res2;
+    if (gv.selected == 'Khasi') {
+      List<String> englishSkills = [];
+      final firestoreInstance = FirebaseFirestore.instance;
+      for (String skill in selectedCheckBoxValue) {
+        // Query Firebase to find the document where 'Khasi' equals the native skill
+        QuerySnapshot query = await firestoreInstance
+            .collection('skills')
+            .where('Khasi', isEqualTo: skill)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          // Extract the 'English' field from the document
+          String englishSkill = query.docs.first.get('English');
+          englishSkills.add(englishSkill);
+        } else {
+          print('No matching skill found for $skill');
+        }
+      }
+      selectedCheckBoxValue = englishSkills;
+    }
+  }
+
   sendAck() async {
     final User? user = FirebaseAuth.instance.currentUser;
     Map<String, dynamic> uploadAck = {};
     bool isOK = false;
+    await toEnglish();
     if (selectedScheduleValue == 1) {
       uploadAck = {
         "sender": user?.uid,

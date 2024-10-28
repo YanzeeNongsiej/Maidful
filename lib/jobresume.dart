@@ -105,8 +105,10 @@ class _JobResumeState extends State<JobResume>
 
   toEnglish() async {
     List<String> res = await english(selectedDaysValue, gv.selected);
+    List<String> res2 = await english(daysList, gv.selected);
     // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
     selectedDaysValue = res;
+    daysList = res2;
     if (gv.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;

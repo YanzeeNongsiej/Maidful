@@ -107,6 +107,9 @@ class _JobProfileState extends State<JobProfile>
     List<String> res = await english(selectedDaysValue, gv.selected);
     // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
     selectedDaysValue = res;
+    List<String> res2 = await english(daysList, gv.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    daysList = res2;
     if (gv.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;
