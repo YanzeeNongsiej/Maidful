@@ -17,9 +17,10 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
-  String email = "", password = "";
+  String email = "", password = "", phno = "";
   GlobalVariables gv = GlobalVariables();
   TextEditingController mailcontroller = TextEditingController();
+  TextEditingController phnocontroller = TextEditingController();
   TextEditingController passwordcontroller = TextEditingController();
   final XMLHandler _xmlHandler = XMLHandler();
   final List<bool> _iss = [true, false];
@@ -91,6 +92,28 @@ class _LogInState extends State<LogIn> {
           key: _formkey,
           child: Column(
             children: [
+              // Container(
+              //   padding:
+              //       const EdgeInsets.symmetric(vertical: 2.0, horizontal: 30.0),
+              //   decoration: BoxDecoration(
+              //       color: const Color(0xFFedf0f8),
+              //       borderRadius: BorderRadius.circular(30)),
+              //   child: TextFormField(
+              //     validator: (value) {
+              //       if (value == null || value.isEmpty) {
+              //         return 'Please Enter Phone Number';
+              //       }
+              //       return null;
+              //     },
+              //     controller: phnocontroller,
+              //     decoration: const InputDecoration(
+              //         border: InputBorder.none,
+              //         hintText: "Ph. No.",
+              //         hintStyle:
+              //             TextStyle(color: Color(0xFFb2b7bf), fontSize: 18.0)),
+              //   ),
+              // ),
+
               Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 2.0, horizontal: 30.0),
@@ -144,6 +167,7 @@ class _LogInState extends State<LogIn> {
                 onTap: () {
                   if (_formkey.currentState!.validate()) {
                     setState(() {
+                      phno = phnocontroller.text;
                       email = mailcontroller.text;
                       password = passwordcontroller.text;
                     });
@@ -325,12 +349,17 @@ class _LogInState extends State<LogIn> {
       //   await FirebaseAuth.instance.currentUser?.updatePhotoURL(baseURL);
       //   print("im donnee${baseURL}");
       // }
+
+      //last code
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password)
           .whenComplete(() {
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const Home()));
       });
+
+      // Phone Authentication
+      // await AuthMethods().phoneAuthentication(phno, context);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -346,6 +375,8 @@ class _LogInState extends State<LogIn> {
               _xmlHandler.getString('wrongpass'),
               style: const TextStyle(fontSize: 18.0),
             )));
+      } else {
+        print("Error for Phone No Login: $e");
       }
     }
   }

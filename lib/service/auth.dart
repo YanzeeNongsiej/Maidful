@@ -1,9 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:get/get.dart';
+import 'package:ibitf_app/home.dart';
 
 class AuthMethods {
   // final FirebaseAuth auth = FirebaseAuth.instance;
 
+  var verificationId = ''.obs;
+  String smscode = "";
+  TextEditingController codeController = TextEditingController();
   static User? user = FirebaseAuth.instance.currentUser;
 
   static Future<User?> loginWithGoogle() async {
@@ -19,6 +25,75 @@ class AuthMethods {
     final UserCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
     return UserCredential.user;
+  }
+
+  Future<void> phoneAuthentication(String phoneNo, BuildContext context) async {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: '+91${phoneNo.trim()}',
+      verificationCompleted: (credential) async {
+        await FirebaseAuth.instance
+            .signInWithCredential(credential)
+            .then((value) {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => Home()));
+        });
+      },
+      codeSent: (verificationId, resendToken) {
+        showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+                  title: Text("Enter OTP"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: codeController,
+                      )
+                    ],
+                  ),
+                  actions: [
+                    ElevatedButton(
+                        onPressed: () {
+                          smscode = codeController.text;
+                          PhoneAuthCredential credentials =
+                              PhoneAuthProvider.credential(
+                                  verificationId: verificationId,
+                                  smsCode: smscode);
+                          FirebaseAuth.instance
+                              .signInWithCredential(credentials)
+                              .then((result) {
+                            Navigator.pop(context);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Home()));
+                          });
+                        },
+                        child: Text("Done"))
+                  ],
+                ));
+        this.verificationId.value = verificationId;
+      },
+      codeAutoRetrievalTimeout: (verificationId) {
+        this.verificationId.value = verificationId;
+      },
+      timeout: Duration(seconds: 45),
+      verificationFailed: (e) {
+        print("Error code:${e.code}; Message:${e.message}");
+        if (e.code == 'invalid-phone-number') {
+          Get.snackbar('Error', 'The provided Phone Number is not valid.');
+        } else {
+          Get.snackbar('Error', 'Something wemt worng, Try again');
+        }
+      },
+    );
+  }
+
+  Future<bool> verifyOTP(String otp) async {
+    var credentials = await FirebaseAuth.instance.signInWithCredential(
+        PhoneAuthProvider.credential(
+            verificationId: verificationId.value, smsCode: otp));
+    return credentials.user != null ? true : false;
   }
 
   static Future<void> signOut() async {
