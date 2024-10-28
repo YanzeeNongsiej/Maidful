@@ -35,6 +35,7 @@ class _JobResumeState extends State<JobResume>
   int whcount = 0, maxlinevalue = 1;
   int _selectedTimingValue = 1;
   int _selectedWageValue = 1;
+  int _selectedNegoValue = 1;
   final _formkey = GlobalKey<FormState>();
   List<String> variantsList = [
     "Housekeeping",
@@ -905,6 +906,56 @@ class _JobResumeState extends State<JobResume>
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
                                 ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 30.0,
+                    ),
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Row(
+                                children: [
+                                  Radio(
+                                      value: 1,
+                                      groupValue: _selectedNegoValue,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedNegoValue = value!;
+                                          //toggleWage(1);
+                                        });
+                                      }),
+                                  Expanded(
+                                    child: Text(_xmlHandler.getString('nego')),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Row(
+                                children: [
+                                  Radio(
+                                      value: 2,
+                                      groupValue: _selectedNegoValue,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedNegoValue = value!;
+                                          // toggleWage(2);
+                                        });
+                                      }),
+                                  Expanded(
+                                      child: Text(
+                                          _xmlHandler.getString('nonnengo')))
+                                ],
                               ),
                             ),
                           ],

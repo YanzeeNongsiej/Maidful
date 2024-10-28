@@ -490,7 +490,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                             _downloadUrl = downloadUrl;
                           });
                         } catch (e) {
-                          print('Error uploadingggggggggggggggggggggg$e');
+                          print('Error $e');
                         }
                       },
                       padding: EdgeInsets.zero, // No padding
@@ -510,60 +510,65 @@ class _EmployerHomePageState extends State<EmployerHome>
                       usrname ?? "Username",
                       style: const TextStyle(fontSize: 24),
                     ),
-                    IconButton(
-                      icon: Icon(
-                        isEditing ? Icons.check : Icons.edit,
-                        color: Colors.blue,
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: Icon(
+                          isEditing ? Icons.check : Icons.edit,
+                          color: Colors.blue,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              String newUsername =
+                                  usrname.toString(); // Use existing username
+                              return AlertDialog(
+                                title: Text('Edit Username'),
+                                content: TextField(
+                                  onChanged: (value) {
+                                    newUsername =
+                                        value; // Update username from input
+                                  },
+                                  controller:
+                                      TextEditingController(text: usrname),
+                                  decoration: InputDecoration(
+                                      hintText: "Enter new username"),
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: Text('Cancel'),
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // Close dialog
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('Save'),
+                                    onPressed: () {
+                                      setState(() {
+                                        usrname = newUsername;
+                                        gv.username = newUsername;
+                                        // Update username in UI
+                                      });
+                                      if (userDocId!.isNotEmpty) {
+                                        FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(userDocId)
+                                            .update({
+                                          'name': newUsername
+                                        }); // Update Firebase
+                                      }
+                                      Navigator.of(context)
+                                          .pop(); // Close dialog
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            String newUsername =
-                                usrname.toString(); // Use existing username
-                            return AlertDialog(
-                              title: Text('Edit Username'),
-                              content: TextField(
-                                onChanged: (value) {
-                                  newUsername =
-                                      value; // Update username from input
-                                },
-                                controller:
-                                    TextEditingController(text: usrname),
-                                decoration: InputDecoration(
-                                    hintText: "Enter new username"),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: Text('Cancel'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text('Save'),
-                                  onPressed: () {
-                                    setState(() {
-                                      usrname = newUsername;
-                                      gv.username = newUsername;
-                                      // Update username in UI
-                                    });
-                                    if (userDocId!.isNotEmpty) {
-                                      FirebaseFirestore.instance
-                                          .collection('users')
-                                          .doc(userDocId)
-                                          .update({
-                                        'name': newUsername
-                                      }); // Update Firebase
-                                    }
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
                     ),
                   ],
                 ),
@@ -1233,7 +1238,7 @@ class _EmployerHomePageState extends State<EmployerHome>
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return const Text("No Services Yet");
+              return Text(_xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1346,7 +1351,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               );
             }
           } else {
-            return const Text("No Services Yet");
+            return Text(_xmlHandler.getString('noserv'));
           }
         });
   }
@@ -1356,11 +1361,11 @@ class _EmployerHomePageState extends State<EmployerHome>
         future: fetchOwnServices(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("loading...");
+            return const Text("Loading...");
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return const Text("No Services Yet");
+              return Text(_xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1473,7 +1478,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               );
             }
           } else {
-            return const Text("No Services Yet");
+            return Text(_xmlHandler.getString('noserv'));
           }
         });
   }
@@ -1483,11 +1488,11 @@ class _EmployerHomePageState extends State<EmployerHome>
         future: fetchOwnJobProfile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("loading...");
+            return const Text("Loading...");
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return const Text("No Services Yet");
+              return Text(_xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1587,7 +1592,7 @@ class _EmployerHomePageState extends State<EmployerHome>
               );
             }
           } else {
-            return const Text("No Services Yet");
+            return Text(_xmlHandler.getString('noserv'));
           }
         });
   }
@@ -1976,7 +1981,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                         Text(_xmlHandler.getString('sched'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(servItem.get("schedule")),
+                        Text(_xmlHandler.getString(servItem.get("schedule"))),
                       ],
                     ),
                     if (servItem.get("schedule") == 'Hourly')
@@ -1994,7 +1999,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                 children: [
                                   Text("${i + 1}. "),
                                   Expanded(
-                                    child: Text("${servItem.get("days")[i]}"),
+                                    child: Text(
+                                        "${_xmlHandler.getString(servItem.get("days")[i])}"),
                                   ),
                                 ],
                               ),
@@ -2028,7 +2034,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                               children: [
                                 Text("${i + 1}. "),
                                 Expanded(
-                                  child: Text("${servItem.get("services")[i]}"),
+                                  child: Text(
+                                      "${_xmlHandler.getString(servItem.get("services")[i])}"),
                                 ),
                               ],
                             ),
@@ -2069,7 +2076,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
-                              Text(servItem.get("wage"),
+                              Text(_xmlHandler.getString(servItem.get("wage")),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
@@ -2349,12 +2356,17 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                             .get("address")),
                                                       ],
                                                     ),
-                                                    const Text(
-                                                      "Services offered:",
-                                                    ),
+                                                    Text(
+                                                        _xmlHandler.getString(
+                                                            'servoff'),
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
                                                     for (var a in servitem
                                                         .get("services"))
-                                                      Text(a),
+                                                      Text(_xmlHandler
+                                                          .getString(a)),
                                                     // Text(
                                                     //     servitem.get("services")
                                                     //         as String),

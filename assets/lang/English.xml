@@ -19,7 +19,7 @@
 <string name="serv">Services:  </string>
 <string name="workhist"> Work History:  </string>
 <string name="wage">Wage:  </string>
-<string name="rate">Rate:  </string>
+<string name="rate">Salary:  </string>
 <string name="hire">Hire this Maid</string>
 <string name="resetpass">Password Reset Email has been sent!</string>
 <string name="nouser">No user found for that email.</string>
@@ -78,4 +78,8 @@ Do you want to take the assessment now? </string>
 <string name="from">From</string>
 <string name="to">To</string>
 <string name="nowork">No work History Yet</string>
+<string name="noserv">No Services Yet</string>
+<string name="servoff">Services Offered:</string>
+<string name="nego"> Negotiable</string>
+<string name="nonnego"> Non Negotiable</string>
 </strings>
