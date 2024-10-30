@@ -11,6 +11,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/chatdao.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
+import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -31,6 +33,18 @@ class ChatBubble extends StatefulWidget {
 class _ChatBubbleState extends State<ChatBubble> {
 // Future<DocumentSnapshot<Object?>> item = getAck(widget.data['ackID']);
   // late DocumentSnapshot ds;
+  XMLHandler _xmlHandler = XMLHandler();
+  GlobalVariables gv = GlobalVariables();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _xmlHandler.loadStrings(gv.selected).then((onValue) {
+      setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.data['ackID'] != "") {
@@ -230,14 +244,15 @@ class _ChatBubbleState extends State<ChatBubble> {
               children: [
                 Row(
                   children: [
-                    Text("Schedule: ${ds.get("schedule")}"),
+                    Text(
+                        "${_xmlHandler.getString('sched')} ${_xmlHandler.getString(ds.get("schedule"))}"),
                   ],
                 ),
                 if (ds.get("schedule") == 'Hourly')
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Days: ",
+                      Text(_xmlHandler.getString('day'),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       for (var i = 0; i < ds.get("days").length; i++)
                         Padding(
@@ -247,7 +262,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                             children: [
                               Text("${i + 1}. "),
                               Expanded(
-                                child: Text("${ds.get("days")[i]}"),
+                                child: Text(
+                                    _xmlHandler.getString(ds.get("days")[i])),
                               ),
                             ],
                           ),
@@ -258,7 +274,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ds.get("schedule") == 'Hourly')
                   Row(
                     children: [
-                      Text("Timing: ",
+                      Text(_xmlHandler.getString('timing'),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text("${ds.get("time_from")}-${ds.get("time_to")}"),
                     ],
@@ -266,7 +282,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Services: ",
+                    Text(_xmlHandler.getString('serv'),
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                     for (var i = 0; i < ds.get("services").length; i++)
                       Padding(
@@ -276,7 +292,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                           children: [
                             Text("${i + 1}. "),
                             Expanded(
-                              child: Text("${ds.get("services")[i]}"),
+                              child: Text(
+                                  _xmlHandler.getString(ds.get("services")[i])),
                             ),
                           ],
                         ),
@@ -288,15 +305,15 @@ class _ChatBubbleState extends State<ChatBubble> {
                     child: Column(children: [
                       Row(
                         children: [
-                          Text("Wage: ",
+                          Text(_xmlHandler.getString('wage'),
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                           ds.get("wage") == 1
-                              ? Text("Weekly",
+                              ? Text(_xmlHandler.getString('weekly'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15))
-                              : Text("Monthly",
+                              : Text(_xmlHandler.getString('monthly'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
@@ -304,7 +321,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       ),
                       Row(
                         children: [
-                          Text("Rate: ",
+                          Text(_xmlHandler.getString('rate'),
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 25)),
                           Text("\u{20B9}${ds.get("rate")}",

@@ -23,6 +23,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:ibitf_app/assessment.dart';
 import 'package:ibitf_app/DAO/skilldao.dart';
+import 'package:ibitf_app/terms.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -172,6 +173,8 @@ class _EmployerHomePageState extends State<EmployerHome>
         }
         break;
       case 'Settings':
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => const Terms()));
         break;
     }
   }

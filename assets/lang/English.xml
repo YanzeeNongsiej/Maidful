@@ -82,4 +82,6 @@ Do you want to take the assessment now? </string>
 <string name="servoff">Services Offered:</string>
 <string name="nego"> Negotiable</string>
 <string name="nonnego"> Non Negotiable</string>
+<string name="read"> I have read the terms and conditions</string>
+<string name="agree"> Agree</string>
 </strings>

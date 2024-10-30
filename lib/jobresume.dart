@@ -24,6 +24,9 @@ class _JobResumeState extends State<JobResume>
   final toTimeController = TextEditingController();
   final whcontroller = TextEditingController();
   final whController1 = TextEditingController();
+  final TextEditingController shiftcont = TextEditingController();
+  List<String> timeEntries = [];
+
   final ratecontroller = TextEditingController();
   static const IconData rupeeSymbol =
       IconData(0x20B9, fontFamily: 'MaterialIcons');
@@ -32,7 +35,7 @@ class _JobResumeState extends State<JobResume>
       timeToValid = false,
       servicesValid = false,
       rateValid = false;
-  int whcount = 0, maxlinevalue = 1;
+  int whcount = 0, maxlinevalue = 1, timingcount = 0, maxlinevalueshift = 1;
   int _selectedTimingValue = 1;
   int _selectedWageValue = 1;
   int _selectedNegoValue = 1;
@@ -58,6 +61,7 @@ class _JobResumeState extends State<JobResume>
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
   List<String> workHistory = [];
+  List<String> shifts = [];
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
   Orientation? orientation;
@@ -142,15 +146,27 @@ class _JobResumeState extends State<JobResume>
       wageBasis = "Monthly";
     }
     Map<String, dynamic> uploadService = {};
+    Map<String, dynamic> timing = {};
     if (_selectedTimingValue == 1) {
       if (servicesValid && rateValid) {
+        timeEntries.add("12:00 AM - 11:59 AM");
+        // Loop through the list of shift strings
+        for (int i = 0; i < timeEntries.length; i++) {
+          // Split the string by " - " to get start and end times
+          List<String> times = timeEntries[i].split(" - ");
+
+          if (times.length == 2) {
+            // Add the times array to the map with a dynamically generated shift key
+            timing['shift${i + 1}'] = [times[0], times[1]];
+          }
+        }
         uploadService = {
           "userid": user?.uid,
           "schedule": "Live-in",
           "days": daysList,
-          "time_from": "12:00 AM",
-          "time_to": "11:59 PM",
+          "timing": timing,
           "services": selectedCheckBoxValue,
+          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
@@ -159,14 +175,23 @@ class _JobResumeState extends State<JobResume>
         isOK = true;
       }
     } else if (_selectedTimingValue == 2) {
-      if (timeFromValid && timeToValid && servicesValid && rateValid) {
+      if (servicesValid && rateValid) {
+        for (int i = 0; i < timeEntries.length; i++) {
+          // Split the string by " - " to get start and end times
+          List<String> times = timeEntries[i].split(" - ");
+
+          if (times.length == 2) {
+            // Add the times array to the map with a dynamically generated shift key
+            timing['shift${i + 1}'] = [times[0], times[1]];
+          }
+        }
         uploadService = {
           "userid": user?.uid,
           "schedule": "Daily",
           "days": daysList,
-          "time_from": fromTimeController.text,
-          "time_to": toTimeController.text,
+          "timing": timing,
           "services": selectedCheckBoxValue,
+          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
@@ -175,18 +200,23 @@ class _JobResumeState extends State<JobResume>
         isOK = true;
       }
     } else {
-      if (timeFromValid &&
-          timeToValid &&
-          servicesValid &&
-          dayValid &&
-          rateValid) {
+      if (servicesValid && dayValid && rateValid) {
+        for (int i = 0; i < timeEntries.length; i++) {
+          // Split the string by " - " to get start and end times
+          List<String> times = timeEntries[i].split(" - ");
+
+          if (times.length == 2) {
+            // Add the times array to the map with a dynamically generated shift key
+            timing['shift${i + 1}'] = [times[0], times[1]];
+          }
+        }
         uploadService = {
           "userid": user?.uid,
           "schedule": "Hourly",
           "days": selectedDaysValue,
-          "time_from": fromTimeController.text,
-          "time_to": toTimeController.text,
+          "timing": timing,
           "services": selectedCheckBoxValue,
+          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
@@ -600,7 +630,6 @@ class _JobResumeState extends State<JobResume>
                           Text(_xmlHandler.getString('timing'),
                               textAlign: TextAlign.center),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               Expanded(
                                 child: Container(
@@ -610,146 +639,337 @@ class _JobResumeState extends State<JobResume>
                                       color: const Color(0xFFedf0f8),
                                       borderRadius: BorderRadius.circular(30)),
                                   child: TextFormField(
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please Enter Start';
-                                      } else {
-                                        timeFromValid = true;
-                                        return null;
-                                      }
-                                    },
-                                    controller: fromTimeController,
+                                    maxLines: maxlinevalueshift,
+                                    controller: shiftcont,
                                     decoration: InputDecoration(
                                         border: InputBorder.none,
-                                        hintText: _xmlHandler.getString('from'),
+                                        hintText: 'shift',
                                         hintStyle: TextStyle(
                                             color: Color(0xFFb2b7bf),
                                             fontSize: 18.0)),
                                     readOnly: true,
-                                    onTap: () async {
-                                      final TimeOfDay? time =
-                                          await showTimePicker(
-                                        context: context,
-                                        initialTime:
-                                            selectedTime ?? TimeOfDay.now(),
-                                        initialEntryMode: entryMode,
-                                        orientation: orientation,
-                                        builder: (BuildContext context,
-                                            Widget? child) {
-                                          // We just wrap these environmental changes around the
-                                          // child in this builder so that we can apply the
-                                          // options selected above. In regular usage, this is
-                                          // rarely necessary, because the default values are
-                                          // usually used as-is.
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              materialTapTargetSize:
-                                                  tapTargetSize,
-                                            ),
-                                            // child: Directionality(
-                                            //   textDirection: textDirection,
-                                            child: MediaQuery(
-                                              data: MediaQuery.of(context)
-                                                  .copyWith(
-                                                alwaysUse24HourFormat:
-                                                    use24HourTime,
-                                              ),
-                                              child: child!,
-                                            ),
-                                            // ),
-                                          );
-                                        },
-                                      );
-                                      if (time != null) {
-                                        setState(() {
-                                          fromTimeController.text =
-                                              time.format(context).toString();
-                                        });
-                                        checkPostAvailability();
-                                      }
-                                    },
                                   ),
                                 ),
                               ),
                               Container(
-                                padding:
-                                    const EdgeInsets.only(left: 10, right: 10),
-                                child: const Text(
-                                  "-",
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 2.0, horizontal: 30.0),
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFFedf0f8),
-                                      borderRadius: BorderRadius.circular(30)),
-                                  child: TextFormField(
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please Enter End';
-                                      } else {
-                                        timeToValid = true;
-                                        return null;
-                                      }
-                                    },
-                                    controller: toTimeController,
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: _xmlHandler.getString('to'),
-                                        hintStyle: TextStyle(
-                                            color: Color(0xFFb2b7bf),
-                                            fontSize: 18.0)),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      final TimeOfDay? time =
-                                          await showTimePicker(
-                                        context: context,
-                                        initialTime:
-                                            selectedTime ?? TimeOfDay.now(),
-                                        initialEntryMode: entryMode,
-                                        orientation: orientation,
-                                        builder: (BuildContext context,
-                                            Widget? child) {
-                                          // We just wrap these environmental changes around the
-                                          // child in this builder so that we can apply the
-                                          // options selected above. In regular usage, this is
-                                          // rarely necessary, because the default values are
-                                          // usually used as-is.
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              materialTapTargetSize:
-                                                  tapTargetSize,
-                                            ),
-                                            // child: Directionality(
-                                            //   textDirection: textDirection,
-                                            child: MediaQuery(
-                                              data: MediaQuery.of(context)
-                                                  .copyWith(
-                                                alwaysUse24HourFormat:
-                                                    use24HourTime,
+                                  decoration: const BoxDecoration(
+                                      color: Color.fromARGB(255, 37, 67, 133),
+                                      shape: BoxShape.circle),
+                                  child: IconButton(
+                                      onPressed: () {
+                                        timingcount += 1;
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text("Add Timing"),
+                                              content: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  Expanded(
+                                                    child: Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 2.0,
+                                                          horizontal: 30.0),
+                                                      decoration: BoxDecoration(
+                                                          color: const Color(
+                                                              0xFFedf0f8),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      30)),
+                                                      child: TextFormField(
+                                                        controller:
+                                                            fromTimeController,
+                                                        decoration: InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            hintText: 'From',
+                                                            hintStyle: TextStyle(
+                                                                color: Color(
+                                                                    0xFFb2b7bf),
+                                                                fontSize:
+                                                                    18.0)),
+                                                        readOnly: true,
+                                                        onTap: () async {
+                                                          final TimeOfDay?
+                                                              time =
+                                                              await showTimePicker(
+                                                            context: context,
+                                                            initialTime:
+                                                                TimeOfDay.now(),
+                                                          );
+                                                          if (time != null) {
+                                                            setState(() {
+                                                              fromTimeController
+                                                                      .text =
+                                                                  time.format(
+                                                                      context);
+                                                            });
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 10,
+                                                            right: 10),
+                                                    child: const Text(
+                                                      "-",
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 2.0,
+                                                          horizontal: 30.0),
+                                                      decoration: BoxDecoration(
+                                                          color: const Color(
+                                                              0xFFedf0f8),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      30)),
+                                                      child: TextFormField(
+                                                        controller:
+                                                            toTimeController,
+                                                        decoration: InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            hintText: 'To',
+                                                            hintStyle: TextStyle(
+                                                                color: Color(
+                                                                    0xFFb2b7bf),
+                                                                fontSize:
+                                                                    18.0)),
+                                                        readOnly: true,
+                                                        onTap: () async {
+                                                          final TimeOfDay?
+                                                              time =
+                                                              await showTimePicker(
+                                                            context: context,
+                                                            initialTime:
+                                                                TimeOfDay.now(),
+                                                          );
+                                                          if (time != null) {
+                                                            setState(() {
+                                                              toTimeController
+                                                                      .text =
+                                                                  time.format(
+                                                                      context);
+                                                            });
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              child: child!,
-                                            ),
-                                            // ),
-                                          );
-                                        },
-                                      );
-                                      if (time != null) {
-                                        setState(() {
-                                          toTimeController.text =
-                                              time.format(context).toString();
-                                        });
-                                        checkPostAvailability();
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("Add"),
+                                                  onPressed: () {
+                                                    if (fromTimeController
+                                                            .text.isNotEmpty &&
+                                                        toTimeController
+                                                            .text.isNotEmpty) {
+                                                      setState(() {
+                                                        maxlinevalueshift =
+                                                            maxlinevalueshift +
+                                                                1;
+                                                        String data =
+                                                            "${fromTimeController.text} - ${toTimeController.text}";
+                                                        timeEntries.add(data);
+                                                        shiftcont.text =
+                                                            "${shiftcont.text}$timingcount. $data\n";
+                                                        fromTimeController
+                                                            .clear();
+                                                        toTimeController
+                                                            .clear();
+                                                      });
+                                                      Navigator.pop(context);
+                                                      setState(() {});
+                                                    } else {
+                                                      // Optionally, show a validation error here
+                                                    }
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: Text("Cancel"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                      ))),
                             ],
                           ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          //   children: [
+                          //     Expanded(
+                          //       child: Container(
+                          //         padding: const EdgeInsets.symmetric(
+                          //             vertical: 2.0, horizontal: 30.0),
+                          //         decoration: BoxDecoration(
+                          //             color: const Color(0xFFedf0f8),
+                          //             borderRadius: BorderRadius.circular(30)),
+                          //         child: TextFormField(
+                          //           validator: (value) {
+                          //             if (value == null || value.isEmpty) {
+                          //               return 'Please Enter Start';
+                          //             } else {
+                          //               timeFromValid = true;
+                          //               return null;
+                          //             }
+                          //           },
+                          //           controller: fromTimeController,
+                          //           decoration: InputDecoration(
+                          //               border: InputBorder.none,
+                          //               hintText: _xmlHandler.getString('from'),
+                          //               hintStyle: TextStyle(
+                          //                   color: Color(0xFFb2b7bf),
+                          //                   fontSize: 18.0)),
+                          //           readOnly: true,
+                          //           onTap: () async {
+                          //             final TimeOfDay? time =
+                          //                 await showTimePicker(
+                          //               context: context,
+                          //               initialTime:
+                          //                   selectedTime ?? TimeOfDay.now(),
+                          //               initialEntryMode: entryMode,
+                          //               orientation: orientation,
+                          //               builder: (BuildContext context,
+                          //                   Widget? child) {
+                          //                 // We just wrap these environmental changes around the
+                          //                 // child in this builder so that we can apply the
+                          //                 // options selected above. In regular usage, this is
+                          //                 // rarely necessary, because the default values are
+                          //                 // usually used as-is.
+                          //                 return Theme(
+                          //                   data: Theme.of(context).copyWith(
+                          //                     materialTapTargetSize:
+                          //                         tapTargetSize,
+                          //                   ),
+                          //                   // child: Directionality(
+                          //                   //   textDirection: textDirection,
+                          //                   child: MediaQuery(
+                          //                     data: MediaQuery.of(context)
+                          //                         .copyWith(
+                          //                       alwaysUse24HourFormat:
+                          //                           use24HourTime,
+                          //                     ),
+                          //                     child: child!,
+                          //                   ),
+                          //                   // ),
+                          //                 );
+                          //               },
+                          //             );
+                          //             if (time != null) {
+                          //               setState(() {
+                          //                 fromTimeController.text =
+                          //                     time.format(context).toString();
+                          //               });
+                          //               checkPostAvailability();
+                          //             }
+                          //           },
+                          //         ),
+                          //       ),
+                          //     ),
+                          //     Container(
+                          //       padding:
+                          //           const EdgeInsets.only(left: 10, right: 10),
+                          //       child: const Text(
+                          //         "-",
+                          //         textAlign: TextAlign.center,
+                          //       ),
+                          //     ),
+                          //     Expanded(
+                          //       child: Container(
+                          //         padding: const EdgeInsets.symmetric(
+                          //             vertical: 2.0, horizontal: 30.0),
+                          //         decoration: BoxDecoration(
+                          //             color: const Color(0xFFedf0f8),
+                          //             borderRadius: BorderRadius.circular(30)),
+                          //         child: TextFormField(
+                          //           validator: (value) {
+                          //             if (value == null || value.isEmpty) {
+                          //               return 'Please Enter End';
+                          //             } else {
+                          //               timeToValid = true;
+                          //               return null;
+                          //             }
+                          //           },
+                          //           controller: toTimeController,
+                          //           decoration: InputDecoration(
+                          //               border: InputBorder.none,
+                          //               hintText: _xmlHandler.getString('to'),
+                          //               hintStyle: TextStyle(
+                          //                   color: Color(0xFFb2b7bf),
+                          //                   fontSize: 18.0)),
+                          //           readOnly: true,
+                          //           onTap: () async {
+                          //             final TimeOfDay? time =
+                          //                 await showTimePicker(
+                          //               context: context,
+                          //               initialTime:
+                          //                   selectedTime ?? TimeOfDay.now(),
+                          //               initialEntryMode: entryMode,
+                          //               orientation: orientation,
+                          //               builder: (BuildContext context,
+                          //                   Widget? child) {
+                          //                 // We just wrap these environmental changes around the
+                          //                 // child in this builder so that we can apply the
+                          //                 // options selected above. In regular usage, this is
+                          //                 // rarely necessary, because the default values are
+                          //                 // usually used as-is.
+                          //                 return Theme(
+                          //                   data: Theme.of(context).copyWith(
+                          //                     materialTapTargetSize:
+                          //                         tapTargetSize,
+                          //                   ),
+                          //                   // child: Directionality(
+                          //                   //   textDirection: textDirection,
+                          //                   child: MediaQuery(
+                          //                     data: MediaQuery.of(context)
+                          //                         .copyWith(
+                          //                       alwaysUse24HourFormat:
+                          //                           use24HourTime,
+                          //                     ),
+                          //                     child: child!,
+                          //                   ),
+                          //                   // ),
+                          //                 );
+                          //               },
+                          //             );
+                          //             if (time != null) {
+                          //               setState(() {
+                          //                 toTimeController.text =
+                          //                     time.format(context).toString();
+                          //               });
+                          //               checkPostAvailability();
+                          //             }
+                          //           },
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                           const SizedBox(
                             height: 30.0,
                           ),
@@ -956,7 +1176,7 @@ class _JobResumeState extends State<JobResume>
                                       }),
                                   Expanded(
                                       child: Text(
-                                          _xmlHandler.getString('nonnengo')))
+                                          _xmlHandler.getString('nonnego')))
                                 ],
                               ),
                             ),
