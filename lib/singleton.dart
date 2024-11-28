@@ -13,4 +13,10 @@ class GlobalVariables {
   set username(String u) {
     uname = u;
   }
+
+  int urole = -1;
+  int get userrole => urole;
+  set userrole(int r) {
+    urole = r;
+  }
 }
