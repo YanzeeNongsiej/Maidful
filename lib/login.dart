@@ -298,33 +298,6 @@ class _LogInState extends State<LogIn> {
 
   userLogin() async {
     try {
-      // old code
-      // await FirebaseAuth.instance
-      //     .signInWithEmailAndPassword(email: email, password: password);
-      // Navigator.push(
-      //     context, MaterialPageRoute(builder: (context) =>  Home(s:_selected,xml:_xmlHandler)));
-
-      // new code
-      // String? photo = FirebaseAuth.instance.currentUser?.photoURL;
-      // if (photo == null || photo.isEmpty) {
-      //   print("photo is reallly nulllll");
-      //   AssetBundle bundle = rootBundle;
-      //   final ByteData bytes = await bundle.load('assets/user.png');
-      //   final Uint8List list = bytes.buffer.asUint8List();
-      //   print("UINTLIST:$list");
-      //   const chunkSize = 4096;
-      //   final List<String> chunks = [];
-      //   for (var i = 0; i < list.length; i += chunkSize) {
-      //     final int end =
-      //         (i + chunkSize < list.length) ? i + chunkSize : list.length;
-      //     final Uint8List c = list.sublist(i, end);
-      //     chunks.add(base64Encode(c));
-      //   }
-      //   final String baseURL = 'data:image/png;base64,${chunks.join('')}';
-
-      //   await FirebaseAuth.instance.currentUser?.updatePhotoURL(baseURL);
-      //   print("im donnee${baseURL}");
-      // }
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password)
           .whenComplete(() {

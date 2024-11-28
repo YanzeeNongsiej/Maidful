@@ -24,6 +24,7 @@ import 'dart:io';
 import 'package:ibitf_app/assessment.dart';
 import 'package:ibitf_app/DAO/skilldao.dart';
 import 'package:ibitf_app/terms.dart';
+import 'package:ibitf_app/contact.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -175,6 +176,10 @@ class _EmployerHomePageState extends State<EmployerHome>
       case 'Settings':
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => const Terms()));
+        break;
+      case 'Contact':
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => HelpSupportPage()));
         break;
     }
   }
@@ -1647,6 +1652,10 @@ class _EmployerHomePageState extends State<EmployerHome>
                 const PopupMenuItem(
                   value: "Settings",
                   child: Text("Settings"),
+                ),
+                const PopupMenuItem(
+                  value: "Contact",
+                  child: Text("Contact Us"),
                 ),
                 PopupMenuItem(
                   value: "Language",
