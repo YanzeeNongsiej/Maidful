@@ -43,11 +43,11 @@
 <string name="Grocery Shopping">Grocery Shopping</string>
 <string name="servdetails">Service Details</string>
 <string name="change">Change</string>
-<string name="livein">Live-in</string>
-<string name="daily">Daily</string>
-<string name="hourly">Hourly</string>
-<string name="weekly">Weekly</string>
-<string name="monthly">Monthly</string>
+<string name="Live-in">Live-in</string>
+<string name="Daily">Daily</string>
+<string name="Hourly">Hourly</string>
+<string name="Weekly">Weekly</string>
+<string name="Monthly">Monthly</string>
 <string name="sendack">Send Acknowledgement Request</string>
 <string name="maiddetails">Maid Details</string>
 <string name="addedsucc">Added Successfully</string>

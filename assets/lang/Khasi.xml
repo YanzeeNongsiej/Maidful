@@ -43,11 +43,11 @@
 <string name="Grocery Shopping">Thied Jingthied</string>
 <string name="servdetails">Ki Kam</string>
 <string name="change">Pynkylla</string>
-<string name="livein">Sah Lang</string>
-<string name="daily">Man Ka Sngi</string>
-<string name="hourly">Kynta</string>
-<string name="weekly">Taiew</string>
-<string name="monthly">Bnai</string>
+<string name="Live-in">Sah Lang</string>
+<string name="Daily">Man Ka Sngi</string>
+<string name="Hourly">Kynta</string>
+<string name="Weekly">Taiew</string>
+<string name="Monthly">Bnai</string>
 <string name="sendack">Phah iaka Jingmynjur</string>
 <string name="maiddetails">Ba Kham Bniah shaphang Nongtrei</string>
 <string name="addedsucc">Lah Dep Add</string>

@@ -49,7 +49,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   final XMLHandler _xmlHandler = XMLHandler();
   GlobalVariables gv = GlobalVariables();
   String? usrname;
-  final List<bool> _iss = [true, false];
+  final List<bool> _iss = [true, false], _isrs = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
   // Stream<QuerySnapshot> fetchChats() {
@@ -62,12 +62,13 @@ class _EmployerHomePageState extends State<EmployerHome>
   bool isEditing = false;
   List<String>? selectedskills;
   List<String> myskills = [];
-  List<File> _documentImages = [];
+  final List<File> _documentImages = [];
   final ImagePicker _picker = ImagePicker();
   List<int>? myscores;
   List<Map<String, dynamic>> skillsWithScores = [];
   List<List<dynamic>> skillsWithNames = [];
   String? userDocId;
+  DocumentSnapshot? userDoc;
   Future<QuerySnapshot> fetchChats() async {
     QuerySnapshot qs = await maidDao().getAllMaids();
     return qs;
@@ -112,12 +113,12 @@ class _EmployerHomePageState extends State<EmployerHome>
 
       if (querySnapshot.docs.isNotEmpty) {
         // Assuming there's only one matching document
-        DocumentSnapshot userDoc = querySnapshot.docs.first;
+        userDoc = querySnapshot.docs.first;
         setState(() {
           try {
-            _downloadUrl = userDoc['url'];
-            _myaddr = userDoc['address'];
-            _mybio = userDoc['remarks'];
+            _downloadUrl = userDoc?['url'];
+            _myaddr = userDoc?['address'];
+            _mybio = userDoc?['remarks'];
           } catch (e) {
             print("No profileimage yet");
           } // Fetch the URL field
@@ -439,424 +440,761 @@ class _EmployerHomePageState extends State<EmployerHome>
     return SingleChildScrollView(
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _downloadUrl != null
-                      ? NetworkImage(_downloadUrl!)
-                      : loadImage() as ImageProvider<Object>,
-                  child: Align(
-                    alignment:
-                        Alignment.bottomRight, // Align icon to bottom right
-                    child: IconButton(
-                      icon:
-                          const Icon(Icons.edit, color: Colors.blue, size: 40),
-                      onPressed: () async {
-                        // Your edit action here
-                        ImagePicker picker = ImagePicker();
-                        final XFile? image =
-                            await picker.pickImage(source: ImageSource.gallery);
-                        if (image == null) return; // No image selected
-
-                        // Upload to Firebase Storage
-                        File file = File(image.path);
-                        try {
-                          String fileName = image.name;
-                          List<String> separate = fileName.split('.');
-                          String filetype = separate[1];
-                          final ref = FirebaseStorage.instance
-                              .ref()
-                              .child('${gv.username}/profile.$filetype');
-                          await ref.putFile(file);
-                          String downloadUrl = await ref.getDownloadURL();
-
-                          // Store URL in Firestore
-
-                          QuerySnapshot querySnapshot = await FirebaseFirestore
-                              .instance
-                              .collection("users")
-                              .where("userid", isEqualTo: userID)
-                              .get();
-
-                          // Check if we found any documents
-                          if (querySnapshot.docs.isNotEmpty) {
-                            // Assuming we want to update the first matching document
-                            DocumentSnapshot userDoc = querySnapshot.docs.first;
-
-                            // Update the document with the new URL
-                            await userDoc.reference.set(
-                              {'url': downloadUrl},
-                              SetOptions(merge: true),
-                            );
-                          }
-
-                          setState(() {
-                            // Update state with the new URL
-                            _downloadUrl = downloadUrl;
-                          });
-                        } catch (e) {
-                          print('Error $e');
-                        }
-                      },
-                      padding: EdgeInsets.zero, // No padding
-                      constraints: const BoxConstraints(), // No constraints
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.person_3_rounded,
-                      color: Colors.blue,
-                    ),
-                    Text(
-                      usrname ?? "Username",
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: Icon(
-                          isEditing ? Icons.check : Icons.edit,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              String newUsername =
-                                  usrname.toString(); // Use existing username
-                              return AlertDialog(
-                                title: Text('Edit Username'),
-                                content: TextField(
-                                  onChanged: (value) {
-                                    newUsername =
-                                        value; // Update username from input
-                                  },
-                                  controller:
-                                      TextEditingController(text: usrname),
-                                  decoration: InputDecoration(
-                                      hintText: "Enter new username"),
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: Text('Cancel'),
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(); // Close dialog
-                                    },
-                                  ),
-                                  TextButton(
-                                    child: Text('Save'),
-                                    onPressed: () {
-                                      setState(() {
-                                        usrname = newUsername;
-                                        gv.username = newUsername;
-                                        // Update username in UI
-                                      });
-                                      if (userDocId!.isNotEmpty) {
-                                        FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(userDocId)
-                                            .update({
-                                          'name': newUsername
-                                        }); // Update Firebase
-                                      }
-                                      Navigator.of(context)
-                                          .pop(); // Close dialog
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_on_sharp,
-                      color: Colors.blue,
-                    ),
-                    Text(
-                      _myaddr ?? "Address",
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isEditing ? Icons.check : Icons.edit,
-                        color: Colors.blue,
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            String newaddr =
-                                _myaddr.toString(); // Use existing username
-                            return AlertDialog(
-                              title: Text('Edit Address'),
-                              content: TextField(
-                                onChanged: (value) {
-                                  newaddr = value; // Update username from input
-                                },
-                                controller:
-                                    TextEditingController(text: _myaddr),
-                                decoration: InputDecoration(
-                                    hintText: "Enter new Address"),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: Text('Cancel'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text('Save'),
-                                  onPressed: () {
-                                    setState(() {
-                                      _myaddr = newaddr;
-
-                                      // Update username in UI
-                                    });
-                                    if (userDocId!.isNotEmpty) {
-                                      FirebaseFirestore.instance
-                                          .collection('users')
-                                          .doc(userDocId)
-                                          .update({
-                                        'address': newaddr
-                                      }); // Update Firebase
-                                    }
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.edit_note,
-                      color: Colors.blue,
-                    ),
-                    Text(
-                      _mybio ?? "Bio",
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isEditing ? Icons.check : Icons.edit,
-                        color: Colors.blue,
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            String newbio =
-                                _mybio.toString(); // Use existing username
-                            return AlertDialog(
-                              title: Text('Edit Bio'),
-                              content: TextField(
-                                onChanged: (value) {
-                                  newbio = value; // Update username from input
-                                },
-                                controller: TextEditingController(text: _mybio),
-                                decoration:
-                                    InputDecoration(hintText: "Enter new Bio"),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: Text('Cancel'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text('Save'),
-                                  onPressed: () {
-                                    setState(() {
-                                      _mybio = newbio;
-
-                                      // Update username in UI
-                                    });
-                                    if (userDocId!.isNotEmpty) {
-                                      FirebaseFirestore.instance
-                                          .collection('users')
-                                          .doc(userDocId)
-                                          .update({
-                                        'remarks': newbio
-                                      }); // Update Firebase
-                                    }
-                                    Navigator.of(context).pop(); // Close dialog
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Row(children: [Expanded(child: showDocuments())]),
           Row(
             children: [
               Expanded(
                 child: Card(
-                  color: Colors.blueAccent[100],
-                  elevation: 10,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Expanded(
-                      child: Column(
-                        children: [
-                          // _buildServiceList(),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _downloadUrl != null
+                              ? NetworkImage(_downloadUrl!)
+                              : loadImage() as ImageProvider<Object>,
+                          child: Align(
+                            alignment: Alignment
+                                .bottomRight, // Align icon to bottom right
+                            child: SizedBox(
+                              height: 40,
+                              width: 40,
+                              child: Card(
+                                margin: EdgeInsets.all(0),
+                                shape: CircleBorder(),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    color: Colors.grey,
+                                    size: 25,
+                                  ),
+                                  onPressed: () async {
+                                    // Your edit action here
+                                    ImagePicker picker = ImagePicker();
+                                    final XFile? image = await picker.pickImage(
+                                        source: ImageSource.gallery);
+                                    if (image == null) {
+                                      return; // No image selected
+                                    }
 
-                          showSkills(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Card(
-                                // elevation: 10,
-                                color: Colors.blue,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      List<String> options = [];
+                                    // Upload to Firebase Storage
+                                    File file = File(image.path);
+                                    try {
+                                      String fileName = image.name;
+                                      List<String> separate =
+                                          fileName.split('.');
+                                      String filetype = separate[1];
+                                      final ref = FirebaseStorage.instance
+                                          .ref()
+                                          .child(
+                                              '${gv.username}/profile.$filetype');
+                                      await ref.putFile(file);
+                                      String downloadUrl =
+                                          await ref.getDownloadURL();
 
-                                      // Fetch skills from Firestore
-                                      QuerySnapshot snapshot =
+                                      // Store URL in Firestore
+
+                                      QuerySnapshot querySnapshot =
                                           await FirebaseFirestore.instance
-                                              .collection('skills')
+                                              .collection("users")
+                                              .where("userid",
+                                                  isEqualTo: userID)
                                               .get();
 
-                                      //fetch only skills from the user
-                                      List<String> allskills = snapshot.docs
-                                          .map((doc) => doc.id)
-                                          .toList();
-                                      print(snapshot.docs.first.id);
-                                      // print(myskills);
-                                      for (var doc in snapshot.docs) {
-                                        // Get the skill for the selected language
+                                      // Check if we found any documents
+                                      if (querySnapshot.docs.isNotEmpty) {
+                                        // Assuming we want to update the first matching document
+                                        DocumentSnapshot userDoc =
+                                            querySnapshot.docs.first;
 
-                                        if (doc[gv.selected] != null &&
-                                            !myskills.contains(doc.id)) {
-                                          options.add(doc[gv.selected]);
-                                        }
+                                        // Update the document with the new URL
+                                        await userDoc.reference.set(
+                                          {'url': downloadUrl},
+                                          SetOptions(merge: true),
+                                        );
                                       }
-                                      List<String> selectedOptions = [];
 
-                                      await showDialog<List<String>>(
+                                      setState(() {
+                                        // Update state with the new URL
+                                        _downloadUrl = downloadUrl;
+                                      });
+                                    } catch (e) {
+                                      print('Error $e');
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10, width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                // mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.person_3_rounded,
+                                    color: Colors.grey,
+                                  ),
+                                  Text(
+                                    usrname ?? "Username",
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  // IconButton(
+                                  //   icon: Icon(
+                                  //     isEditing ? Icons.check : Icons.edit,
+                                  //     color: Colors.blue,
+                                  //   ),
+                                  //   onPressed: () {
+                                  //     showDialog(
+                                  //       context: context,
+                                  //       builder: (BuildContext context) {
+                                  //         String newUsername = usrname
+                                  //             .toString(); // Use existing username
+                                  //         return AlertDialog(
+                                  //           title: Text('Edit Username'),
+                                  //           content: TextField(
+                                  //             onChanged: (value) {
+                                  //               newUsername =
+                                  //                   value; // Update username from input
+                                  //             },
+                                  //             controller: TextEditingController(
+                                  //                 text: usrname),
+                                  //             decoration: InputDecoration(
+                                  //                 hintText: "Enter new username"),
+                                  //           ),
+                                  //           actions: <Widget>[
+                                  //             TextButton(
+                                  //               child: Text('Cancel'),
+                                  //               onPressed: () {
+                                  //                 Navigator.of(context)
+                                  //                     .pop(); // Close dialog
+                                  //               },
+                                  //             ),
+                                  //             TextButton(
+                                  //               child: Text('Save'),
+                                  //               onPressed: () {
+                                  //                 setState(() {
+                                  //                   usrname = newUsername;
+                                  //                   gv.username = newUsername;
+                                  //                   // Update username in UI
+                                  //                 });
+                                  //                 if (userDocId!.isNotEmpty) {
+                                  //                   FirebaseFirestore.instance
+                                  //                       .collection('users')
+                                  //                       .doc(userDocId)
+                                  //                       .update({
+                                  //                     'name': newUsername
+                                  //                   }); // Update Firebase
+                                  //                 }
+                                  //                 Navigator.of(context)
+                                  //                     .pop(); // Close dialog
+                                  //               },
+                                  //             ),
+                                  //           ],
+                                  //         );
+                                  //       },
+                                  //     );
+                                  //   },
+                                  // ),
+                                ],
+                              ),
+
+                              Row(
+                                // mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.location_on_sharp,
+                                    color: Colors.grey,
+                                  ),
+                                  Text(
+                                    _myaddr ?? "Address",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  // IconButton(
+                                  //   icon: Icon(
+                                  //     isEditing ? Icons.check : Icons.edit,
+                                  //     color: Colors.blue,
+                                  //   ),
+                                  //   onPressed: () {
+                                  //     showDialog(
+                                  //       context: context,
+                                  //       builder: (BuildContext context) {
+                                  //         String newaddr = _myaddr
+                                  //             .toString(); // Use existing username
+                                  //         return AlertDialog(
+                                  //           title: Text('Edit Address'),
+                                  //           content: TextField(
+                                  //             onChanged: (value) {
+                                  //               newaddr =
+                                  //                   value; // Update username from input
+                                  //             },
+                                  //             controller: TextEditingController(
+                                  //                 text: _myaddr),
+                                  //             decoration: InputDecoration(
+                                  //                 hintText: "Enter new Address"),
+                                  //           ),
+                                  //           actions: <Widget>[
+                                  //             TextButton(
+                                  //               child: Text('Cancel'),
+                                  //               onPressed: () {
+                                  //                 Navigator.of(context)
+                                  //                     .pop(); // Close dialog
+                                  //               },
+                                  //             ),
+                                  //             TextButton(
+                                  //               child: Text('Save'),
+                                  //               onPressed: () {
+                                  //                 setState(() {
+                                  //                   _myaddr = newaddr;
+
+                                  //                   // Update username in UI
+                                  //                 });
+                                  //                 if (userDocId!.isNotEmpty) {
+                                  //                   FirebaseFirestore.instance
+                                  //                       .collection('users')
+                                  //                       .doc(userDocId)
+                                  //                       .update({
+                                  //                     'address': newaddr
+                                  //                   }); // Update Firebase
+                                  //                 }
+                                  //                 Navigator.of(context)
+                                  //                     .pop(); // Close dialog
+                                  //               },
+                                  //             ),
+                                  //           ],
+                                  //         );
+                                  //       },
+                                  //     );
+                                  //   },
+                                  // ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.info_outline,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
+                                          // Use existing username
                                           return AlertDialog(
-                                            title: Text("Select Options"),
-                                            content: SingleChildScrollView(
-                                              child: ListBody(
-                                                children: options.map((option) {
-                                                  return CheckboxListTile(
-                                                    title: Text(option),
-                                                    value: selectedOptions
-                                                        .contains(option),
-                                                    onChanged: (bool? value) {
-                                                      if (value == true) {
-                                                        selectedOptions
-                                                            .add(option);
-                                                      } else {
-                                                        selectedOptions
-                                                            .remove(option);
-                                                      }
-                                                      // Update the UI
-                                                      (context as Element)
-                                                          .markNeedsBuild();
-                                                    },
-                                                  );
-                                                }).toList(),
+                                            scrollable: true,
+                                            titlePadding: EdgeInsets.all(0),
+
+                                            // title: Container(
+                                            //   color: Colors
+                                            //       .blue, // Set the background color for the title
+                                            //   padding: EdgeInsets.all(
+                                            //       16), // Add padding for better appearance
+                                            //   child: Text(
+                                            //     'Custom Title',
+                                            //     style: TextStyle(
+                                            //         color: Colors
+                                            //             .white), // Change text color
+                                            //   ),
+                                            // ),
+
+                                            title: Container(
+                                              padding: EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                  color: Colors.blue,
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  20),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  20))),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.info_outline,
+                                                    size: 30,
+                                                    color: Colors.white,
+                                                  ),
+                                                  SizedBox(width: 10),
+                                                  Text(
+                                                    'User\'s General Info',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            actions: [
+                                            content: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                        _xmlHandler
+                                                            .getString('nam'),
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    Text("$usrname"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text("Username: ",
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    Text(
+                                                        "${userDoc?['username']}"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text("Gender: ",
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    userDoc?['gender'] == 1
+                                                        ? Text("Male")
+                                                        : Text("Female"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text("Date of Birth: ",
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    Text("${userDoc?['dob']}"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                        _xmlHandler
+                                                            .getString('addr'),
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    Text(
+                                                        "${userDoc?['address']}"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text("Primary Role: ",
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    userDoc?['role'] == 1
+                                                        ? Text("Maid")
+                                                        : Text("Home-Owner"),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text("Language known: ",
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    Text(
+                                                        "${userDoc?['language'].toString()}"),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            actions: <Widget>[
                                               TextButton(
-                                                child: Text("Cancel"),
+                                                child: Text('Cancel'),
                                                 onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                              TextButton(
-                                                child: Text("Done"),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                  selectedskills =
-                                                      selectedOptions;
-                                                  for (var s in selectedskills!
-                                                      .toList()) {
-                                                    updateScoreToDB(
-                                                        gv.selected, s, -1);
-                                                  }
-                                                  print(
-                                                      "Selected skills: $selectedskills");
-                                                  setState(() {});
+                                                  Navigator.of(context)
+                                                      .pop(); // Close dialog
                                                 },
                                               ),
                                             ],
                                           );
                                         },
-                                      ).then((result) {
-                                        if (result != null) {
-                                          // Handle the selected options
-                                          print("Selected options: $result");
-                                          selectedskills = result;
-                                        }
-                                      });
-                                      // Navigator.push(
-                                      //     context,
-                                      //     MaterialPageRoute(
-                                      //         builder: (context) =>
-                                      //             const JobResume()));
+                                      );
                                     },
-                                    child: const Row(
-                                      children: [
-                                        Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          'Add',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ],
-                                    ),
                                   ),
-                                ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit_outlined,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          String newaddr = _myaddr
+                                              .toString(); // Use existing username
+                                          return AlertDialog(
+                                            title: Text('Edit Address'),
+                                            content: TextField(
+                                              onChanged: (value) {
+                                                newaddr =
+                                                    value; // Update username from input
+                                              },
+                                              controller: TextEditingController(
+                                                  text: _myaddr),
+                                              decoration: InputDecoration(
+                                                  hintText:
+                                                      "Enter new Address"),
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed: () {
+                                                  Navigator.of(context)
+                                                      .pop(); // Close dialog
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text('Save'),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _myaddr = newaddr;
+
+                                                    // Update username in UI
+                                                  });
+                                                  if (userDocId!.isNotEmpty) {
+                                                    FirebaseFirestore.instance
+                                                        .collection('users')
+                                                        .doc(userDocId)
+                                                        .update({
+                                                      'address': newaddr
+                                                    }); // Update Firebase
+                                                  }
+                                                  Navigator.of(context)
+                                                      .pop(); // Close dialog
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
+
+                              // Row(
+                              //   mainAxisSize: MainAxisSize.min,
+                              //   children: [
+                              //     Icon(
+                              //       Icons.edit_note,
+                              //       color: Colors.blue,
+                              //     ),
+                              //     Text(
+                              //       _mybio ?? "Bio",
+                              //       style: TextStyle(fontSize: 20),
+                              //     ),
+                              //     IconButton(
+                              //       icon: Icon(
+                              //         isEditing ? Icons.check : Icons.edit,
+                              //         color: Colors.blue,
+                              //       ),
+                              //       onPressed: () {
+                              //         showDialog(
+                              //           context: context,
+                              //           builder: (BuildContext context) {
+                              //             String newbio =
+                              //                 _mybio.toString(); // Use existing username
+                              //             return AlertDialog(
+                              //               title: Text('Edit Bio'),
+                              //               content: TextField(
+                              //                 onChanged: (value) {
+                              //                   newbio =
+                              //                       value; // Update username from input
+                              //                 },
+                              //                 controller:
+                              //                     TextEditingController(text: _mybio),
+                              //                 decoration: InputDecoration(
+                              //                     hintText: "Enter new Bio"),
+                              //               ),
+                              //               actions: <Widget>[
+                              //                 TextButton(
+                              //                   child: Text('Cancel'),
+                              //                   onPressed: () {
+                              //                     Navigator.of(context)
+                              //                         .pop(); // Close dialog
+                              //                   },
+                              //                 ),
+                              //                 TextButton(
+                              //                   child: Text('Save'),
+                              //                   onPressed: () {
+                              //                     setState(() {
+                              //                       _mybio = newbio;
+
+                              //                       // Update username in UI
+                              //                     });
+                              //                     if (userDocId!.isNotEmpty) {
+                              //                       FirebaseFirestore.instance
+                              //                           .collection('users')
+                              //                           .doc(userDocId)
+                              //                           .update({
+                              //                         'remarks': newbio
+                              //                       }); // Update Firebase
+                              //                     }
+                              //                     Navigator.of(context)
+                              //                         .pop(); // Close dialog
+                              //                   },
+                              //                 ),
+                              //               ],
+                              //             );
+                              //           },
+                              //         );
+                              //       },
+                              //     ),
+                              //   ],
+                              // ),
+                              // Primary Role
+                              // Row(
+                              //   mainAxisSize: MainAxisSize.min,
+                              //   children: [
+                              //     Icon(
+                              //       Icons.settings,
+                              //       color: Colors.blue,
+                              //     ),
+                              //     if (gv.urole == 1)
+                              //       Text(
+                              //         "Maid",
+                              //         style: TextStyle(fontSize: 20),
+                              //       ),
+                              //     if (gv.urole == 2)
+                              //       Text(
+                              //         "Home-Owner",
+                              //         style: TextStyle(fontSize: 20),
+                              //       ),
+                              //     IconButton(
+                              //       icon: Icon(
+                              //         isEditing ? Icons.check : Icons.edit,
+                              //         color: Colors.blue,
+                              //       ),
+                              //       onPressed: () {
+                              //         showDialog(
+                              //           context: context,
+                              //           builder: (BuildContext context) {
+                              //             String newbio =
+                              //                 _mybio.toString(); // Use existing username
+                              //             return AlertDialog(
+                              //               title: Text('Edit Bio'),
+                              //               content: TextField(
+                              //                 onChanged: (value) {
+                              //                   newbio =
+                              //                       value; // Update username from input
+                              //                 },
+                              //                 controller:
+                              //                     TextEditingController(text: _mybio),
+                              //                 decoration: InputDecoration(
+                              //                     hintText: "Enter new Bio"),
+                              //               ),
+                              //               actions: <Widget>[
+                              //                 TextButton(
+                              //                   child: Text('Cancel'),
+                              //                   onPressed: () {
+                              //                     Navigator.of(context)
+                              //                         .pop(); // Close dialog
+                              //                   },
+                              //                 ),
+                              //                 TextButton(
+                              //                   child: Text('Save'),
+                              //                   onPressed: () {
+                              //                     setState(() {
+                              //                       _mybio = newbio;
+
+                              //                       // Update username in UI
+                              //                     });
+                              //                     if (userDocId!.isNotEmpty) {
+                              //                       FirebaseFirestore.instance
+                              //                           .collection('users')
+                              //                           .doc(userDocId)
+                              //                           .update({
+                              //                         'remarks': newbio
+                              //                       }); // Update Firebase
+                              //                     }
+                              //                     Navigator.of(context)
+                              //                         .pop(); // Close dialog
+                              //                   },
+                              //                 ),
+                              //               ],
+                              //             );
+                              //           },
+                              //         );
+                              //       },
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
+          Row(children: [Expanded(child: showDocuments())]),
+          if (gv.urole == 1)
+            Row(
+              children: [
+                Expanded(
+                  child: Card(
+                    color: Colors.blueAccent[100],
+                    elevation: 10,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Expanded(
+                        child: Column(
+                          children: [
+                            // _buildServiceList(),
+
+                            showSkills(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        List<String> options = [];
+
+                                        // Fetch skills from Firestore
+                                        QuerySnapshot snapshot =
+                                            await FirebaseFirestore.instance
+                                                .collection('skills')
+                                                .get();
+
+                                        //fetch only skills from the user
+                                        List<String> allskills = snapshot.docs
+                                            .map((doc) => doc.id)
+                                            .toList();
+                                        print(snapshot.docs.first.id);
+                                        // print(myskills);
+                                        for (var doc in snapshot.docs) {
+                                          // Get the skill for the selected language
+
+                                          if (doc[gv.selected] != null &&
+                                              !myskills.contains(doc.id)) {
+                                            options.add(doc[gv.selected]);
+                                          }
+                                        }
+                                        List<String> selectedOptions = [];
+
+                                        await showDialog<List<String>>(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text("Select Options"),
+                                              content: SingleChildScrollView(
+                                                child: ListBody(
+                                                  children:
+                                                      options.map((option) {
+                                                    return CheckboxListTile(
+                                                      title: Text(option),
+                                                      value: selectedOptions
+                                                          .contains(option),
+                                                      onChanged: (bool? value) {
+                                                        if (value == true) {
+                                                          selectedOptions
+                                                              .add(option);
+                                                        } else {
+                                                          selectedOptions
+                                                              .remove(option);
+                                                        }
+                                                        // Update the UI
+                                                        (context as Element)
+                                                            .markNeedsBuild();
+                                                      },
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("Cancel"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: Text("Done"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    selectedskills =
+                                                        selectedOptions;
+                                                    for (var s
+                                                        in selectedskills!
+                                                            .toList()) {
+                                                      updateScoreToDB(
+                                                          gv.selected, s, -1);
+                                                    }
+                                                    print(
+                                                        "Selected skills: $selectedskills");
+                                                    setState(() {});
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ).then((result) {
+                                          if (result != null) {
+                                            // Handle the selected options
+                                            print("Selected options: $result");
+                                            selectedskills = result;
+                                          }
+                                        });
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) =>
+                                        //             const JobResume()));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'Add',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
           Container(
             child: Column(
               children: [
@@ -881,119 +1219,122 @@ class _EmployerHomePageState extends State<EmployerHome>
                     )
                   ],
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        color: Colors.blueAccent[100],
-                        elevation: 10,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                ((_xmlHandler.getString('myserv')).toString()),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              _buildServiceList(),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Card(
-                                    // elevation: 10,
-                                    color: Colors.blue,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5.0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const JobResume()));
-                                        },
-                                        child: const Row(
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                            ),
-                                            Text(
-                                              'Add',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ],
+                if (gv.urole == 1)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          color: Colors.blueAccent[100],
+                          elevation: 10,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Text(
+                                  ((_xmlHandler.getString('myserv'))
+                                      .toString()),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                _buildServiceList(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Card(
+                                      // elevation: 10,
+                                      color: Colors.blue,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const JobResume()));
+                                          },
+                                          child: const Row(
+                                            children: [
+                                              Icon(
+                                                Icons.add,
+                                                color: Colors.white,
+                                              ),
+                                              Text(
+                                                'Add',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        color: Colors.blueAccent[100],
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                (_xmlHandler.getString('posted')).toString(),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              _buildJobProfileList(),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Card(
-                                    // elevation: 10,
-                                    color: Colors.blue,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5.0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const JobProfile()));
-                                        },
-                                        child: const Row(
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                            ),
-                                            Text(
-                                              'Add',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ],
+                      )
+                    ],
+                  ),
+                if (gv.urole == 2)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          color: Colors.blueAccent[100],
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Text(
+                                  (_xmlHandler.getString('posted')).toString(),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                _buildJobProfileList(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Card(
+                                      // elevation: 10,
+                                      color: Colors.blue,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const JobProfile()));
+                                          },
+                                          child: const Row(
+                                            children: [
+                                              Icon(
+                                                Icons.add,
+                                                color: Colors.white,
+                                              ),
+                                              Text(
+                                                'Add',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  ],
-                ),
+                      )
+                    ],
+                  ),
               ],
             ),
           )
@@ -1255,6 +1596,15 @@ class _EmployerHomePageState extends State<EmployerHome>
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
                   final item = snapshot.data!.docs[index];
+
+                  Map<String, dynamic> time = item.get('timing');
+                  List<String> allShifts = [];
+                  time.forEach((key, value) {
+                    if (value is List<dynamic>) {
+                      allShifts.addAll(value.map((e) => e.toString()));
+                    }
+                  });
+
                   return Expanded(
                     child: Card(
                       child: Column(
@@ -1281,9 +1631,14 @@ class _EmployerHomePageState extends State<EmployerHome>
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        TextSpan(
-                                          text:
-                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ...List.generate(
+                                          (allShifts.length / 2).ceil(),
+                                          (i) => TextSpan(
+                                            text:
+                                                '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
                                         ),
                                         const TextSpan(
                                           text: '\nDays: ',
@@ -1382,6 +1737,14 @@ class _EmployerHomePageState extends State<EmployerHome>
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
                   final item = snapshot.data!.docs[index];
+                  Map<String, dynamic> time = item.get('timing');
+                  List<String> allShifts = [];
+                  time.forEach((key, value) {
+                    if (value is List<dynamic>) {
+                      allShifts.addAll(value.map((e) => e.toString()));
+                    }
+                  });
+
                   return Expanded(
                     child: Card(
                       child: Column(
@@ -1408,9 +1771,14 @@ class _EmployerHomePageState extends State<EmployerHome>
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        TextSpan(
-                                          text:
-                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ...List.generate(
+                                          (allShifts.length / 2).ceil(),
+                                          (i) => TextSpan(
+                                            text:
+                                                '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
                                         ),
                                         const TextSpan(
                                           text: '\nDays: ',
@@ -1509,6 +1877,13 @@ class _EmployerHomePageState extends State<EmployerHome>
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
                   final item = snapshot.data!.docs[index];
+                  Map<String, dynamic> time = item.get('timing');
+                  List<String> allShifts = [];
+                  time.forEach((key, value) {
+                    if (value is List<dynamic>) {
+                      allShifts.addAll(value.map((e) => e.toString()));
+                    }
+                  });
                   return Expanded(
                     child: Card(
                       child: Column(
@@ -1535,9 +1910,14 @@ class _EmployerHomePageState extends State<EmployerHome>
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        TextSpan(
-                                          text:
-                                              "${item.get("time_from")}-${item.get("time_to")}",
+                                        ...List.generate(
+                                          (allShifts.length / 2).ceil(),
+                                          (i) => TextSpan(
+                                            text:
+                                                '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
                                         ),
                                         const TextSpan(
                                           text: '\nDays: ',
@@ -1613,6 +1993,8 @@ class _EmployerHomePageState extends State<EmployerHome>
     Future<QuerySnapshot<Object?>> qs = Usersdao().getUserDetails(userid);
     return qs;
   }
+
+  void changeRole(int role) {}
 
   @override
   Widget build(BuildContext context) {
@@ -1690,7 +2072,50 @@ class _EmployerHomePageState extends State<EmployerHome>
                       )),
                     );
                   }),
-                )
+                ),
+                PopupMenuItem(
+                  padding: EdgeInsets.all(0),
+                  value: "Role",
+                  child: StatefulBuilder(builder: (context, setState) {
+                    return SizedBox(
+                      height: (Checkbox.width) * 1.5,
+                      // width: MediaQuery.of(context).size.width,
+                      child: Center(
+                        child: ToggleButtons(
+                          isSelected: _isrs,
+                          selectedColor: Colors.white,
+                          fillColor: Colors.blue,
+                          color: Colors.black,
+                          // borderRadius: BorderRadius.circular(10),
+                          borderColor: Colors.grey,
+                          borderWidth: 0,
+                          onPressed: (int index) {
+                            setState(() {
+                              if (index == 0) {
+                                _isrs[0] = true;
+                                _isrs[1] = false;
+                              } else {
+                                _isrs[0] = false;
+                                _isrs[1] = true;
+                              }
+
+                              // gv.selected = lang[index];
+                              _xmlHandler.loadStrings(gv.selected.toString());
+                              updateParentState();
+                            });
+                          },
+                          children: const [
+                            Text('Maid'),
+                            Padding(
+                              padding: EdgeInsets.only(left: 8, right: 8),
+                              child: Text('Employer'),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
               ];
             },
           ),
@@ -1870,35 +2295,37 @@ class _FABState extends State<FAB> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              FloatingActionButton.extended(
-                onPressed: () => {
-                  // Add your action for Option 1
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const JobResume()))
-                },
-                heroTag: null,
-                label: const Text(
-                  "Post a Service (Maids)",
+              if (gv.urole == 1)
+                FloatingActionButton.extended(
+                  onPressed: () => {
+                    // Add your action for Option 1
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const JobResume()))
+                  },
+                  heroTag: null,
+                  label: const Text(
+                    "Post a Service (Maids)",
+                  ),
+                  icon: const Icon(Icons.person_add_rounded),
                 ),
-                icon: const Icon(Icons.person_add_rounded),
-              ),
               const SizedBox(height: 16.0),
-              FloatingActionButton.extended(
-                onPressed: () => {
-                  // Add your action for Option 1
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const JobProfile()))
-                },
-                heroTag: null,
-                label: const Text(
-                  "Post a Job Profile",
+              if (gv.urole == 2)
+                FloatingActionButton.extended(
+                  onPressed: () => {
+                    // Add your action for Option 1
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const JobProfile()))
+                  },
+                  heroTag: null,
+                  label: const Text(
+                    "Post a Job Profile",
+                  ),
+                  icon: const Icon(Icons.add_card_sharp),
                 ),
-                icon: const Icon(Icons.add_card_sharp),
-              ),
             ],
           ),
         ),
@@ -1937,7 +2364,7 @@ class _NestedTabBarState extends State<NestedTabBar>
       setState(() {});
       // gv.username = widget.uname.toString();
     });
-    _nestedTabController = TabController(length: 2, vsync: this);
+    _nestedTabController = TabController(length: 1, vsync: this);
   }
 
   @override
@@ -1952,6 +2379,12 @@ class _NestedTabBarState extends State<NestedTabBar>
     return qs;
   }
 
+  Future<QuerySnapshot> fetchJobProfiles() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getAllJobProfiles(userID);
+    return qs;
+  }
+
   Future<QuerySnapshot> fetchUserData(String userId) async {
     QuerySnapshot qs = await Usersdao().getUserDetails(userId);
     return qs;
@@ -1961,6 +2394,13 @@ class _NestedTabBarState extends State<NestedTabBar>
     showDialog(
         context: context,
         builder: (context) {
+          Map<String, dynamic> time = servItem.get('timing');
+          List<String> allShifts = [];
+          time.forEach((key, value) {
+            if (value is List<dynamic>) {
+              allShifts.addAll(value.map((e) => e.toString()));
+            }
+          });
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
@@ -2011,8 +2451,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                 children: [
                                   Text("${i + 1}. "),
                                   Expanded(
-                                    child: Text(
-                                        "${_xmlHandler.getString(servItem.get("days")[i])}"),
+                                    child: Text(_xmlHandler
+                                        .getString(servItem.get("days")[i])),
                                   ),
                                 ],
                               ),
@@ -2021,15 +2461,33 @@ class _NestedTabBarState extends State<NestedTabBar>
                       ),
                     if (servItem.get("schedule") == 'Daily' ||
                         servItem.get("schedule") == 'Hourly')
-                      Row(
-                        children: [
+                      Column(children: [
+                        Row(children: [
                           Text(_xmlHandler.getString('timing'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                              "${servItem.get("time_from")}-${servItem.get("time_to")}"),
-                        ],
-                      ),
+                        ]),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 30),
+                              child: Text.rich(TextSpan(
+                                children: <InlineSpan>[
+                                  ...List.generate(
+                                    (allShifts.length / 2).ceil(),
+                                    (i) => TextSpan(
+                                      text:
+                                          'Shift ${i + 1} : ${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              )),
+                            ),
+                          ],
+                        )
+                      ]),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2046,8 +2504,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                               children: [
                                 Text("${i + 1}. "),
                                 Expanded(
-                                  child: Text(
-                                      "${_xmlHandler.getString(servItem.get("services")[i])}"),
+                                  child: Text(_xmlHandler
+                                      .getString(servItem.get("services")[i])),
                                 ),
                               ],
                             ),
@@ -2264,277 +2722,949 @@ class _NestedTabBarState extends State<NestedTabBar>
         });
   }
 
+  getJobProfileDetail(item, servItem) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          Map<String, dynamic> time = servItem.get('timing');
+          List<String> allShifts = [];
+          time.forEach((key, value) {
+            if (value is List<dynamic>) {
+              allShifts.addAll(value.map((e) => e.toString()));
+            }
+          });
+          return AlertDialog(
+            scrollable: true,
+            insetPadding: const EdgeInsets.only(left: 8, right: 8),
+            title: Text(_xmlHandler.getString('maiddetails'),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            content: Card(
+              elevation: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('nam'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(item.get("name")),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('addr'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(item.get("address")),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(_xmlHandler.getString('sched'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(_xmlHandler.getString(servItem.get("schedule"))),
+                      ],
+                    ),
+                    if (servItem.get("schedule") == 'Hourly')
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_xmlHandler.getString('day'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          for (var i = 0; i < servItem.get("days").length; i++)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 30),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("${i + 1}. "),
+                                  Expanded(
+                                    child: Text(_xmlHandler
+                                        .getString(servItem.get("days")[i])),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (servItem.get("schedule") == 'Daily' ||
+                        servItem.get("schedule") == 'Hourly')
+                      Row(
+                        children: [
+                          Text(_xmlHandler.getString('timing'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          Text.rich(TextSpan(
+                            children: <InlineSpan>[
+                              ...List.generate(
+                                (allShifts.length / 2).ceil(),
+                                (i) => TextSpan(
+                                  text:
+                                      '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                  style: const TextStyle(color: Colors.black),
+                                ),
+                              ),
+                            ],
+                          ))
+                        ],
+                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_xmlHandler.getString('serv'),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        for (var i = 0;
+                            i < servItem.get("services").length;
+                            i++)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("${i + 1}. "),
+                                Expanded(
+                                  child: Text(_xmlHandler
+                                      .getString(servItem.get("services")[i])),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Text(_xmlHandler.getString('wage'),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                              Text(_xmlHandler.getString(servItem.get("wage")),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(_xmlHandler.getString('rate'),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25)),
+                              Text("\u{20B9}${servItem.get("rate")}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Card(
+                                // elevation: 10,
+                                color: Colors.green,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) => ChatPage(
+                                      //             name: item.get("name"),
+                                      //             receiverID: item.get("userid"),
+                                      //             postType: "services",
+                                      //             postTypeID: servItem.id)));
+                                    },
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.handshake,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          _xmlHandler.getString('hire'),
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              //     Card(
+                              //       // elevation: 10,
+                              //       color: Colors.amber[600],
+                              //       child: Padding(
+                              //         padding: const EdgeInsets.all(5.0),
+                              //         child: GestureDetector(
+                              //           onTap: () {
+                              //             // Navigator.pop(context);
+                              //           },
+                              //           child: const Row(
+                              //             children: [
+                              //               Icon(Icons.threesixty_sharp),
+                              //               Text('Counter'),
+                              //             ],
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Card(
+                    // elevation: 10,
+                    color: Colors.blue,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.person_3_rounded,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Profile',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    // elevation: 10,
+                    color: Colors.green,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                      name: item.get("name"),
+                                      receiverID: item.get("userid"),
+                                      postType: "services",
+                                      postTypeID: servItem.id)));
+                        },
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.chat,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Chat',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    // elevation: 10,
+                    color: Colors.orange,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Row(
+                          children: [
+                            Icon(Icons.cancel, color: Colors.white),
+                            Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // TextButton(
+                  //   onPressed: () {
+                  //     Navigator.pop(context);
+                  //   },
+                  //   child: Row(
+                  //     children: [const Icon(Icons.chat), Text("chat")],
+                  //   ),
+                  // ),
+                ],
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        TabBar(
-          controller: _nestedTabController,
-          dividerColor: Colors.grey,
-          indicatorSize: TabBarIndicatorSize.tab,
-          indicator: const BoxDecoration(
-              border: Border(
-                  left: BorderSide(color: Colors.grey),
-                  top: BorderSide(color: Colors.grey),
-                  right: BorderSide(color: Colors.grey)),
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-              color: Colors.blue,
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.lightBlue, Colors.white])),
-          unselectedLabelColor: Colors.black54,
-          tabs: const [
-            Tab(
-              text: "Maids(for Home Owners)",
-            ),
-            Tab(
-              text: "Job Profiles(For Maids)",
-            ),
-          ],
-        ),
-        Container(
-          height: screenHeight * 0.70,
-          margin: const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
-          child: TabBarView(
-            controller: _nestedTabController,
-            children: <Widget>[
-              FutureBuilder(
-                  // StreamBuilder(
-                  future: fetchServices(),
-                  // stream: fetchChats(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2, childAspectRatio: 0.85),
-                          shrinkWrap: true,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (context, index) {
-                            final servitem = snapshot.data!.docs[index];
-                            return FutureBuilder(
-                                future: fetchUserData(servitem.get("userid")),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    final item = snapshot.data!.docs.first;
-                                    return Column(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () {
-                                            getServiceDetail(item, servitem);
-                                          },
-                                          child: Card(
-                                            semanticContainer: true,
-                                            clipBehavior:
-                                                Clip.antiAliasWithSaveLayer,
-                                            color: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10.0),
-                                            ),
-                                            // elevation: 10,
-                                            child: GridTile(
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 8.0),
-                                                child: Column(
-                                                  children: [
-                                                    CircleAvatar(
-                                                      foregroundImage: item
-                                                                  .get('url') ==
-                                                              null
-                                                          ? const AssetImage(
-                                                                  "assets/profile.png")
-                                                              as ImageProvider<
-                                                                  Object>
-                                                          : NetworkImage(
-                                                              item.get('url')),
-                                                    ),
-                                                    Text(item.get("name")),
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.location_pin,
-                                                          size: 15,
-                                                        ),
-                                                        Text(item
-                                                            .get("address")),
-                                                      ],
-                                                    ),
-                                                    Text(
-                                                        _xmlHandler.getString(
-                                                            'servoff'),
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                    for (var a in servitem
-                                                        .get("services"))
-                                                      Text(_xmlHandler
-                                                          .getString(a)),
-                                                    // Text(
-                                                    //     servitem.get("services")
-                                                    //         as String),
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment.end,
-                                                      children: [
-                                                        IconButton(
-                                                          onPressed: () async {
-                                                            Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                    builder: (context) => ChatPage(
-                                                                        name: item.get(
-                                                                            "name"),
-                                                                        receiverID:
-                                                                            item.get(
-                                                                                "userid"),
-                                                                        postType:
-                                                                            "services",
-                                                                        postTypeID:
-                                                                            servitem.id)));
-                                                          },
-                                                          icon: const Icon(Icons
-                                                              .chat_rounded),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Center(
-                                        child: Text(snapshot.error.toString()));
-                                  } else {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                });
-                          });
-                      // return ListView.builder(
-                      //     shrinkWrap: true,
-                      //     itemCount: snapshot.data!.docs.length,
-                      //     itemBuilder: (context, index) {
-                      //       final servitem = snapshot.data!.docs[index];
-                      //       // print("Service ID: ${servitem.id}");
-                      //       return FutureBuilder(
-                      //           future:
-                      //               fetchUserData(servitem.get("userid")),
-                      //           builder: (context, snapshot) {
-                      //             if (snapshot.hasData) {
-                      //               final item = snapshot.data!.docs.first;
-                      //               return Column(
-                      //                 children: [
-                      //                   GestureDetector(
-                      //                     onTap: () {
-                      //                       getServiceDetail(
-                      //                           item, servitem);
-                      //                     },
-                      //                     child: Card(
-                      //                       semanticContainer: true,
-                      //                       clipBehavior:
-                      //                           Clip.antiAliasWithSaveLayer,
-                      //                       color: Colors.white,
-                      //                       shape: RoundedRectangleBorder(
-                      //                         borderRadius:
-                      //                             BorderRadius.circular(
-                      //                                 10.0),
-                      //                       ),
-                      //                       // elevation: 10,
-                      //                       child: ListTile(
-                      //                         leading: CircleAvatar(
-                      //                           foregroundImage:
-                      //                               NetworkImage(AuthMethods
-                      //                                       .user
-                      //                                       ?.photoURL ??
-                      //                                   ''),
-                      //                         ),
-                      //                         title: Text(item.get("name")),
-                      //                         subtitle: Row(
-                      //                           children: [
-                      //                             const Icon(
-                      //                               Icons.location_pin,
-                      //                               size: 15,
-                      //                             ),
-                      //                             Text(item.get("address")),
-                      //                           ],
-                      //                         ),
-                      //                         trailing: Row(
-                      //                           mainAxisSize:
-                      //                               MainAxisSize.min,
-                      //                           children: [
-                      //                             IconButton(
-                      //                               onPressed: () async {
-                      //                                 Navigator.push(
-                      //                                     context,
-                      //                                     MaterialPageRoute(
-                      //                                         builder: (context) => ChatPage(
-                      //                                             name: item
-                      //                                                 .get(
-                      //                                                     "name"),
-                      //                                             receiverID:
-                      //                                                 item.get(
-                      //                                                     "userid"),
-                      //                                             postType:
-                      //                                                 "services",
-                      //                                             postTypeID:
-                      //                                                 servitem
-                      //                                                     .id)));
-                      //                               },
-                      //                               icon: const Icon(
-                      //                                   Icons.chat_rounded),
-                      //                             ),
-                      //                           ],
-                      //                         ),
-                      //                       ),
-                      //                     ),
-                      //                   ),
-                      //                 ],
-                      //               );
-                      //             } else if (snapshot.hasError) {
-                      //               return Center(
-                      //                   child: Text(
-                      //                       snapshot.error.toString()));
-                      //             } else {
-                      //               return const Center(
-                      //                 child: CircularProgressIndicator(),
-                      //               );
-                      //             }
-                      //           });
-                      //     });
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text(snapshot.error.toString()));
-                    } else {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  }),
+      children: [
+        if (gv.urole == 2)
+          Column(
+            children: [
               Container(
-                // decoration: BoxDecoration(
-                //   borderRadius: BorderRadius.circular(8.0),
-                //   color: Colors.blueGrey[300],
-                // ),
-                child: const Text("Job Profiles"),
+                padding: EdgeInsets.all(5),
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  border: Border(
+                      left: BorderSide(color: Colors.grey),
+                      top: BorderSide(color: Colors.grey),
+                      right: BorderSide(color: Colors.grey)),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  color: Colors.blue,
+                  // gradient: LinearGradient(
+                  //     begin: Alignment.topCenter,
+                  //     end: Alignment.bottomCenter,
+                  //     colors: [Colors.lightBlueAccent, Colors.white]
+                  //     ),
+                ),
+                child: Center(
+                  child: Text(
+                    'Available Services(Maids)',
+                    style: TextStyle(fontSize: 15, color: Colors.white
+                        // fontWeight: FontWeight.w400,
+                        ),
+                  ),
+                ),
               ),
+              Container(
+                  height: screenHeight * 0.70,
+                  margin:
+                      const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
+                  child: TabBarView(
+                      controller: _nestedTabController,
+                      children: <Widget>[
+                        FutureBuilder(
+                            // StreamBuilder(
+                            future: fetchServices(),
+                            // stream: fetchChats(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return GridView.builder(
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            childAspectRatio: 0.85),
+                                    shrinkWrap: true,
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) {
+                                      final servitem =
+                                          snapshot.data!.docs[index];
+                                      return FutureBuilder(
+                                          future: fetchUserData(
+                                              servitem.get("userid")),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              final item =
+                                                  snapshot.data!.docs.first;
+                                              return Column(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      getServiceDetail(
+                                                          item, servitem);
+                                                    },
+                                                    child: Card(
+                                                      semanticContainer: true,
+                                                      clipBehavior: Clip
+                                                          .antiAliasWithSaveLayer,
+                                                      color: Colors.white,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10.0),
+                                                      ),
+                                                      // elevation: 10,
+                                                      child: GridTile(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  top: 8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              CircleAvatar(
+                                                                foregroundImage: item.get(
+                                                                            'url') ==
+                                                                        null
+                                                                    ? const AssetImage(
+                                                                            "assets/profile.png")
+                                                                        as ImageProvider<
+                                                                            Object>
+                                                                    : NetworkImage(
+                                                                        item.get(
+                                                                            'url')),
+                                                              ),
+                                                              Text(item
+                                                                  .get("name")),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  const Icon(
+                                                                    Icons
+                                                                        .location_pin,
+                                                                    size: 15,
+                                                                  ),
+                                                                  Text(item.get(
+                                                                      "address")),
+                                                                ],
+                                                              ),
+                                                              Text(
+                                                                  _xmlHandler
+                                                                      .getString(
+                                                                          'servoff'),
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold)),
+                                                              for (var a
+                                                                  in servitem.get(
+                                                                      "services"))
+                                                                Text(_xmlHandler
+                                                                    .getString(
+                                                                        a)),
+                                                              // Text(
+                                                              //     servitem.get("services")
+                                                              //         as String),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  IconButton(
+                                                                    onPressed:
+                                                                        () async {
+                                                                      Navigator.push(
+                                                                          context,
+                                                                          MaterialPageRoute(
+                                                                              builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                    },
+                                                                    icon: const Icon(
+                                                                        Icons
+                                                                            .chat_rounded),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            } else if (snapshot.hasError) {
+                                              return Center(
+                                                  child: Text(snapshot.error
+                                                      .toString()));
+                                            } else {
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            }
+                                          });
+                                    });
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                    child: Text(snapshot.error.toString()));
+                              } else {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                            })
+                      ]))
             ],
           ),
-        )
+        if (gv.urole == 1)
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(5),
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  border: Border(
+                      left: BorderSide(color: Colors.grey),
+                      top: BorderSide(color: Colors.grey),
+                      right: BorderSide(color: Colors.grey)),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  color: Colors.blue,
+                  // gradient: LinearGradient(
+                  //     begin: Alignment.topCenter,
+                  //     end: Alignment.bottomCenter,
+                  //     colors: [Colors.lightBlueAccent, Colors.white]),
+                ),
+                child: Center(
+                  child: Text(
+                    'Available Jobs',
+                    style: TextStyle(fontSize: 15, color: Colors.white
+                        // fontWeight: FontWeight.w400,
+                        ),
+                  ),
+                ),
+              ),
+              Container(
+                  height: screenHeight * 0.70,
+                  margin:
+                      const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
+                  child: TabBarView(
+                      controller: _nestedTabController,
+                      children: <Widget>[
+                        FutureBuilder(
+                            // StreamBuilder(
+                            future: fetchJobProfiles(),
+                            // stream: fetchChats(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return GridView.builder(
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            childAspectRatio: 0.85),
+                                    shrinkWrap: true,
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) {
+                                      final servitem =
+                                          snapshot.data!.docs[index];
+                                      return FutureBuilder(
+                                          future: fetchUserData(
+                                              servitem.get("userid")),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              final item =
+                                                  snapshot.data!.docs.first;
+                                              return Column(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      getJobProfileDetail(
+                                                          item, servitem);
+                                                    },
+                                                    child: Card(
+                                                      semanticContainer: true,
+                                                      clipBehavior: Clip
+                                                          .antiAliasWithSaveLayer,
+                                                      color: Colors.white,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10.0),
+                                                      ),
+                                                      // elevation: 10,
+                                                      child: GridTile(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  top: 8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              CircleAvatar(
+                                                                foregroundImage: item.get(
+                                                                            'url') ==
+                                                                        null
+                                                                    ? const AssetImage(
+                                                                            "assets/profile.png")
+                                                                        as ImageProvider<
+                                                                            Object>
+                                                                    : NetworkImage(
+                                                                        item.get(
+                                                                            'url')),
+                                                              ),
+                                                              Text(item
+                                                                  .get("name")),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  const Icon(
+                                                                    Icons
+                                                                        .location_pin,
+                                                                    size: 15,
+                                                                  ),
+                                                                  Text(item.get(
+                                                                      "address")),
+                                                                ],
+                                                              ),
+                                                              Text(
+                                                                  _xmlHandler
+                                                                      .getString(
+                                                                          'servoff'),
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold)),
+                                                              for (var a
+                                                                  in servitem.get(
+                                                                      "services"))
+                                                                Text(_xmlHandler
+                                                                    .getString(
+                                                                        a)),
+                                                              // Text(
+                                                              //     servitem.get("services")
+                                                              //         as String),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  IconButton(
+                                                                    onPressed:
+                                                                        () async {
+                                                                      Navigator.push(
+                                                                          context,
+                                                                          MaterialPageRoute(
+                                                                              builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                    },
+                                                                    icon: const Icon(
+                                                                        Icons
+                                                                            .chat_rounded),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            } else if (snapshot.hasError) {
+                                              return Center(
+                                                  child: Text(snapshot.error
+                                                      .toString()));
+                                            } else {
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            }
+                                          });
+                                    });
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                    child: Text(snapshot.error.toString()));
+                              } else {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                            })
+                      ]))
+            ],
+          ),
       ],
     );
+
+    // return Column(
+    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //   children: <Widget>[
+    //     TabBar(
+    //       controller: _nestedTabController,
+    //       dividerColor: Colors.grey,
+    //       indicatorSize: TabBarIndicatorSize.tab,
+    //       indicator: const BoxDecoration(
+    //           border: Border(
+    //               left: BorderSide(color: Colors.grey),
+    //               top: BorderSide(color: Colors.grey),
+    //               right: BorderSide(color: Colors.grey)),
+    //           borderRadius: BorderRadius.only(
+    //               topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+    //           color: Colors.blue,
+    //           gradient: LinearGradient(
+    //               begin: Alignment.topCenter,
+    //               end: Alignment.bottomCenter,
+    //               colors: [Colors.lightBlue, Colors.white])),
+    //       unselectedLabelColor: Colors.black54,
+    //       tabs: [
+    //         if (gv.urole == 1)
+    //           Tab(
+    //             text: "Maids(for Home Owners)",
+    //           ),
+    //         if (gv.urole == 2)
+    //           Tab(
+    //             text: "Job Profiles(For Maids)",
+    //           ),
+    //       ],
+    //     ),
+    //     Container(
+    //       height: screenHeight * 0.70,
+    //       margin: const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
+    //       child: TabBarView(
+    //         controller: _nestedTabController,
+    //         children: <Widget>[
+    //           FutureBuilder(
+    //               // StreamBuilder(
+    //               future: fetchServices(),
+    //               // stream: fetchChats(),
+    //               builder: (context, snapshot) {
+    //                 if (snapshot.hasData) {
+    //                   return GridView.builder(
+    //                       gridDelegate:
+    //                           const SliverGridDelegateWithFixedCrossAxisCount(
+    //                               crossAxisCount: 2, childAspectRatio: 0.85),
+    //                       shrinkWrap: true,
+    //                       itemCount: snapshot.data!.docs.length,
+    //                       itemBuilder: (context, index) {
+    //                         final servitem = snapshot.data!.docs[index];
+    //                         return FutureBuilder(
+    //                             future: fetchUserData(servitem.get("userid")),
+    //                             builder: (context, snapshot) {
+    //                               if (snapshot.hasData) {
+    //                                 final item = snapshot.data!.docs.first;
+    //                                 return Column(
+    //                                   children: [
+    //                                     GestureDetector(
+    //                                       onTap: () {
+    //                                         getServiceDetail(item, servitem);
+    //                                       },
+    //                                       child: Card(
+    //                                         semanticContainer: true,
+    //                                         clipBehavior:
+    //                                             Clip.antiAliasWithSaveLayer,
+    //                                         color: Colors.white,
+    //                                         shape: RoundedRectangleBorder(
+    //                                           borderRadius:
+    //                                               BorderRadius.circular(10.0),
+    //                                         ),
+    //                                         // elevation: 10,
+    //                                         child: GridTile(
+    //                                           child: Padding(
+    //                                             padding: const EdgeInsets.only(
+    //                                                 top: 8.0),
+    //                                             child: Column(
+    //                                               children: [
+    //                                                 CircleAvatar(
+    //                                                   foregroundImage: item
+    //                                                               .get('url') ==
+    //                                                           null
+    //                                                       ? const AssetImage(
+    //                                                               "assets/profile.png")
+    //                                                           as ImageProvider<
+    //                                                               Object>
+    //                                                       : NetworkImage(
+    //                                                           item.get('url')),
+    //                                                 ),
+    //                                                 Text(item.get("name")),
+    //                                                 Row(
+    //                                                   mainAxisAlignment:
+    //                                                       MainAxisAlignment
+    //                                                           .center,
+    //                                                   children: [
+    //                                                     const Icon(
+    //                                                       Icons.location_pin,
+    //                                                       size: 15,
+    //                                                     ),
+    //                                                     Text(item
+    //                                                         .get("address")),
+    //                                                   ],
+    //                                                 ),
+    //                                                 Text(
+    //                                                     _xmlHandler.getString(
+    //                                                         'servoff'),
+    //                                                     style: TextStyle(
+    //                                                         fontWeight:
+    //                                                             FontWeight
+    //                                                                 .bold)),
+    //                                                 for (var a in servitem
+    //                                                     .get("services"))
+    //                                                   Text(_xmlHandler
+    //                                                       .getString(a)),
+    //                                                 // Text(
+    //                                                 //     servitem.get("services")
+    //                                                 //         as String),
+    //                                                 Row(
+    //                                                   mainAxisAlignment:
+    //                                                       MainAxisAlignment.end,
+    //                                                   children: [
+    //                                                     IconButton(
+    //                                                       onPressed: () async {
+    //                                                         Navigator.push(
+    //                                                             context,
+    //                                                             MaterialPageRoute(
+    //                                                                 builder: (context) => ChatPage(
+    //                                                                     name: item.get(
+    //                                                                         "name"),
+    //                                                                     receiverID:
+    //                                                                         item.get(
+    //                                                                             "userid"),
+    //                                                                     postType:
+    //                                                                         "services",
+    //                                                                     postTypeID:
+    //                                                                         servitem.id)));
+    //                                                       },
+    //                                                       icon: const Icon(Icons
+    //                                                           .chat_rounded),
+    //                                                     ),
+    //                                                   ],
+    //                                                 ),
+    //                                               ],
+    //                                             ),
+    //                                           ),
+    //                                         ),
+    //                                       ),
+    //                                     ),
+    //                                   ],
+    //                                 );
+    //                               } else if (snapshot.hasError) {
+    //                                 return Center(
+    //                                     child: Text(snapshot.error.toString()));
+    //                               } else {
+    //                                 return const Center(
+    //                                   child: CircularProgressIndicator(),
+    //                                 );
+    //                               }
+    //                             });
+    //                       });
+    //                   // return ListView.builder(
+    //                   //     shrinkWrap: true,
+    //                   //     itemCount: snapshot.data!.docs.length,
+    //                   //     itemBuilder: (context, index) {
+    //                   //       final servitem = snapshot.data!.docs[index];
+    //                   //       // print("Service ID: ${servitem.id}");
+    //                   //       return FutureBuilder(
+    //                   //           future:
+    //                   //               fetchUserData(servitem.get("userid")),
+    //                   //           builder: (context, snapshot) {
+    //                   //             if (snapshot.hasData) {
+    //                   //               final item = snapshot.data!.docs.first;
+    //                   //               return Column(
+    //                   //                 children: [
+    //                   //                   GestureDetector(
+    //                   //                     onTap: () {
+    //                   //                       getServiceDetail(
+    //                   //                           item, servitem);
+    //                   //                     },
+    //                   //                     child: Card(
+    //                   //                       semanticContainer: true,
+    //                   //                       clipBehavior:
+    //                   //                           Clip.antiAliasWithSaveLayer,
+    //                   //                       color: Colors.white,
+    //                   //                       shape: RoundedRectangleBorder(
+    //                   //                         borderRadius:
+    //                   //                             BorderRadius.circular(
+    //                   //                                 10.0),
+    //                   //                       ),
+    //                   //                       // elevation: 10,
+    //                   //                       child: ListTile(
+    //                   //                         leading: CircleAvatar(
+    //                   //                           foregroundImage:
+    //                   //                               NetworkImage(AuthMethods
+    //                   //                                       .user
+    //                   //                                       ?.photoURL ??
+    //                   //                                   ''),
+    //                   //                         ),
+    //                   //                         title: Text(item.get("name")),
+    //                   //                         subtitle: Row(
+    //                   //                           children: [
+    //                   //                             const Icon(
+    //                   //                               Icons.location_pin,
+    //                   //                               size: 15,
+    //                   //                             ),
+    //                   //                             Text(item.get("address")),
+    //                   //                           ],
+    //                   //                         ),
+    //                   //                         trailing: Row(
+    //                   //                           mainAxisSize:
+    //                   //                               MainAxisSize.min,
+    //                   //                           children: [
+    //                   //                             IconButton(
+    //                   //                               onPressed: () async {
+    //                   //                                 Navigator.push(
+    //                   //                                     context,
+    //                   //                                     MaterialPageRoute(
+    //                   //                                         builder: (context) => ChatPage(
+    //                   //                                             name: item
+    //                   //                                                 .get(
+    //                   //                                                     "name"),
+    //                   //                                             receiverID:
+    //                   //                                                 item.get(
+    //                   //                                                     "userid"),
+    //                   //                                             postType:
+    //                   //                                                 "services",
+    //                   //                                             postTypeID:
+    //                   //                                                 servitem
+    //                   //                                                     .id)));
+    //                   //                               },
+    //                   //                               icon: const Icon(
+    //                   //                                   Icons.chat_rounded),
+    //                   //                             ),
+    //                   //                           ],
+    //                   //                         ),
+    //                   //                       ),
+    //                   //                     ),
+    //                   //                   ),
+    //                   //                 ],
+    //                   //               );
+    //                   //             } else if (snapshot.hasError) {
+    //                   //               return Center(
+    //                   //                   child: Text(
+    //                   //                       snapshot.error.toString()));
+    //                   //             } else {
+    //                   //               return const Center(
+    //                   //                 child: CircularProgressIndicator(),
+    //                   //               );
+    //                   //             }
+    //                   //           });
+    //                   //     });
+    //                 } else if (snapshot.hasError) {
+    //                   return Center(child: Text(snapshot.error.toString()));
+    //                 } else {
+    //                   return const Center(
+    //                     child: CircularProgressIndicator(),
+    //                   );
+    //                 }
+    //               }),
+    //           Container(
+    //             // decoration: BoxDecoration(
+    //             //   borderRadius: BorderRadius.circular(8.0),
+    //             //   color: Colors.blueGrey[300],
+    //             // ),
+    //             child: const Text("Job Profiles"),
+    //           ),
+    //         ],
+    //       ),
+    //     )
+    //   ],
+    // );
   }
 }

@@ -163,4 +163,12 @@ class maidDao {
         .doc()
         .set(jobProfileInfoMap);
   }
+
+  Future<QuerySnapshot> getAllJobProfiles(String curUser) async {
+    return await FirebaseFirestore.instance
+        .collection("jobprofile")
+        .where("ack", isEqualTo: false)
+        .where("userid", isNotEqualTo: curUser)
+        .get();
+  }
 }
