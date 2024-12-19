@@ -3,8 +3,7 @@ class Service {
   final String rate;
   final String schedule;
   final List<String> services;
-  final String time_from;
-  final String time_to;
+  final Map<String, dynamic> timing;
   final String userid;
   final String wage;
   final List<String> work_history;
@@ -15,8 +14,7 @@ class Service {
       required this.rate,
       required this.schedule,
       required this.services,
-      required this.time_from,
-      required this.time_to,
+      required this.timing,
       required this.userid,
       required this.wage,
       required this.work_history,
@@ -28,8 +26,7 @@ class Service {
       'rate': rate,
       'schedule': schedule,
       'services': services,
-      'time_from': time_from,
-      'time_to': time_to,
+      'timing': timing,
       'userid': userid,
       'wage': wage,
       'work_history': work_history,

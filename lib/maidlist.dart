@@ -6,7 +6,7 @@ import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
 import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/service/auth.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 
 class MaidList extends StatefulWidget {
@@ -18,17 +18,13 @@ class MaidList extends StatefulWidget {
 
 class _MaidListState extends State<MaidList>
     with SingleTickerProviderStateMixin {
-  static const IconData rupeeSymbol =
-      IconData(0x20B9, fontFamily: 'MaterialIcons');
-
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
       setState(() {});
     });
   }
@@ -54,7 +50,8 @@ class _MaidListState extends State<MaidList>
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: Text(_xmlHandler.getString('maiddetails'),
+            title: Text(
+                GlobalVariables.instance.xmlHandler.getString('maiddetails'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
@@ -64,7 +61,9 @@ class _MaidListState extends State<MaidList>
                   children: [
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('nam'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('nam'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("name")),
@@ -72,7 +71,9 @@ class _MaidListState extends State<MaidList>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('addr'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('addr'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("address")),
@@ -80,7 +81,9 @@ class _MaidListState extends State<MaidList>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('sched'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('sched'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(servItem.get("schedule")),
@@ -90,7 +93,9 @@ class _MaidListState extends State<MaidList>
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_xmlHandler.getString('day'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('day'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < servItem.get("days").length; i++)
@@ -112,7 +117,9 @@ class _MaidListState extends State<MaidList>
                         servItem.get("schedule") == 'Hourly')
                       Row(
                         children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           Text(
@@ -122,7 +129,9 @@ class _MaidListState extends State<MaidList>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_xmlHandler.getString('serv'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('serv'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         for (var i = 0;
@@ -145,7 +154,9 @@ class _MaidListState extends State<MaidList>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_xmlHandler.getString('workhist'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('workhist'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         for (var i = 0;
@@ -172,7 +183,9 @@ class _MaidListState extends State<MaidList>
                         children: [
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('wage'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('wage'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
@@ -184,7 +197,9 @@ class _MaidListState extends State<MaidList>
                           ),
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('rate'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('rate'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 25)),
@@ -221,7 +236,8 @@ class _MaidListState extends State<MaidList>
                                           color: Colors.white,
                                         ),
                                         Text(
-                                          _xmlHandler.getString('hire'),
+                                          GlobalVariables.instance.xmlHandler
+                                              .getString('hire'),
                                           style: const TextStyle(
                                               color: Colors.white),
                                         ),

@@ -10,7 +10,6 @@ import 'package:ibitf_app/xmlhandle.dart';
 
 // import 'package:marquee/marquee.dart';
 final XMLHandler _xmlHandler = XMLHandler();
-GlobalVariables gv = GlobalVariables();
 
 class ChatPage extends StatefulWidget {
   final String name;
@@ -45,7 +44,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
 
     checkOwnServ().then((a) {
-      _xmlHandler.loadStrings(gv.selected).then((a) {});
+      _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((a) {});
       setState(() {});
     });
   }

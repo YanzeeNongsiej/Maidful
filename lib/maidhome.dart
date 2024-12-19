@@ -8,7 +8,7 @@ import 'package:ibitf_app/DAO/employerdao.dart';
 import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
@@ -40,13 +40,14 @@ class _MaidHomePageState extends State<MaidHome>
     const Tab(icon: Icon(Icons.calendar_month)),
     const Tab(icon: Icon(Icons.settings)),
   ];
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
+
   @override
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
       setState(() {});
     });
   }
@@ -186,7 +187,7 @@ class _MaidHomePageState extends State<MaidHome>
                         ),
                       ),
                       Text(
-                        _xmlHandler.getString('welc'),
+                        GlobalVariables.instance.xmlHandler.getString('welc'),
                         style: const TextStyle(
                           fontSize: 20.0,
                           color: Colors.blue,
@@ -296,7 +297,8 @@ class _MaidHomePageState extends State<MaidHome>
                 }
               }),
           Center(
-            child: Text(_xmlHandler.getString('setting')),
+            child:
+                Text(GlobalVariables.instance.xmlHandler.getString('setting')),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:ibitf_app/xmlhandle.dart';
+import 'package:ibitf_app/singleton.dart';
 
 List<String> processLang(List<String> s, XMLHandler xml) {
   List<String> result = [];
@@ -10,7 +11,6 @@ List<String> processLang(List<String> s, XMLHandler xml) {
 }
 
 Future<List<String>> english(List<String> s, String selected) async {
-  XMLHandler xmlHandler = XMLHandler();
   List<String> result = [];
   String lang;
   if (selected == "Khasi") {
@@ -18,9 +18,9 @@ Future<List<String>> english(List<String> s, String selected) async {
   } else {
     lang = "English";
   }
-  xmlHandler.loadStrings(lang).then((val) {
+  GlobalVariables.instance.xmlHandler.loadStrings(lang).then((val) {
     for (var i in s) {
-      result.add(xmlHandler.getEnglishString(i));
+      result.add(GlobalVariables.instance.xmlHandler.getEnglishString(i));
     }
   });
   return result;

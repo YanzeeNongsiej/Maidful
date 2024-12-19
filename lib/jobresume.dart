@@ -333,8 +333,10 @@ class _JobResumeState extends State<JobResume>
           if (selTimeF.isNotEmpty && selTimeT.isNotEmpty) {
             TimeOfDay selTimeFrom = stringToTimeOfDay(selTimeF),
                 selTimeTo = stringToTimeOfDay(selTimeT),
-                timeF = stringToTimeOfDay(serv.time_from),
-                timet = stringToTimeOfDay(serv.time_to);
+                timeF = stringToTimeOfDay(
+                    serv.timing[0].toString().split(' - ')[0]),
+                timet = stringToTimeOfDay(
+                    serv.timing[0].toString().split(' - ')[1]);
             if (timeIsPresent(selTimeFrom, selTimeTo, timeF, timet)) {
               showDialog(
                   context: context,
@@ -360,8 +362,10 @@ class _JobResumeState extends State<JobResume>
                 if (d == servday) {
                   TimeOfDay selTimeFrom = stringToTimeOfDay(selTimeF),
                       selTimeTo = stringToTimeOfDay(selTimeT),
-                      timeF = stringToTimeOfDay(serv.time_from),
-                      timet = stringToTimeOfDay(serv.time_to);
+                      timeF = stringToTimeOfDay(
+                          serv.timing[0].toString().split(' - ')[0]),
+                      timet = stringToTimeOfDay(
+                          serv.timing[0].toString().split(' - ')[1]);
                   if (timeIsPresent(selTimeFrom, selTimeTo, timeF, timet)) {
                     showDialog(
                         context: context,
@@ -507,7 +511,7 @@ class _JobResumeState extends State<JobResume>
                                       }),
                                   Expanded(
                                     child:
-                                        Text(_xmlHandler.getString('livein')),
+                                        Text(_xmlHandler.getString('Live-in')),
                                   )
                                 ],
                               ),
@@ -528,7 +532,7 @@ class _JobResumeState extends State<JobResume>
                                       }),
                                   Expanded(
                                       child:
-                                          Text(_xmlHandler.getString('daily')))
+                                          Text(_xmlHandler.getString('Daily')))
                                 ],
                               ),
                             ),
@@ -550,7 +554,7 @@ class _JobResumeState extends State<JobResume>
                                       }),
                                   Expanded(
                                       child:
-                                          Text(_xmlHandler.getString('hourly')))
+                                          Text(_xmlHandler.getString('Hourly')))
                                 ],
                               ),
                             ),
@@ -894,7 +898,7 @@ class _JobResumeState extends State<JobResume>
                                           }),
                                       Expanded(
                                         child: Text(
-                                            _xmlHandler.getString('weekly')),
+                                            _xmlHandler.getString('Weekly')),
                                       )
                                     ],
                                   ),
@@ -914,7 +918,7 @@ class _JobResumeState extends State<JobResume>
                                           }),
                                       Expanded(
                                           child: Text(
-                                              _xmlHandler.getString('monthly')))
+                                              _xmlHandler.getString('Monthly')))
                                     ],
                                   ),
                                 ),
