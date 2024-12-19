@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ibitf_app/DAO/usersDao.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/forgot_password.dart';
 import 'package:ibitf_app/home.dart';
 import 'package:ibitf_app/service/auth.dart';
@@ -22,14 +22,14 @@ class _LogInState extends State<LogIn> {
   TextEditingController mailcontroller = TextEditingController();
   TextEditingController phnocontroller = TextEditingController();
   TextEditingController passwordcontroller = TextEditingController();
-  final XMLHandler _xmlHandler = XMLHandler();
+
   final List<bool> _iss = [true, false];
   List<String> lang = ['English', 'Khasi'];
   final _formkey = GlobalKey<FormState>();
   @override
   void initState() {
     super.initState();
-    _xmlHandler.loadStrings('English').then((val) {
+    GlobalVariables.instance.xmlHandler.loadStrings('English').then((val) {
       setState(() {});
     });
   }
@@ -70,8 +70,9 @@ class _LogInState extends State<LogIn> {
                 _iss[1] = true;
               }
 
-              gv.selected = lang[index];
-              _xmlHandler.loadStrings(gv.selected);
+              GlobalVariables.instance.selected = lang[index];
+              GlobalVariables.instance.xmlHandler
+                  .loadStrings(GlobalVariables.instance.selected);
             });
           },
           selectedColor: Colors.white,
@@ -202,7 +203,7 @@ class _LogInState extends State<LogIn> {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const ForgotPassword()));
         },
-        child: Text(_xmlHandler.getString('forgot'),
+        child: Text(GlobalVariables.instance.xmlHandler.getString('forgot'),
             style: const TextStyle(
                 color: Color(0xFF8c8e98),
                 fontSize: 18.0,
@@ -212,7 +213,7 @@ class _LogInState extends State<LogIn> {
         height: 40.0,
       ),
       Text(
-        _xmlHandler.getString('signin'),
+        GlobalVariables.instance.xmlHandler.getString('signin'),
         style: const TextStyle(
             color: Color(0xFF273671),
             fontSize: 22.0,
@@ -265,7 +266,7 @@ class _LogInState extends State<LogIn> {
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(_xmlHandler.getString('noac'),
+          Text(GlobalVariables.instance.xmlHandler.getString('noac'),
               style: const TextStyle(
                   color: Color(0xFF8c8e98),
                   fontSize: 18.0,
@@ -279,7 +280,7 @@ class _LogInState extends State<LogIn> {
                   MaterialPageRoute(builder: (context) => const SignUp()));
             },
             child: Text(
-              _xmlHandler.getString('signup'),
+              GlobalVariables.instance.xmlHandler.getString('signup'),
               style: const TextStyle(
                   color: Color(0xFF273671),
                   fontSize: 12.0,
@@ -337,14 +338,14 @@ class _LogInState extends State<LogIn> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: Colors.orangeAccent,
             content: Text(
-              _xmlHandler.getString('nouser'),
+              GlobalVariables.instance.xmlHandler.getString('nouser'),
               style: const TextStyle(fontSize: 18.0),
             )));
       } else if (e.code == 'wrong-password') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: Colors.orangeAccent,
             content: Text(
-              _xmlHandler.getString('wrongpass'),
+              GlobalVariables.instance.xmlHandler.getString('wrongpass'),
               style: const TextStyle(fontSize: 18.0),
             )));
       } else {
@@ -364,7 +365,8 @@ class _LogInState extends State<LogIn> {
               SingleChildScrollView(
                 child: isPortrait
                     ? Column(children: [
-                        addImage("assets/${gv.selected}.jpg"),
+                        addImage(
+                            "assets/${GlobalVariables.instance.selected}.jpg"),
                         restOfIt(zero: 18, first: 18, second: 22, third: 32)
                       ])
                     : Expanded(
@@ -378,7 +380,8 @@ class _LogInState extends State<LogIn> {
                                 //margin: EdgeInsets.fromLTRB(10, 50, 0, 0),
                                 width: (MediaQuery.sizeOf(context).width) / 1.5,
                                 height: MediaQuery.sizeOf(context).height,
-                                child: addImage("assets/${gv.selected}.jpg"),
+                                child: addImage(
+                                    "assets/${GlobalVariables.instance.selected}.jpg"),
 
                                 // );
                                 // }

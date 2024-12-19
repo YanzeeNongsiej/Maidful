@@ -7,7 +7,7 @@ import 'package:ibitf_app/model/service.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
 
@@ -58,8 +58,7 @@ class _JobResumeState extends State<JobResume>
     "Saturday",
     "Sunday"
   ];
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
+
   List<String> workHistory = [];
   List<String> shifts = [];
   TimeOfDay? selectedTime;
@@ -76,14 +75,16 @@ class _JobResumeState extends State<JobResume>
   @override
   void initState() {
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
-      daysList[0] = _xmlHandler.getString('Monday');
-      daysList[1] = _xmlHandler.getString('Tuesday');
-      daysList[2] = _xmlHandler.getString('Wednesday');
-      daysList[3] = _xmlHandler.getString('Thursday');
-      daysList[4] = _xmlHandler.getString('Friday');
-      daysList[5] = _xmlHandler.getString('Saturday');
-      daysList[6] = _xmlHandler.getString('Sunday');
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
+      daysList[0] = GlobalVariables.instance.xmlHandler.getString('Monday');
+      daysList[1] = GlobalVariables.instance.xmlHandler.getString('Tuesday');
+      daysList[2] = GlobalVariables.instance.xmlHandler.getString('Wednesday');
+      daysList[3] = GlobalVariables.instance.xmlHandler.getString('Thursday');
+      daysList[4] = GlobalVariables.instance.xmlHandler.getString('Friday');
+      daysList[5] = GlobalVariables.instance.xmlHandler.getString('Saturday');
+      daysList[6] = GlobalVariables.instance.xmlHandler.getString('Sunday');
       getSkills();
       setState(() {});
     });
@@ -97,9 +98,9 @@ class _JobResumeState extends State<JobResume>
     for (var doc in snapshot.docs) {
       // Get the skill for the selected language
 
-      if (doc[gv.selected] != null) {
+      if (doc[GlobalVariables.instance.selected] != null) {
         print('Prev${variantsList[i]}');
-        variantsList[i] = doc[gv.selected];
+        variantsList[i] = doc[GlobalVariables.instance.selected];
         print(variantsList[i]);
         i = i + 1;
       }
@@ -108,12 +109,14 @@ class _JobResumeState extends State<JobResume>
   }
 
   toEnglish() async {
-    List<String> res = await english(selectedDaysValue, gv.selected);
-    List<String> res2 = await english(daysList, gv.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res =
+        await english(selectedDaysValue, GlobalVariables.instance.selected);
+    List<String> res2 =
+        await english(daysList, GlobalVariables.instance.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     selectedDaysValue = res;
     daysList = res2;
-    if (gv.selected == 'Khasi') {
+    if (GlobalVariables.instance.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;
       for (String skill in selectedCheckBoxValue) {
@@ -231,14 +234,14 @@ class _JobResumeState extends State<JobResume>
           .whenComplete(
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                    _xmlHandler.getString('addedsucc'),
+                    GlobalVariables.instance.xmlHandler.getString('addedsucc'),
                     style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        _xmlHandler.getString('error'),
+        GlobalVariables.instance.xmlHandler.getString('error'),
         style: const TextStyle(fontSize: 20.0),
       )));
     }
@@ -251,11 +254,13 @@ class _JobResumeState extends State<JobResume>
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Add ${_xmlHandler.getString('workhist')}'),
+            title: Text(
+                'Add ${GlobalVariables.instance.xmlHandler.getString('workhist')}'),
             content: TextFormField(
               controller: whController1,
               decoration: InputDecoration(
-                labelText: _xmlHandler.getString('workhist'),
+                labelText:
+                    GlobalVariables.instance.xmlHandler.getString('workhist'),
               ),
             ),
             actions: [
@@ -324,7 +329,8 @@ class _JobResumeState extends State<JobResume>
               builder: (context) {
                 return AlertDialog(
                   title: const Text("Warning"),
-                  content: Text(_xmlHandler.getString('avail')),
+                  content: Text(
+                      GlobalVariables.instance.xmlHandler.getString('avail')),
                 );
               });
         } else if (_selectedTimingValue == 2) {
@@ -343,7 +349,8 @@ class _JobResumeState extends State<JobResume>
                   builder: (context) {
                     return AlertDialog(
                       title: const Text("Warning"),
-                      content: Text(_xmlHandler.getString('avail')),
+                      content: Text(GlobalVariables.instance.xmlHandler
+                          .getString('avail')),
                     );
                   });
             }
@@ -372,7 +379,8 @@ class _JobResumeState extends State<JobResume>
                         builder: (context) {
                           return AlertDialog(
                             title: const Text("Warning"),
-                            content: Text(_xmlHandler.getString('avail')),
+                            content: Text(GlobalVariables.instance.xmlHandler
+                                .getString('avail')),
                           );
                         });
                     break;
@@ -459,7 +467,7 @@ class _JobResumeState extends State<JobResume>
         ),
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: Text(_xmlHandler.getString('addserv')),
+        title: Text(GlobalVariables.instance.xmlHandler.getString('addserv')),
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
@@ -510,8 +518,9 @@ class _JobResumeState extends State<JobResume>
                                         checkPostAvailability();
                                       }),
                                   Expanded(
-                                    child:
-                                        Text(_xmlHandler.getString('Live-in')),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('Live-in')),
                                   )
                                 ],
                               ),
@@ -531,8 +540,9 @@ class _JobResumeState extends State<JobResume>
                                         checkPostAvailability();
                                       }),
                                   Expanded(
-                                      child:
-                                          Text(_xmlHandler.getString('Daily')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('Daily')))
                                 ],
                               ),
                             ),
@@ -553,8 +563,9 @@ class _JobResumeState extends State<JobResume>
                                         checkPostAvailability();
                                       }),
                                   Expanded(
-                                      child:
-                                          Text(_xmlHandler.getString('Hourly')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('Hourly')))
                                 ],
                               ),
                             ),
@@ -574,7 +585,8 @@ class _JobResumeState extends State<JobResume>
                           DropDownMultiSelect(
                             validator: ($selectedDaysValue) {
                               if (selectedDaysValue.isEmpty) {
-                                return _xmlHandler.getString('selectdays');
+                                return GlobalVariables.instance.xmlHandler
+                                    .getString('selectdays');
                               } else {
                                 dayValid = true;
                                 return '';
@@ -618,7 +630,8 @@ class _JobResumeState extends State<JobResume>
                               value = selectedDaysValue;
                               checkPostAvailability();
                             },
-                            whenEmpty: _xmlHandler.getString('selectdays'),
+                            whenEmpty: GlobalVariables.instance.xmlHandler
+                                .getString('selectdays'),
                           ),
                           const SizedBox(
                             height: 30.0,
@@ -631,7 +644,9 @@ class _JobResumeState extends State<JobResume>
                           showOptionsHour, // Show the options only if showOptions is true
                       child: Column(
                         children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               textAlign: TextAlign.center),
                           Row(
                             children: [
@@ -832,7 +847,8 @@ class _JobResumeState extends State<JobResume>
                     DropDownMultiSelect(
                       validator: ($selectedCheckBoxValue) {
                         if (selectedCheckBoxValue.isEmpty) {
-                          return _xmlHandler.getString('selectserv');
+                          return GlobalVariables.instance.xmlHandler
+                              .getString('selectserv');
                         } else {
                           servicesValid = true;
                           return '';
@@ -869,14 +885,17 @@ class _JobResumeState extends State<JobResume>
                       onChanged: (List<String> value) {
                         value = selectedCheckBoxValue;
                       },
-                      whenEmpty: _xmlHandler.getString('selectserv'),
+                      whenEmpty: GlobalVariables.instance.xmlHandler
+                          .getString('selectserv'),
                     ),
                     const SizedBox(
                       height: 30.0,
                     ),
                     Column(
                       children: [
-                        Text(_xmlHandler.getString('wage'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('wage'),
                             textAlign: TextAlign.center),
                         Column(
                           children: [
@@ -897,8 +916,9 @@ class _JobResumeState extends State<JobResume>
                                             });
                                           }),
                                       Expanded(
-                                        child: Text(
-                                            _xmlHandler.getString('Weekly')),
+                                        child: Text(GlobalVariables
+                                            .instance.xmlHandler
+                                            .getString('Weekly')),
                                       )
                                     ],
                                   ),
@@ -917,8 +937,9 @@ class _JobResumeState extends State<JobResume>
                                             });
                                           }),
                                       Expanded(
-                                          child: Text(
-                                              _xmlHandler.getString('Monthly')))
+                                          child: Text(GlobalVariables
+                                              .instance.xmlHandler
+                                              .getString('Monthly')))
                                     ],
                                   ),
                                 ),
@@ -934,7 +955,7 @@ class _JobResumeState extends State<JobResume>
                     Column(
                       children: [
                         Text(
-                          _xmlHandler.getString('rate'),
+                          GlobalVariables.instance.xmlHandler.getString('rate'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -966,7 +987,8 @@ class _JobResumeState extends State<JobResume>
                                 child: TextFormField(
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return _xmlHandler.getString('rate');
+                                      return GlobalVariables.instance.xmlHandler
+                                          .getString('rate');
                                     } else {
                                       rateValid = true;
                                       return null;
@@ -976,7 +998,9 @@ class _JobResumeState extends State<JobResume>
                                   keyboardType: TextInputType.number,
                                   decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: _xmlHandler.getString('rate'),
+                                      hintText: GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('rate'),
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
@@ -1009,7 +1033,9 @@ class _JobResumeState extends State<JobResume>
                                         });
                                       }),
                                   Expanded(
-                                    child: Text(_xmlHandler.getString('nego')),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('nego')),
                                   )
                                 ],
                               ),
@@ -1028,8 +1054,9 @@ class _JobResumeState extends State<JobResume>
                                         });
                                       }),
                                   Expanded(
-                                      child: Text(
-                                          _xmlHandler.getString('nonnego')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('nonnego')))
                                 ],
                               ),
                             ),
@@ -1043,7 +1070,8 @@ class _JobResumeState extends State<JobResume>
                     Column(
                       children: [
                         Text(
-                          _xmlHandler.getString('workhist'),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('workhist'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -1060,7 +1088,9 @@ class _JobResumeState extends State<JobResume>
                                   controller: whcontroller,
                                   decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: _xmlHandler.getString('nowork'),
+                                      hintText: GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('nowork'),
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
@@ -1105,7 +1135,8 @@ class _JobResumeState extends State<JobResume>
                               borderRadius: BorderRadius.circular(30)),
                           child: Center(
                               child: Text(
-                            _xmlHandler.getString('postserv'),
+                            GlobalVariables.instance.xmlHandler
+                                .getString('postserv'),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,

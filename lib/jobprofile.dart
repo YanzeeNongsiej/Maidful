@@ -68,21 +68,22 @@ class _JobProfileState extends State<JobProfile>
 
   List<String> selectedCheckBoxValue = [];
   List<String> selectedDaysValue = [];
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
+
   List<String> timeEntries = [];
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
-      daysList[0] = _xmlHandler.getString('Monday');
-      daysList[1] = _xmlHandler.getString('Tuesday');
-      daysList[2] = _xmlHandler.getString('Wednesday');
-      daysList[3] = _xmlHandler.getString('Thursday');
-      daysList[4] = _xmlHandler.getString('Friday');
-      daysList[5] = _xmlHandler.getString('Saturday');
-      daysList[6] = _xmlHandler.getString('Sunday');
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
+      daysList[0] = GlobalVariables.instance.xmlHandler.getString('Monday');
+      daysList[1] = GlobalVariables.instance.xmlHandler.getString('Tuesday');
+      daysList[2] = GlobalVariables.instance.xmlHandler.getString('Wednesday');
+      daysList[3] = GlobalVariables.instance.xmlHandler.getString('Thursday');
+      daysList[4] = GlobalVariables.instance.xmlHandler.getString('Friday');
+      daysList[5] = GlobalVariables.instance.xmlHandler.getString('Saturday');
+      daysList[6] = GlobalVariables.instance.xmlHandler.getString('Sunday');
       getSkills();
       setState(() {});
     });
@@ -96,9 +97,9 @@ class _JobProfileState extends State<JobProfile>
     for (var doc in snapshot.docs) {
       // Get the skill for the selected language
 
-      if (doc[gv.selected] != null) {
+      if (doc[GlobalVariables.instance.selected] != null) {
         print('Prev${variantsList[i]}');
-        variantsList[i] = doc[gv.selected];
+        variantsList[i] = doc[GlobalVariables.instance.selected];
         print(variantsList[i]);
         i = i + 1;
       }
@@ -107,13 +108,15 @@ class _JobProfileState extends State<JobProfile>
   }
 
   toEnglish() async {
-    List<String> res = await english(selectedDaysValue, gv.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res =
+        await english(selectedDaysValue, GlobalVariables.instance.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     selectedDaysValue = res;
-    List<String> res2 = await english(daysList, gv.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res2 =
+        await english(daysList, GlobalVariables.instance.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     daysList = res2;
-    if (gv.selected == 'Khasi') {
+    if (GlobalVariables.instance.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;
       for (String skill in selectedCheckBoxValue) {
@@ -227,14 +230,14 @@ class _JobProfileState extends State<JobProfile>
           .whenComplete(
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                    _xmlHandler.getString('addedsucc'),
+                    GlobalVariables.instance.xmlHandler.getString('addedsucc'),
                     style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        _xmlHandler.getString('error'),
+        GlobalVariables.instance.xmlHandler.getString('error'),
         style: const TextStyle(fontSize: 20.0),
       )));
     }
@@ -280,7 +283,8 @@ class _JobProfileState extends State<JobProfile>
               builder: (context) {
                 return AlertDialog(
                   title: const Text("Warning"),
-                  content: Text(_xmlHandler.getString('avail')),
+                  content: Text(
+                      GlobalVariables.instance.xmlHandler.getString('avail')),
                 );
               });
         } else if (_selectedTimingValue == 1) {
@@ -299,7 +303,8 @@ class _JobProfileState extends State<JobProfile>
                   builder: (context) {
                     return AlertDialog(
                       title: const Text("Warning"),
-                      content: Text(_xmlHandler.getString('avail')),
+                      content: Text(GlobalVariables.instance.xmlHandler
+                          .getString('avail')),
                     );
                   });
             }
@@ -328,7 +333,8 @@ class _JobProfileState extends State<JobProfile>
                         builder: (context) {
                           return AlertDialog(
                             title: const Text("Warning"),
-                            content: Text(_xmlHandler.getString('avail')),
+                            content: Text(GlobalVariables.instance.xmlHandler
+                                .getString('avail')),
                           );
                         });
                     break;
@@ -415,7 +421,7 @@ class _JobProfileState extends State<JobProfile>
         ),
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: Text(_xmlHandler.getString('addjob')),
+        title: Text(GlobalVariables.instance.xmlHandler.getString('addjob')),
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
@@ -466,8 +472,9 @@ class _JobProfileState extends State<JobProfile>
                                         });
                                       }),
                                   Expanded(
-                                    child:
-                                        Text(_xmlHandler.getString('Live-in')),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('Live-in')),
                                   )
                                 ],
                               ),
@@ -486,8 +493,9 @@ class _JobProfileState extends State<JobProfile>
                                         });
                                       }),
                                   Expanded(
-                                      child:
-                                          Text(_xmlHandler.getString('Daily')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('Daily')))
                                 ],
                               ),
                             ),
@@ -506,8 +514,9 @@ class _JobProfileState extends State<JobProfile>
                                         });
                                       }),
                                   Expanded(
-                                      child:
-                                          Text(_xmlHandler.getString('Hourly')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('Hourly')))
                                 ],
                               ),
                             ),
@@ -527,7 +536,8 @@ class _JobProfileState extends State<JobProfile>
                           DropDownMultiSelect(
                             validator: ($selectedDaysValue) {
                               if (selectedDaysValue.isEmpty) {
-                                return _xmlHandler.getString('selectdays');
+                                return GlobalVariables.instance.xmlHandler
+                                    .getString('selectdays');
                               } else {
                                 dayValid = true;
                                 return '';
@@ -571,7 +581,8 @@ class _JobProfileState extends State<JobProfile>
                               value = selectedDaysValue;
                               checkPostAvailability();
                             },
-                            whenEmpty: _xmlHandler.getString('selectdays'),
+                            whenEmpty: GlobalVariables.instance.xmlHandler
+                                .getString('selectdays'),
                           ),
                           const SizedBox(
                             height: 30.0,
@@ -584,7 +595,9 @@ class _JobProfileState extends State<JobProfile>
                           showOptionsHour, // Show the options only if showOptions is true
                       child: Column(
                         children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               textAlign: TextAlign.center),
                           Row(
                             children: [
@@ -781,7 +794,7 @@ class _JobProfileState extends State<JobProfile>
                           ),
                         ],
                         // [
-                        //   Text(_xmlHandler.getString('timing'),
+                        //   Text(GlobalVariables.instance.xmlHandler.getString('timing'),
                         //       textAlign: TextAlign.center),
                         //   Row(
                         //     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -805,7 +818,7 @@ class _JobProfileState extends State<JobProfile>
                         //             controller: fromTimeController,
                         //             decoration: InputDecoration(
                         //                 border: InputBorder.none,
-                        //                 hintText: _xmlHandler.getString('from'),
+                        //                 hintText: GlobalVariables.instance.xmlHandler.getString('from'),
                         //                 hintStyle: TextStyle(
                         //                     color: Color(0xFFb2b7bf),
                         //                     fontSize: 18.0)),
@@ -882,7 +895,7 @@ class _JobProfileState extends State<JobProfile>
                         //             controller: toTimeController,
                         //             decoration: InputDecoration(
                         //                 border: InputBorder.none,
-                        //                 hintText: _xmlHandler.getString('to'),
+                        //                 hintText: GlobalVariables.instance.xmlHandler.getString('to'),
                         //                 hintStyle: TextStyle(
                         //                     color: Color(0xFFb2b7bf),
                         //                     fontSize: 18.0)),
@@ -943,7 +956,8 @@ class _JobProfileState extends State<JobProfile>
                     DropDownMultiSelect(
                       validator: ($selectedCheckBoxValue) {
                         if (selectedCheckBoxValue.isEmpty) {
-                          return _xmlHandler.getString('selectserv');
+                          return GlobalVariables.instance.xmlHandler
+                              .getString('selectserv');
                         } else {
                           servicesValid = true;
                           return '';
@@ -980,14 +994,17 @@ class _JobProfileState extends State<JobProfile>
                       onChanged: (List<String> value) {
                         value = selectedCheckBoxValue;
                       },
-                      whenEmpty: _xmlHandler.getString('selectserv'),
+                      whenEmpty: GlobalVariables.instance.xmlHandler
+                          .getString('selectserv'),
                     ),
                     const SizedBox(
                       height: 30.0,
                     ),
                     Column(
                       children: [
-                        Text(_xmlHandler.getString('wage'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('wage'),
                             textAlign: TextAlign.center),
                         Column(
                           children: [
@@ -1008,8 +1025,9 @@ class _JobProfileState extends State<JobProfile>
                                             });
                                           }),
                                       Expanded(
-                                        child: Text(
-                                            _xmlHandler.getString('Weekly')),
+                                        child: Text(GlobalVariables
+                                            .instance.xmlHandler
+                                            .getString('Weekly')),
                                       )
                                     ],
                                   ),
@@ -1028,8 +1046,9 @@ class _JobProfileState extends State<JobProfile>
                                             });
                                           }),
                                       Expanded(
-                                          child: Text(
-                                              _xmlHandler.getString('Monthly')))
+                                          child: Text(GlobalVariables
+                                              .instance.xmlHandler
+                                              .getString('Monthly')))
                                     ],
                                   ),
                                 ),
@@ -1045,7 +1064,7 @@ class _JobProfileState extends State<JobProfile>
                     Column(
                       children: [
                         Text(
-                          _xmlHandler.getString('rate'),
+                          GlobalVariables.instance.xmlHandler.getString('rate'),
                           textAlign: TextAlign.start,
                         ),
                         Row(
@@ -1077,7 +1096,8 @@ class _JobProfileState extends State<JobProfile>
                                 child: TextFormField(
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return _xmlHandler.getString('rate');
+                                      return GlobalVariables.instance.xmlHandler
+                                          .getString('rate');
                                     } else {
                                       rateValid = true;
                                       return null;
@@ -1087,7 +1107,9 @@ class _JobProfileState extends State<JobProfile>
                                   keyboardType: TextInputType.number,
                                   decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: _xmlHandler.getString('rate'),
+                                      hintText: GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('rate'),
                                       hintStyle: TextStyle(
                                           color: Color(0xFFb2b7bf),
                                           fontSize: 18.0)),
@@ -1120,7 +1142,9 @@ class _JobProfileState extends State<JobProfile>
                                         });
                                       }),
                                   Expanded(
-                                    child: Text(_xmlHandler.getString('nego')),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('nego')),
                                   )
                                 ],
                               ),
@@ -1139,8 +1163,9 @@ class _JobProfileState extends State<JobProfile>
                                         });
                                       }),
                                   Expanded(
-                                      child: Text(
-                                          _xmlHandler.getString('nonnego')))
+                                      child: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('nonnego')))
                                 ],
                               ),
                             ),
@@ -1172,7 +1197,8 @@ class _JobProfileState extends State<JobProfile>
                               borderRadius: BorderRadius.circular(30)),
                           child: Center(
                               child: Text(
-                            _xmlHandler.getString('postjob'),
+                            GlobalVariables.instance.xmlHandler
+                                .getString('postjob'),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,

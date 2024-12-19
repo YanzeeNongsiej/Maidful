@@ -1,28 +1,14 @@
-// import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
 import 'package:ibitf_app/DAO/maiddao.dart';
-import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatlist.dart';
-import 'package:ibitf_app/chatpage.dart';
-//to chatlist
-import 'package:ibitf_app/controller/chat_controller.dart';
-
 import 'package:ibitf_app/jobprofile.dart';
 import 'package:ibitf_app/jobresume.dart';
 import 'package:ibitf_app/landinghome.dart';
-//pages
 import 'package:ibitf_app/login.dart';
-// import 'package:ibitf_app/maid.dart';
 import 'package:ibitf_app/service/auth.dart';
-import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
-// import 'material_design_indicator.dart';
-// XMLHandler? _xmlHandler;
-
 import 'package:ibitf_app/terms.dart';
 import 'package:ibitf_app/contact.dart';
 import 'package:ibitf_app/profile.dart';
@@ -46,7 +32,6 @@ class _EmployerHomePageState extends State<EmployerHome>
   get uname => null;
   String userID = FirebaseAuth.instance.currentUser!.uid;
   String newaddress = "", newname = "", userid = "";
-  final XMLHandler _xmlHandler = XMLHandler();
 
   String? usrname;
   final List<bool> _iss = [true, false], _isrs = [true, false];
@@ -110,7 +95,9 @@ class _EmployerHomePageState extends State<EmployerHome>
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
     super.initState();
-    _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((val) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((val) {
       setState(() {});
       GlobalVariables.instance.username = widget.uname.toString();
       usrname = GlobalVariables.instance.username;
@@ -226,7 +213,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                             }
 
                             GlobalVariables.instance.selected = lang[index];
-                            _xmlHandler.loadStrings(
+                            GlobalVariables.instance.xmlHandler.loadStrings(
                                 GlobalVariables.instance.selected.toString());
                             //updateParentState();
                           });
@@ -263,7 +250,7 @@ class _EmployerHomePageState extends State<EmployerHome>
                               }
 
                               // GlobalVariables.instance.selected = lang[index];
-                              _xmlHandler.loadStrings(
+                              GlobalVariables.instance.xmlHandler.loadStrings(
                                   GlobalVariables.instance.selected.toString());
                               updateParentState();
                             });

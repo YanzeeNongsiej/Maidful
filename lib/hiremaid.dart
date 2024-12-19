@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:multiselect/multiselect.dart';
-import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
@@ -31,8 +30,6 @@ class _HireMaidState extends State<HireMaid> {
       timeToValid = false,
       servicesValid = false,
       rateValid = false;
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
 
   List<String> daysList = [
     "Monday",
@@ -70,26 +67,33 @@ class _HireMaidState extends State<HireMaid> {
 
   @override
   void initState() {
-    _xmlHandler.loadStrings(gv.selected).then((a) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
       if (widget.itemGlobal?.get("schedule") == "Live-in") {
         selectedScheduleValue = 1;
-        selectedScheduleString = _xmlHandler.getString('livein');
+        selectedScheduleString =
+            GlobalVariables.instance.xmlHandler.getString('livein');
       } else if (widget.itemGlobal?.get("schedule") == "Daily") {
         selectedScheduleValue = 2;
-        selectedScheduleString = _xmlHandler.getString('daily');
+        selectedScheduleString =
+            GlobalVariables.instance.xmlHandler.getString('daily');
         showOptionsHour = true;
       } else {
         selectedScheduleValue = 3;
-        selectedScheduleString = _xmlHandler.getString('hourly');
+        selectedScheduleString =
+            GlobalVariables.instance.xmlHandler.getString('hourly');
         showOptionsHour = true;
         showOptionsDay = true;
       }
       if (widget.itemGlobal?.get("wage") == "Weekly") {
         _selectedWageValue = 1;
-        _selectedWageString = _xmlHandler.getString('weekly');
+        _selectedWageString =
+            GlobalVariables.instance.xmlHandler.getString('weekly');
       } else {
         _selectedWageValue = 2;
-        _selectedWageString = _xmlHandler.getString('monthly');
+        _selectedWageString =
+            GlobalVariables.instance.xmlHandler.getString('monthly');
       }
       defTimeFrom = widget.itemGlobal?.get("time_from");
       defTimeTo = widget.itemGlobal?.get("time_to");
@@ -98,30 +102,37 @@ class _HireMaidState extends State<HireMaid> {
       origselectedCheckBoxValue =
           widget.itemGlobal?.get("services").cast<String>();
 
-      daysList[0] = _xmlHandler.getString('Monday');
-      daysList[1] = _xmlHandler.getString('Tuesday');
-      daysList[2] = _xmlHandler.getString('Wednesday');
-      daysList[3] = _xmlHandler.getString('Thursday');
-      daysList[4] = _xmlHandler.getString('Friday');
-      daysList[5] = _xmlHandler.getString('Saturday');
-      daysList[6] = _xmlHandler.getString('Sunday');
+      daysList[0] = GlobalVariables.instance.xmlHandler.getString('Monday');
+      daysList[1] = GlobalVariables.instance.xmlHandler.getString('Tuesday');
+      daysList[2] = GlobalVariables.instance.xmlHandler.getString('Wednesday');
+      daysList[3] = GlobalVariables.instance.xmlHandler.getString('Thursday');
+      daysList[4] = GlobalVariables.instance.xmlHandler.getString('Friday');
+      daysList[5] = GlobalVariables.instance.xmlHandler.getString('Saturday');
+      daysList[6] = GlobalVariables.instance.xmlHandler.getString('Sunday');
 
-      variantsList[0] = _xmlHandler.getString('Housekeeping');
-      variantsList[1] = _xmlHandler.getString('Cooking');
-      variantsList[2] = _xmlHandler.getString('Laundry');
-      variantsList[3] = _xmlHandler.getString('Babysitting');
-      variantsList[4] = _xmlHandler.getString('Elderly Care');
-      variantsList[5] = _xmlHandler.getString('Grocery Shopping');
-      selectedDaysValue = processLang(origselectedDaysValue, _xmlHandler);
-      selectedCheckBoxValue =
-          processLang(origselectedCheckBoxValue, _xmlHandler);
+      variantsList[0] =
+          GlobalVariables.instance.xmlHandler.getString('Housekeeping');
+      variantsList[1] =
+          GlobalVariables.instance.xmlHandler.getString('Cooking');
+      variantsList[2] =
+          GlobalVariables.instance.xmlHandler.getString('Laundry');
+      variantsList[3] =
+          GlobalVariables.instance.xmlHandler.getString('Babysitting');
+      variantsList[4] =
+          GlobalVariables.instance.xmlHandler.getString('Elderly Care');
+      variantsList[5] =
+          GlobalVariables.instance.xmlHandler.getString('Grocery Shopping');
+      selectedDaysValue = processLang(
+          origselectedDaysValue, GlobalVariables.instance.xmlHandler);
+      selectedCheckBoxValue = processLang(
+          origselectedCheckBoxValue, GlobalVariables.instance.xmlHandler);
 
       print(daysList);
       setState(() {});
     });
     super.initState();
 
-    print(_xmlHandler.getString('hourly'));
+    print(GlobalVariables.instance.xmlHandler.getString('hourly'));
 
     //  as List<String>;
     // List<String> strlist = dynamiclist.cast<String>();
@@ -164,7 +175,7 @@ class _HireMaidState extends State<HireMaid> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.name),
-            Text(_xmlHandler.getString('servdetails'),
+            Text(GlobalVariables.instance.xmlHandler.getString('servdetails'),
                 style: const TextStyle(fontSize: 15))
           ],
         ),
@@ -177,20 +188,24 @@ class _HireMaidState extends State<HireMaid> {
               children: [
                 Text.rich(TextSpan(text: '* Click ', children: <InlineSpan>[
                   TextSpan(
-                    text: _xmlHandler.getString('change'),
+                    text:
+                        GlobalVariables.instance.xmlHandler.getString('change'),
                     style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.amber),
                   ),
                   TextSpan(
-                    text: _xmlHandler.getString('click'),
+                    text:
+                        GlobalVariables.instance.xmlHandler.getString('click'),
                   )
                 ])),
                 ExpansionTile(
                   title: Row(
                     children: [
-                      Text(_xmlHandler.getString('sched'),
+                      Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('sched'),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(selectedScheduleString),
                     ],
@@ -200,7 +215,8 @@ class _HireMaidState extends State<HireMaid> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          _xmlHandler.getString('change'),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('change'),
                           style: const TextStyle(color: Colors.white),
                         ),
                       )),
@@ -220,13 +236,15 @@ class _HireMaidState extends State<HireMaid> {
                                     // checkPostAvailability();
                                     setState(() {
                                       selectedScheduleValue = value!;
-                                      selectedScheduleString =
-                                          _xmlHandler.getString('livein');
+                                      selectedScheduleString = GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('livein');
                                       toggleTimings(1);
                                     });
                                   }),
                               Expanded(
-                                child: Text(_xmlHandler.getString('livein')),
+                                child: Text(GlobalVariables.instance.xmlHandler
+                                    .getString('livein')),
                               )
                             ],
                           ),
@@ -241,13 +259,16 @@ class _HireMaidState extends State<HireMaid> {
                                   onChanged: (value) {
                                     setState(() {
                                       selectedScheduleValue = value!;
-                                      selectedScheduleString =
-                                          _xmlHandler.getString('daily');
+                                      selectedScheduleString = GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('daily');
                                       toggleTimings(2);
                                     });
                                   }),
                               Expanded(
-                                  child: Text(_xmlHandler.getString('daily')))
+                                  child: Text(GlobalVariables
+                                      .instance.xmlHandler
+                                      .getString('daily')))
                             ],
                           ),
                         ),
@@ -267,7 +288,9 @@ class _HireMaidState extends State<HireMaid> {
                                     });
                                   }),
                               Expanded(
-                                  child: Text(_xmlHandler.getString('hourly')))
+                                  child: Text(GlobalVariables
+                                      .instance.xmlHandler
+                                      .getString('hourly')))
                             ],
                           ),
                         ),
@@ -282,7 +305,9 @@ class _HireMaidState extends State<HireMaid> {
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_xmlHandler.getString('day'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('day'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < selectedDaysValue.length; i++)
@@ -305,7 +330,8 @@ class _HireMaidState extends State<HireMaid> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              _xmlHandler.getString('change'),
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('change'),
                               style: const TextStyle(color: Colors.white),
                             ),
                           )),
@@ -377,7 +403,9 @@ class _HireMaidState extends State<HireMaid> {
                   child: ExpansionTile(
                       title: Row(
                         children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           Text("$defTimeFrom-$defTimeTo"),
@@ -388,14 +416,17 @@ class _HireMaidState extends State<HireMaid> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              _xmlHandler.getString('change'),
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('change'),
                               style: const TextStyle(color: Colors.white),
                             ),
                           )),
                       children: <Widget>[
                         Column(
                           children: [
-                            Text(_xmlHandler.getString('timing'),
+                            Text(
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('timing'),
                                 textAlign: TextAlign.center),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -565,7 +596,8 @@ class _HireMaidState extends State<HireMaid> {
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_xmlHandler.getString('serv'),
+                      Text(
+                          GlobalVariables.instance.xmlHandler.getString('serv'),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       for (var i = 0; i < selectedCheckBoxValue.length; i++)
                         Padding(
@@ -587,7 +619,8 @@ class _HireMaidState extends State<HireMaid> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          _xmlHandler.getString('change'),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('change'),
                           style: const TextStyle(color: Colors.white),
                         ),
                       )),
@@ -671,7 +704,9 @@ class _HireMaidState extends State<HireMaid> {
                     children: [
                       Row(
                         children: [
-                          Text(_xmlHandler.getString('wage'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('wage'),
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                           Text(_selectedWageString,
@@ -686,14 +721,17 @@ class _HireMaidState extends State<HireMaid> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          _xmlHandler.getString('change'),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('change'),
                           style: const TextStyle(color: Colors.white),
                         ),
                       )),
                   children: [
                     Column(
                       children: [
-                        Text(_xmlHandler.getString('wage'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('wage'),
                             textAlign: TextAlign.center),
                         Column(
                           children: [
@@ -710,14 +748,17 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
-                                              _selectedWageString = _xmlHandler
-                                                  .getString('weekly');
+                                              _selectedWageString =
+                                                  GlobalVariables
+                                                      .instance.xmlHandler
+                                                      .getString('weekly');
                                               //toggleWage(1);
                                             });
                                           }),
                                       Expanded(
-                                        child: Text(
-                                            _xmlHandler.getString('weekly')),
+                                        child: Text(GlobalVariables
+                                            .instance.xmlHandler
+                                            .getString('weekly')),
                                       )
                                     ],
                                   ),
@@ -732,14 +773,17 @@ class _HireMaidState extends State<HireMaid> {
                                           onChanged: (value) {
                                             setState(() {
                                               _selectedWageValue = value!;
-                                              _selectedWageString = _xmlHandler
-                                                  .getString('monthly');
+                                              _selectedWageString =
+                                                  GlobalVariables
+                                                      .instance.xmlHandler
+                                                      .getString('monthly');
                                               // toggleWage(2);
                                             });
                                           }),
                                       Expanded(
-                                          child: Text(
-                                              _xmlHandler.getString('monthly')))
+                                          child: Text(GlobalVariables
+                                              .instance.xmlHandler
+                                              .getString('monthly')))
                                     ],
                                   ),
                                 ),
@@ -754,7 +798,8 @@ class _HireMaidState extends State<HireMaid> {
                 ExpansionTile(
                   title: Row(
                     children: [
-                      Text(_xmlHandler.getString('rate'),
+                      Text(
+                          GlobalVariables.instance.xmlHandler.getString('rate'),
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 25)),
                       Text("\u{20B9}$defRate",
@@ -767,7 +812,8 @@ class _HireMaidState extends State<HireMaid> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          _xmlHandler.getString('change'),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('change'),
                           style: const TextStyle(color: Colors.white),
                         ),
                       )),
@@ -846,7 +892,8 @@ class _HireMaidState extends State<HireMaid> {
                     child: TextButton(
                       onPressed: sendAck,
                       child: Text(
-                        _xmlHandler.getString('sendack'),
+                        GlobalVariables.instance.xmlHandler
+                            .getString('sendack'),
                         style: const TextStyle(color: Colors.white),
                       ),
                     )),
@@ -859,13 +906,15 @@ class _HireMaidState extends State<HireMaid> {
   }
 
   toEnglish() async {
-    List<String> res = await english(selectedDaysValue, gv.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res =
+        await english(selectedDaysValue, GlobalVariables.instance.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     selectedDaysValue = res;
-    List<String> res2 = await english(daysList, gv.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res2 =
+        await english(daysList, GlobalVariables.instance.selected);
+    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     daysList = res2;
-    if (gv.selected == 'Khasi') {
+    if (GlobalVariables.instance.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;
       for (String skill in selectedCheckBoxValue) {
@@ -943,7 +992,7 @@ class _HireMaidState extends State<HireMaid> {
           .whenComplete(
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                    _xmlHandler.getString('addedsucc'),
+                    GlobalVariables.instance.xmlHandler.getString('addedsucc'),
                     style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
@@ -953,13 +1002,15 @@ class _HireMaidState extends State<HireMaid> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        _xmlHandler.getString('error'),
+        GlobalVariables.instance.xmlHandler.getString('error'),
         style: const TextStyle(fontSize: 20.0),
       )));
     }
-    List<String> res = await english(selectedDaysValue, gv.selected);
+    List<String> res =
+        await english(selectedDaysValue, GlobalVariables.instance.selected);
     print("Converted days: $res");
-    List<String> res2 = await english(selectedCheckBoxValue, gv.selected);
+    List<String> res2 =
+        await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
     print("Converted services: $res2");
   }
 }

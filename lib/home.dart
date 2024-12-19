@@ -12,7 +12,7 @@ import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/adminhome.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 // import 'material_design_indicator.dart';
 
@@ -31,7 +31,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   final dobcontroller = TextEditingController();
   final addressController = TextEditingController();
   final remarksController = TextEditingController();
-  final XMLHandler _xmlHandler = XMLHandler();
+
   late TabController _tabController;
   int _selectedValue = 1;
   int _selectedRoleValue = 1;
@@ -44,8 +44,6 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
     "Bengali"
   ];
   List<String> selectedCheckBoxValue = [];
-
-  GlobalVariables gv = GlobalVariables();
 
   final _formkey = GlobalKey<FormState>();
 
@@ -63,7 +61,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
       //   Navigator.push(
       //       context, MaterialPageRoute(builder: (context) => const EmployerHome()));
       // } else if (_selectedRoleValue == 2) {
-      gv.urole = _selectedRoleValue;
+      GlobalVariables.instance.urole = _selectedRoleValue;
       Navigator.pop(context);
       Navigator.push(
           context,
@@ -87,7 +85,9 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
     _tabController = TabController(length: 3, vsync: this);
     print("USer Details:$user");
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((val) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((val) {
       setState(() {});
     });
   }
@@ -138,13 +138,13 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
               if (item == 'admin') {
                 return const AdminHome();
               } else if (item == "2") {
-                gv.urole = 2;
+                GlobalVariables.instance.urole = 2;
                 return EmployerHome(
                   uname: name,
                   uid: user!.uid,
                 );
               } else if (item == "1") {
-                gv.urole = 1;
+                GlobalVariables.instance.urole = 1;
                 return EmployerHome(
                   uname: name,
                   uid: user!.uid,

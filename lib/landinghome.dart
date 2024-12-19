@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 
 class LandingHomePage extends StatefulWidget {
@@ -17,133 +17,138 @@ class LandingHomePage extends StatefulWidget {
 }
 
 class _LandingHomePageState extends State<LandingHomePage> {
-  final XMLHandler _xmlHandler = XMLHandler();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((val) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((val) {
       setState(() {});
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "${_xmlHandler.getString('welc')}, ${widget.uname}",
-            style: TextStyle(
-              fontSize: 20.0,
-              color: Colors.indigo[900],
-            ),
-          ),
-        ),
-        const NestedTabBar(),
+    return AnimatedBuilder(
+        animation: GlobalVariables.instance,
+        builder: (context, child) {
+          return ListView(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "${GlobalVariables.instance.xmlHandler.getString('welc')}, ${widget.uname}",
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.indigo[900],
+                  ),
+                ),
+              ),
+              const NestedTabBar(),
 
-        // const DefaultTabController(
-        //   length: 2,
-        //   child: TabBar(
-        //       dividerColor: Colors.transparent,
-        //       indicatorSize: TabBarIndicatorSize.tab,
-        //       indicator: BoxDecoration(
-        //           borderRadius: const BorderRadius.only(
-        //               topLeft: Radius.circular(20),
-        //               topRight: Radius.circular(20)),
-        //           color: Colors.blue,
-        //           gradient: LinearGradient(
-        //               begin: Alignment.topCenter,
-        //               end: Alignment.bottomCenter,
-        //               // transform: GradientRotation(90),
-        //               colors: [Colors.lightBlue, Colors.white])),
-        //       tabs: [
-        //         Tab(
-        //           child: Text("maids"),
-        //         ),
-        //         Tab(child: Text("Job Profiles"))
-        //       ]),
-        // ),
-        // Visibility(
-        //     visible:
-        //         showMaids, // Show the options only if showOptions is true
-        //     child: Container(
-        //       child: Text("maids"),
-        //     )),
-        // Visibility(
-        //     visible: showJobProfiles,
-        //     child: Container(
-        //       child: Text("Job Profiles"),
-        //     ))
+              // const DefaultTabController(
+              //   length: 2,
+              //   child: TabBar(
+              //       dividerColor: Colors.transparent,
+              //       indicatorSize: TabBarIndicatorSize.tab,
+              //       indicator: BoxDecoration(
+              //           borderRadius: const BorderRadius.only(
+              //               topLeft: Radius.circular(20),
+              //               topRight: Radius.circular(20)),
+              //           color: Colors.blue,
+              //           gradient: LinearGradient(
+              //               begin: Alignment.topCenter,
+              //               end: Alignment.bottomCenter,
+              //               // transform: GradientRotation(90),
+              //               colors: [Colors.lightBlue, Colors.white])),
+              //       tabs: [
+              //         Tab(
+              //           child: Text("maids"),
+              //         ),
+              //         Tab(child: Text("Job Profiles"))
+              //       ]),
+              // ),
+              // Visibility(
+              //     visible:
+              //         showMaids, // Show the options only if showOptions is true
+              //     child: Container(
+              //       child: Text("maids"),
+              //     )),
+              // Visibility(
+              //     visible: showJobProfiles,
+              //     child: Container(
+              //       child: Text("Job Profiles"),
+              //     ))
 
-        // Row(
-        //   children: [
-        //     Expanded(
-        //       child: GestureDetector(
-        //         onTap: () => {
-        //           Navigator.push(
-        //               context,
-        //               MaterialPageRoute(
-        //                   builder: (context) => const MaidList()))
-        //         },
-        //         child: Card(
-        //           semanticContainer: true,
-        //           clipBehavior: Clip.antiAliasWithSaveLayer,
-        //           color: Colors.blueAccent[100],
+              // Row(
+              //   children: [
+              //     Expanded(
+              //       child: GestureDetector(
+              //         onTap: () => {
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => const MaidList()))
+              //         },
+              //         child: Card(
+              //           semanticContainer: true,
+              //           clipBehavior: Clip.antiAliasWithSaveLayer,
+              //           color: Colors.blueAccent[100],
 
-        //           shape: RoundedRectangleBorder(
-        //             borderRadius: BorderRadius.circular(10.0),
-        //           ),
-        //           elevation: 10,
-        //           // margin: EdgeInsets.all(10),
-        //           child: Column(
-        //             children: [
-        //               const Icon(
-        //                 Icons.person_search_sharp,
-        //                 size: 100,
-        //                 color: Colors.white,
-        //               ),
-        //               // Image.asset(
-        //               //   "assets/user.png",
-        //               //   fit: BoxFit.scaleDown,
-        //               // ),
-        //               Text(
-        //                 (_xmlHandler.getString('maid')).toString(),
-        //                 style: const TextStyle(color: Colors.white),
-        //               ),
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //     Expanded(
-        //       child: Card(
-        //         semanticContainer: true,
-        //         clipBehavior: Clip.antiAliasWithSaveLayer,
-        //         color: Colors.blueAccent[100],
-        //         shape: RoundedRectangleBorder(
-        //           borderRadius: BorderRadius.circular(10.0),
-        //         ),
-        //         elevation: 5,
+              //           shape: RoundedRectangleBorder(
+              //             borderRadius: BorderRadius.circular(10.0),
+              //           ),
+              //           elevation: 10,
+              //           // margin: EdgeInsets.all(10),
+              //           child: Column(
+              //             children: [
+              //               const Icon(
+              //                 Icons.person_search_sharp,
+              //                 size: 100,
+              //                 color: Colors.white,
+              //               ),
+              //               // Image.asset(
+              //               //   "assets/user.png",
+              //               //   fit: BoxFit.scaleDown,
+              //               // ),
+              //               Text(
+              //                 (GlobalVariables.instance.xmlHandler.getString('maid')).toString(),
+              //                 style: const TextStyle(color: Colors.white),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //     Expanded(
+              //       child: Card(
+              //         semanticContainer: true,
+              //         clipBehavior: Clip.antiAliasWithSaveLayer,
+              //         color: Colors.blueAccent[100],
+              //         shape: RoundedRectangleBorder(
+              //           borderRadius: BorderRadius.circular(10.0),
+              //         ),
+              //         elevation: 5,
 
-        //         // margin: EdgeInsets.all(10),
-        //         child: Column(
-        //           children: [
-        //             const Icon(Icons.manage_search_outlined,
-        //                 size: 100, color: Colors.white),
-        //             Text(
-        //               (_xmlHandler.getString('job')).toString(),
-        //               style: const TextStyle(color: Colors.white),
-        //             ),
-        //           ],
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
-      ],
-    );
+              //         // margin: EdgeInsets.all(10),
+              //         child: Column(
+              //           children: [
+              //             const Icon(Icons.manage_search_outlined,
+              //                 size: 100, color: Colors.white),
+              //             Text(
+              //               (GlobalVariables.instance.xmlHandler.getString('job')).toString(),
+              //               style: const TextStyle(color: Colors.white),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     ),
+              //   ],
+              // ),
+            ],
+          );
+        });
   }
 }
 
@@ -156,13 +161,13 @@ class NestedTabBar extends StatefulWidget {
 
 class _NestedTabBarState extends State<NestedTabBar>
     with TickerProviderStateMixin {
-  final XMLHandler _xmlHandler = XMLHandler();
-
   late TabController _nestedTabController;
   @override
   void initState() {
     super.initState();
-    _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((val) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((val) {
       setState(() {});
       // GlobalVariables.instance.username = widget.uname.toString();
     });
@@ -206,7 +211,8 @@ class _NestedTabBarState extends State<NestedTabBar>
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: Text(_xmlHandler.getString('maiddetails'),
+            title: Text(
+                GlobalVariables.instance.xmlHandler.getString('maiddetails'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
@@ -216,7 +222,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                   children: [
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('nam'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('nam'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("name")),
@@ -224,7 +232,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('addr'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('addr'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("address")),
@@ -232,17 +242,22 @@ class _NestedTabBarState extends State<NestedTabBar>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('sched'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('sched'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(_xmlHandler.getString(servItem.get("schedule"))),
+                        Text(GlobalVariables.instance.xmlHandler
+                            .getString(servItem.get("schedule"))),
                       ],
                     ),
                     if (servItem.get("schedule") == 'Hourly')
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_xmlHandler.getString('day'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('day'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < servItem.get("days").length; i++)
@@ -253,7 +268,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                 children: [
                                   Text("${i + 1}. "),
                                   Expanded(
-                                    child: Text(_xmlHandler
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
                                         .getString(servItem.get("days")[i])),
                                   ),
                                 ],
@@ -265,7 +281,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                         servItem.get("schedule") == 'Hourly')
                       Column(children: [
                         Row(children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                         ]),
@@ -293,7 +311,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_xmlHandler.getString('serv'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('serv'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         for (var i = 0;
@@ -306,7 +326,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                               children: [
                                 Text("${i + 1}. "),
                                 Expanded(
-                                  child: Text(_xmlHandler
+                                  child: Text(GlobalVariables
+                                      .instance.xmlHandler
                                       .getString(servItem.get("services")[i])),
                                 ),
                               ],
@@ -317,7 +338,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_xmlHandler.getString('workhist'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('workhist'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         for (var i = 0;
@@ -344,11 +367,15 @@ class _NestedTabBarState extends State<NestedTabBar>
                         children: [
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('wage'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('wage'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
-                              Text(_xmlHandler.getString(servItem.get("wage")),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString(servItem.get("wage")),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
@@ -356,7 +383,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                           ),
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('rate'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('rate'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 25)),
@@ -393,7 +422,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                           color: Colors.white,
                                         ),
                                         Text(
-                                          _xmlHandler.getString('hire'),
+                                          GlobalVariables.instance.xmlHandler
+                                              .getString('hire'),
                                           style: const TextStyle(
                                               color: Colors.white),
                                         ),
@@ -538,7 +568,8 @@ class _NestedTabBarState extends State<NestedTabBar>
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: Text(_xmlHandler.getString('maiddetails'),
+            title: Text(
+                GlobalVariables.instance.xmlHandler.getString('maiddetails'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
@@ -548,7 +579,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                   children: [
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('nam'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('nam'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("name")),
@@ -556,7 +589,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('addr'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('addr'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         Text(item.get("address")),
@@ -564,17 +599,22 @@ class _NestedTabBarState extends State<NestedTabBar>
                     ),
                     Row(
                       children: [
-                        Text(_xmlHandler.getString('sched'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('sched'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(_xmlHandler.getString(servItem.get("schedule"))),
+                        Text(GlobalVariables.instance.xmlHandler
+                            .getString(servItem.get("schedule"))),
                       ],
                     ),
                     if (servItem.get("schedule") == 'Hourly')
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_xmlHandler.getString('day'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('day'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           for (var i = 0; i < servItem.get("days").length; i++)
@@ -585,7 +625,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                 children: [
                                   Text("${i + 1}. "),
                                   Expanded(
-                                    child: Text(_xmlHandler
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
                                         .getString(servItem.get("days")[i])),
                                   ),
                                 ],
@@ -597,7 +638,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                         servItem.get("schedule") == 'Hourly')
                       Row(
                         children: [
-                          Text(_xmlHandler.getString('timing'),
+                          Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('timing'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           Text.rich(TextSpan(
@@ -617,7 +660,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_xmlHandler.getString('serv'),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('serv'),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         for (var i = 0;
@@ -630,7 +675,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                               children: [
                                 Text("${i + 1}. "),
                                 Expanded(
-                                  child: Text(_xmlHandler
+                                  child: Text(GlobalVariables
+                                      .instance.xmlHandler
                                       .getString(servItem.get("services")[i])),
                                 ),
                               ],
@@ -644,11 +690,15 @@ class _NestedTabBarState extends State<NestedTabBar>
                         children: [
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('wage'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('wage'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
-                              Text(_xmlHandler.getString(servItem.get("wage")),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString(servItem.get("wage")),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
@@ -656,7 +706,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                           ),
                           Row(
                             children: [
-                              Text(_xmlHandler.getString('rate'),
+                              Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('rate'),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 25)),
@@ -693,7 +745,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                           color: Colors.white,
                                         ),
                                         Text(
-                                          _xmlHandler.getString('hire'),
+                                          GlobalVariables.instance.xmlHandler
+                                              .getString('hire'),
                                           style: const TextStyle(
                                               color: Colors.white),
                                         ),
@@ -827,375 +880,385 @@ class _NestedTabBarState extends State<NestedTabBar>
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    return Column(
-      children: [
-        if (GlobalVariables.instance.urole == 2)
-          Column(
+    return AnimatedBuilder(
+        animation: GlobalVariables.instance,
+        builder: (context, child) {
+          return Column(
             children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  border: Border(
-                      left: BorderSide(color: Colors.grey),
-                      top: BorderSide(color: Colors.grey),
-                      right: BorderSide(color: Colors.grey)),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20)),
-                  color: Colors.blue,
-                  // gradient: LinearGradient(
-                  //     begin: Alignment.topCenter,
-                  //     end: Alignment.bottomCenter,
-                  //     colors: [Colors.lightBlueAccent, Colors.white]
-                  //     ),
-                ),
-                child: Center(
-                  child: Text(
-                    'Available Services(Maids)',
-                    style: TextStyle(fontSize: 15, color: Colors.white
-                        // fontWeight: FontWeight.w400,
+              if (GlobalVariables.instance.urole == 2)
+                Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(5),
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        border: Border(
+                            left: BorderSide(color: Colors.grey),
+                            top: BorderSide(color: Colors.grey),
+                            right: BorderSide(color: Colors.grey)),
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20)),
+                        color: Colors.blue,
+                        // gradient: LinearGradient(
+                        //     begin: Alignment.topCenter,
+                        //     end: Alignment.bottomCenter,
+                        //     colors: [Colors.lightBlueAccent, Colors.white]
+                        //     ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Available Services(Maids)',
+                          style: TextStyle(fontSize: 15, color: Colors.white
+                              // fontWeight: FontWeight.w400,
+                              ),
                         ),
-                  ),
-                ),
-              ),
-              Container(
-                  height: screenHeight * 0.70,
-                  margin:
-                      const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
-                  child: TabBarView(
-                      controller: _nestedTabController,
-                      children: <Widget>[
-                        FutureBuilder(
-                            // StreamBuilder(
-                            future: fetchServices(),
-                            // stream: fetchChats(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return GridView.builder(
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            childAspectRatio: 0.85),
-                                    shrinkWrap: true,
-                                    itemCount: snapshot.data!.docs.length,
-                                    itemBuilder: (context, index) {
-                                      final servitem =
-                                          snapshot.data!.docs[index];
-                                      return FutureBuilder(
-                                          future: fetchUserData(
-                                              servitem.get("userid")),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.hasData) {
-                                              final item =
-                                                  snapshot.data!.docs.first;
-                                              return Column(
-                                                children: [
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      getServiceDetail(
-                                                          item, servitem);
-                                                    },
-                                                    child: Card(
-                                                      semanticContainer: true,
-                                                      clipBehavior: Clip
-                                                          .antiAliasWithSaveLayer,
-                                                      color: Colors.white,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                      ),
-                                                      // elevation: 10,
-                                                      child: GridTile(
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  top: 8.0),
-                                                          child: Column(
-                                                            children: [
-                                                              CircleAvatar(
-                                                                foregroundImage: item.get(
-                                                                            'url') ==
-                                                                        null
-                                                                    ? const AssetImage(
-                                                                            "assets/profile.png")
-                                                                        as ImageProvider<
-                                                                            Object>
-                                                                    : NetworkImage(
-                                                                        item.get(
-                                                                            'url')),
+                      ),
+                    ),
+                    Container(
+                        height: screenHeight * 0.70,
+                        margin: const EdgeInsets.only(
+                            left: 5.0, right: 5.0, top: 10.0),
+                        child: TabBarView(
+                            controller: _nestedTabController,
+                            children: <Widget>[
+                              FutureBuilder(
+                                  // StreamBuilder(
+                                  future: fetchServices(),
+                                  // stream: fetchChats(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return GridView.builder(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2,
+                                                  childAspectRatio: 0.85),
+                                          shrinkWrap: true,
+                                          itemCount: snapshot.data!.docs.length,
+                                          itemBuilder: (context, index) {
+                                            final servitem =
+                                                snapshot.data!.docs[index];
+                                            return FutureBuilder(
+                                                future: fetchUserData(
+                                                    servitem.get("userid")),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    final item = snapshot
+                                                        .data!.docs.first;
+                                                    return Column(
+                                                      children: [
+                                                        GestureDetector(
+                                                          onTap: () {
+                                                            getServiceDetail(
+                                                                item, servitem);
+                                                          },
+                                                          child: Card(
+                                                            semanticContainer:
+                                                                true,
+                                                            clipBehavior: Clip
+                                                                .antiAliasWithSaveLayer,
+                                                            color: Colors.white,
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10.0),
+                                                            ),
+                                                            // elevation: 10,
+                                                            child: GridTile(
+                                                              child: Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        top:
+                                                                            8.0),
+                                                                child: Column(
+                                                                  children: [
+                                                                    CircleAvatar(
+                                                                      foregroundImage: item.get('url') ==
+                                                                              null
+                                                                          ? const AssetImage("assets/profile.png") as ImageProvider<
+                                                                              Object>
+                                                                          : NetworkImage(
+                                                                              item.get('url')),
+                                                                    ),
+                                                                    Text(item.get(
+                                                                        "name")),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .center,
+                                                                      children: [
+                                                                        const Icon(
+                                                                          Icons
+                                                                              .location_pin,
+                                                                          size:
+                                                                              15,
+                                                                        ),
+                                                                        Text(item
+                                                                            .get("address")),
+                                                                      ],
+                                                                    ),
+                                                                    Text(
+                                                                        GlobalVariables
+                                                                            .instance
+                                                                            .xmlHandler
+                                                                            .getString(
+                                                                                'servoff'),
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold)),
+                                                                    for (var a
+                                                                        in servitem.get(
+                                                                            "services"))
+                                                                      Text(GlobalVariables
+                                                                          .instance
+                                                                          .xmlHandler
+                                                                          .getString(
+                                                                              a)),
+                                                                    // Text(
+                                                                    //     servitem.get("services")
+                                                                    //         as String),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .end,
+                                                                      children: [
+                                                                        IconButton(
+                                                                          onPressed:
+                                                                              () async {
+                                                                            Navigator.push(context,
+                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                          },
+                                                                          icon:
+                                                                              const Icon(Icons.chat_rounded),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
                                                               ),
-                                                              Text(item
-                                                                  .get("name")),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                children: [
-                                                                  const Icon(
-                                                                    Icons
-                                                                        .location_pin,
-                                                                    size: 15,
-                                                                  ),
-                                                                  Text(item.get(
-                                                                      "address")),
-                                                                ],
-                                                              ),
-                                                              Text(
-                                                                  _xmlHandler
-                                                                      .getString(
-                                                                          'servoff'),
-                                                                  style: TextStyle(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold)),
-                                                              for (var a
-                                                                  in servitem.get(
-                                                                      "services"))
-                                                                Text(_xmlHandler
-                                                                    .getString(
-                                                                        a)),
-                                                              // Text(
-                                                              //     servitem.get("services")
-                                                              //         as String),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  IconButton(
-                                                                    onPressed:
-                                                                        () async {
-                                                                      Navigator.push(
-                                                                          context,
-                                                                          MaterialPageRoute(
-                                                                              builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
-                                                                    },
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .chat_rounded),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            } else if (snapshot.hasError) {
-                                              return Center(
-                                                  child: Text(snapshot.error
-                                                      .toString()));
-                                            } else {
-                                              return const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            }
+                                                      ],
+                                                    );
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Center(
+                                                        child: Text(snapshot
+                                                            .error
+                                                            .toString()));
+                                                  } else {
+                                                    return const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    );
+                                                  }
+                                                });
                                           });
-                                    });
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                    child: Text(snapshot.error.toString()));
-                              } else {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-                            })
-                      ]))
-            ],
-          ),
-        if (GlobalVariables.instance.urole == 1)
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  border: Border(
-                      left: BorderSide(color: Colors.grey),
-                      top: BorderSide(color: Colors.grey),
-                      right: BorderSide(color: Colors.grey)),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20)),
-                  color: Colors.blue,
-                  // gradient: LinearGradient(
-                  //     begin: Alignment.topCenter,
-                  //     end: Alignment.bottomCenter,
-                  //     colors: [Colors.lightBlueAccent, Colors.white]),
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                          child:
+                                              Text(snapshot.error.toString()));
+                                    } else {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                  })
+                            ]))
+                  ],
                 ),
-                child: Center(
-                  child: Text(
-                    'Available Jobs',
-                    style: TextStyle(fontSize: 15, color: Colors.white
-                        // fontWeight: FontWeight.w400,
+              if (GlobalVariables.instance.urole == 1)
+                Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(5),
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        border: Border(
+                            left: BorderSide(color: Colors.grey),
+                            top: BorderSide(color: Colors.grey),
+                            right: BorderSide(color: Colors.grey)),
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20)),
+                        color: Colors.blue,
+                        // gradient: LinearGradient(
+                        //     begin: Alignment.topCenter,
+                        //     end: Alignment.bottomCenter,
+                        //     colors: [Colors.lightBlueAccent, Colors.white]),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Available Jobs',
+                          style: TextStyle(fontSize: 15, color: Colors.white
+                              // fontWeight: FontWeight.w400,
+                              ),
                         ),
-                  ),
-                ),
-              ),
-              Container(
-                  height: screenHeight * 0.70,
-                  margin:
-                      const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0),
-                  child: TabBarView(
-                      controller: _nestedTabController,
-                      children: <Widget>[
-                        FutureBuilder(
-                            // StreamBuilder(
-                            future: fetchJobProfiles(),
-                            // stream: fetchChats(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return GridView.builder(
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            childAspectRatio: 0.85),
-                                    shrinkWrap: true,
-                                    itemCount: snapshot.data!.docs.length,
-                                    itemBuilder: (context, index) {
-                                      final servitem =
-                                          snapshot.data!.docs[index];
-                                      return FutureBuilder(
-                                          future: fetchUserData(
-                                              servitem.get("userid")),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.hasData) {
-                                              final item =
-                                                  snapshot.data!.docs.first;
-                                              return Column(
-                                                children: [
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      getJobProfileDetail(
-                                                          item, servitem);
-                                                    },
-                                                    child: Card(
-                                                      semanticContainer: true,
-                                                      clipBehavior: Clip
-                                                          .antiAliasWithSaveLayer,
-                                                      color: Colors.white,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                      ),
-                                                      // elevation: 10,
-                                                      child: GridTile(
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  top: 8.0),
-                                                          child: Column(
-                                                            children: [
-                                                              CircleAvatar(
-                                                                foregroundImage: item.get(
-                                                                            'url') ==
-                                                                        null
-                                                                    ? const AssetImage(
-                                                                            "assets/profile.png")
-                                                                        as ImageProvider<
-                                                                            Object>
-                                                                    : NetworkImage(
-                                                                        item.get(
-                                                                            'url')),
+                      ),
+                    ),
+                    Container(
+                        height: screenHeight * 0.70,
+                        margin: const EdgeInsets.only(
+                            left: 5.0, right: 5.0, top: 10.0),
+                        child: TabBarView(
+                            controller: _nestedTabController,
+                            children: <Widget>[
+                              FutureBuilder(
+                                  // StreamBuilder(
+                                  future: fetchJobProfiles(),
+                                  // stream: fetchChats(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return GridView.builder(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2,
+                                                  childAspectRatio: 0.85),
+                                          shrinkWrap: true,
+                                          itemCount: snapshot.data!.docs.length,
+                                          itemBuilder: (context, index) {
+                                            final servitem =
+                                                snapshot.data!.docs[index];
+                                            return FutureBuilder(
+                                                future: fetchUserData(
+                                                    servitem.get("userid")),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    final item = snapshot
+                                                        .data!.docs.first;
+                                                    return Column(
+                                                      children: [
+                                                        GestureDetector(
+                                                          onTap: () {
+                                                            getJobProfileDetail(
+                                                                item, servitem);
+                                                          },
+                                                          child: Card(
+                                                            semanticContainer:
+                                                                true,
+                                                            clipBehavior: Clip
+                                                                .antiAliasWithSaveLayer,
+                                                            color: Colors.white,
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10.0),
+                                                            ),
+                                                            // elevation: 10,
+                                                            child: GridTile(
+                                                              child: Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        top:
+                                                                            8.0),
+                                                                child: Column(
+                                                                  children: [
+                                                                    CircleAvatar(
+                                                                      foregroundImage: item.get('url') ==
+                                                                              null
+                                                                          ? const AssetImage("assets/profile.png") as ImageProvider<
+                                                                              Object>
+                                                                          : NetworkImage(
+                                                                              item.get('url')),
+                                                                    ),
+                                                                    Text(item.get(
+                                                                        "name")),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .center,
+                                                                      children: [
+                                                                        const Icon(
+                                                                          Icons
+                                                                              .location_pin,
+                                                                          size:
+                                                                              15,
+                                                                        ),
+                                                                        Text(item
+                                                                            .get("address")),
+                                                                      ],
+                                                                    ),
+                                                                    Text(
+                                                                        GlobalVariables
+                                                                            .instance
+                                                                            .xmlHandler
+                                                                            .getString(
+                                                                                'servoff'),
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold)),
+                                                                    for (var a
+                                                                        in servitem.get(
+                                                                            "services"))
+                                                                      Text(GlobalVariables
+                                                                          .instance
+                                                                          .xmlHandler
+                                                                          .getString(
+                                                                              a)),
+                                                                    // Text(
+                                                                    //     servitem.get("services")
+                                                                    //         as String),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .end,
+                                                                      children: [
+                                                                        IconButton(
+                                                                          onPressed:
+                                                                              () async {
+                                                                            Navigator.push(context,
+                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                          },
+                                                                          icon:
+                                                                              const Icon(Icons.chat_rounded),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
                                                               ),
-                                                              Text(item
-                                                                  .get("name")),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                children: [
-                                                                  const Icon(
-                                                                    Icons
-                                                                        .location_pin,
-                                                                    size: 15,
-                                                                  ),
-                                                                  Text(item.get(
-                                                                      "address")),
-                                                                ],
-                                                              ),
-                                                              Text(
-                                                                  _xmlHandler
-                                                                      .getString(
-                                                                          'servoff'),
-                                                                  style: TextStyle(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold)),
-                                                              for (var a
-                                                                  in servitem.get(
-                                                                      "services"))
-                                                                Text(_xmlHandler
-                                                                    .getString(
-                                                                        a)),
-                                                              // Text(
-                                                              //     servitem.get("services")
-                                                              //         as String),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  IconButton(
-                                                                    onPressed:
-                                                                        () async {
-                                                                      Navigator.push(
-                                                                          context,
-                                                                          MaterialPageRoute(
-                                                                              builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
-                                                                    },
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .chat_rounded),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            } else if (snapshot.hasError) {
-                                              return Center(
-                                                  child: Text(snapshot.error
-                                                      .toString()));
-                                            } else {
-                                              return const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            }
+                                                      ],
+                                                    );
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Center(
+                                                        child: Text(snapshot
+                                                            .error
+                                                            .toString()));
+                                                  } else {
+                                                    return const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    );
+                                                  }
+                                                });
                                           });
-                                    });
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                    child: Text(snapshot.error.toString()));
-                              } else {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-                            })
-                      ]))
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                          child:
+                                              Text(snapshot.error.toString()));
+                                    } else {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                  })
+                            ]))
+                  ],
+                ),
             ],
-          ),
-      ],
-    );
+          );
+        });
 
     // return Column(
     //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1301,7 +1364,7 @@ class _NestedTabBarState extends State<NestedTabBar>
     //                                                   ],
     //                                                 ),
     //                                                 Text(
-    //                                                     _xmlHandler.getString(
+    //                                                     GlobalVariables.instance.xmlHandler.getString(
     //                                                         'servoff'),
     //                                                     style: TextStyle(
     //                                                         fontWeight:
@@ -1309,7 +1372,7 @@ class _NestedTabBarState extends State<NestedTabBar>
     //                                                                 .bold)),
     //                                                 for (var a in servitem
     //                                                     .get("services"))
-    //                                                   Text(_xmlHandler
+    //                                                   Text(GlobalVariables.instance.xmlHandler
     //                                                       .getString(a)),
     //                                                 // Text(
     //                                                 //     servitem.get("services")

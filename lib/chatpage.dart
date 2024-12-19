@@ -6,10 +6,8 @@ import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/hiremaid.dart';
 import 'package:ibitf_app/singleton.dart';
-import 'package:ibitf_app/xmlhandle.dart';
 
 // import 'package:marquee/marquee.dart';
-final XMLHandler _xmlHandler = XMLHandler();
 
 class ChatPage extends StatefulWidget {
   final String name;
@@ -44,7 +42,9 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
 
     checkOwnServ().then((a) {
-      _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((a) {});
+      GlobalVariables.instance.xmlHandler
+          .loadStrings(GlobalVariables.instance.selected)
+          .then((a) {});
       setState(() {});
     });
   }
@@ -137,7 +137,8 @@ class _ChatPageState extends State<ChatPage> {
                                   color: Colors.white,
                                 ),
                                 Text(
-                                  _xmlHandler.getString('hire'),
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('hire'),
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               ],
@@ -184,7 +185,7 @@ class _ChatPageState extends State<ChatPage> {
         },
       );
     } else {
-      return Text(_xmlHandler.getString('nojob'));
+      return Text(GlobalVariables.instance.xmlHandler.getString('nojob'));
     }
   }
 

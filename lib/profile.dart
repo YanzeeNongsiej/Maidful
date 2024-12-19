@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ibitf_app/xmlhandle.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -27,7 +26,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   String userID = FirebaseAuth.instance.currentUser!.uid;
   final List<File> _documentImages = [];
-  final XMLHandler _xmlHandler = XMLHandler();
 
   String? usrname;
   List<String>? selectedskills;
@@ -39,7 +37,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     // TODO: implement initState
-    _xmlHandler.loadStrings(GlobalVariables.instance.selected).then((val) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((val) {
       print(GlobalVariables.instance.selected);
       setState(() {});
 
@@ -186,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
               .toString()),
           children: [
             if (selectedskills == null && myskills.isEmpty)
-              Text(_xmlHandler.getString('noskills')),
+              Text(GlobalVariables.instance.xmlHandler.getString('noskills')),
             if (selectedskills == null && myskills.isNotEmpty)
               createSkillsFirst(myskills),
             if (selectedskills != null && myskills.isNotEmpty)
@@ -372,17 +372,19 @@ class _ProfilePageState extends State<ProfilePage> {
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: Text(
-                                      '${_xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
-                                  content: Text(
-                                      _xmlHandler.getString('confirmassess')),
+                                      '${GlobalVariables.instance.xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
+                                  content: Text(GlobalVariables
+                                      .instance.xmlHandler
+                                      .getString('confirmassess')),
                                   actions: [
                                     TextButton.icon(
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
                                         icon: Icon(Icons.close),
-                                        label:
-                                            Text(_xmlHandler.getString('no'))),
+                                        label: Text(GlobalVariables
+                                            .instance.xmlHandler
+                                            .getString('no'))),
                                     TextButton.icon(
                                       onPressed: () {
                                         // Add your confirm logic here
@@ -398,7 +400,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       },
                                       icon: Icon(
                                           Icons.check), // Icon for confirmation
-                                      label: Text(_xmlHandler.getString('yes')),
+                                      label: Text(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('yes')),
                                     ),
                                   ],
                                 );
@@ -406,7 +410,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             );
                           },
                           child: Text(
-                            _xmlHandler.getString('assessment'),
+                            GlobalVariables.instance.xmlHandler
+                                .getString('assessment'),
                           )),
                 ],
               ),
@@ -450,7 +455,8 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return Text(_xmlHandler.getString('noserv'));
+              return Text(
+                  GlobalVariables.instance.xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -579,7 +585,8 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }
           } else {
-            return Text(_xmlHandler.getString('noserv'));
+            return Text(
+                GlobalVariables.instance.xmlHandler.getString('noserv'));
           }
         });
   }
@@ -593,7 +600,8 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return Text(_xmlHandler.getString('noserv'));
+              return Text(
+                  GlobalVariables.instance.xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -719,7 +727,8 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }
           } else {
-            return Text(_xmlHandler.getString('noserv'));
+            return Text(
+                GlobalVariables.instance.xmlHandler.getString('noserv'));
           }
         });
   }
@@ -733,7 +742,8 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           if (snapshot.hasData) {
             if (snapshot.data!.docs.isEmpty) {
-              return Text(_xmlHandler.getString('noserv'));
+              return Text(
+                  GlobalVariables.instance.xmlHandler.getString('noserv'));
             } else {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -848,7 +858,8 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }
           } else {
-            return Text(_xmlHandler.getString('noserv'));
+            return Text(
+                GlobalVariables.instance.xmlHandler.getString('noserv'));
           }
         });
   }
@@ -858,8 +869,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return AnimatedBuilder(
         animation: GlobalVariables.instance,
         builder: (context, child) {
-          final language = GlobalVariables.instance.selected;
-
           return SingleChildScrollView(
             child: Column(
               children: [
@@ -1035,7 +1044,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       Row(
                                                         children: [
                                                           Text(
-                                                              _xmlHandler
+                                                              GlobalVariables
+                                                                  .instance
+                                                                  .xmlHandler
                                                                   .getString(
                                                                       'nam'),
                                                               style: const TextStyle(
@@ -1084,7 +1095,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       Row(
                                                         children: [
                                                           Text(
-                                                              _xmlHandler
+                                                              GlobalVariables
+                                                                  .instance
+                                                                  .xmlHandler
                                                                   .getString(
                                                                       'addr'),
                                                               style: const TextStyle(
@@ -1246,10 +1259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       .get();
 
                                               //fetch only skills from the user
-                                              List<String> allskills = snapshot
-                                                  .docs
-                                                  .map((doc) => doc.id)
-                                                  .toList();
+
                                               print(snapshot.docs.first.id);
                                               // print(myskills);
                                               for (var doc in snapshot.docs) {
@@ -1392,7 +1402,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      (_xmlHandler.getString('active'))
+                                      (GlobalVariables.instance.xmlHandler
+                                              .getString('active'))
                                           .toString(),
                                       textAlign: TextAlign.center,
                                     ),
@@ -1416,7 +1427,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   child: Column(
                                     children: [
                                       Text(
-                                        ((_xmlHandler.getString('myserv'))
+                                        ((GlobalVariables.instance.xmlHandler
+                                                .getString('myserv'))
                                             .toString()),
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
@@ -1477,7 +1489,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   child: Column(
                                     children: [
                                       Text(
-                                        (_xmlHandler.getString('posted'))
+                                        (GlobalVariables.instance.xmlHandler
+                                                .getString('posted'))
                                             .toString(),
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(

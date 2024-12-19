@@ -1,7 +1,7 @@
 import 'package:ibitf_app/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 
 class ForgotPassword extends StatefulWidget {
@@ -16,13 +16,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   TextEditingController mailcontroller = TextEditingController();
 
   final _formkey = GlobalKey<FormState>();
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _xmlHandler.loadStrings(gv.selected).then((a) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((a) {
       setState(() {});
     });
   }
@@ -32,14 +33,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-        _xmlHandler.getString('resetpass'),
+        GlobalVariables.instance.xmlHandler.getString('resetpass'),
         style: const TextStyle(fontSize: 20.0),
       )));
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-          _xmlHandler.getString('nouser'),
+          GlobalVariables.instance.xmlHandler.getString('nouser'),
           style: const TextStyle(fontSize: 20.0),
         )));
       }
@@ -59,7 +60,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             Container(
               alignment: Alignment.topCenter,
               child: Text(
-                _xmlHandler.getString('passrec'),
+                GlobalVariables.instance.xmlHandler.getString('passrec'),
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 30.0,
@@ -70,7 +71,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               height: 10.0,
             ),
             Text(
-              _xmlHandler.getString('enterem'),
+              GlobalVariables.instance.xmlHandler.getString('enterem'),
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20.0,
@@ -131,7 +132,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                   borderRadius: BorderRadius.circular(10)),
                               child: Center(
                                 child: Text(
-                                  _xmlHandler.getString('sendem'),
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('sendem'),
                                   style: const TextStyle(
                                       color: Colors.black,
                                       fontSize: 18.0,
@@ -147,7 +149,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _xmlHandler.getString('noac'),
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('noac'),
                                 style: const TextStyle(
                                     fontSize: 18.0, color: Colors.white),
                               ),
@@ -163,7 +166,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                               const SignUp()));
                                 },
                                 child: Text(
-                                  _xmlHandler.getString('create'),
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('create'),
                                   style: const TextStyle(
                                       color: Color.fromARGB(225, 184, 166, 6),
                                       fontSize: 20.0,

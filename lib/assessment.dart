@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ibitf_app/singleton.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'dart:math';
 import 'dart:async';
 import 'package:ibitf_app/DAO/skilldao.dart';
@@ -27,15 +27,14 @@ class Assessment extends StatefulWidget {
 }
 
 class _MyWidgetState extends State<Assessment> {
-  final XMLHandler _xmlHandler = XMLHandler();
-  GlobalVariables gv = GlobalVariables();
-
   @override
   void initState() {
     super.initState();
     timerNotifier = ValueNotifier<int>(timerDuration);
     ans = [false, false, false, false, false];
-    _xmlHandler.loadStrings(gv.selected).then((onValue) {
+    GlobalVariables.instance.xmlHandler
+        .loadStrings(GlobalVariables.instance.selected)
+        .then((onValue) {
       setState(() {});
     });
     canBack = false;
@@ -48,7 +47,7 @@ class _MyWidgetState extends State<Assessment> {
     // Get the specific skill document
     QuerySnapshot snapshot = await firestore
         .collection('skills')
-        .where(gv.selected, isEqualTo: skill.toString())
+        .where(GlobalVariables.instance.selected, isEqualTo: skill.toString())
         .get();
 
     if (snapshot.docs.isEmpty) {
@@ -73,8 +72,9 @@ class _MyWidgetState extends State<Assessment> {
 
     for (var doc in questionsSnapshot.docs) {
       String qid = doc.id;
-      String question = doc[gv.selected];
-      List<String> options = List<String>.from(doc['${gv.selected}Options']);
+      String question = doc[GlobalVariables.instance.selected];
+      List<String> options =
+          List<String>.from(doc['${GlobalVariables.instance.selected}Options']);
       String answer = doc['Ans'];
 
       questions.add({
@@ -126,9 +126,10 @@ class _MyWidgetState extends State<Assessment> {
       showDialog(
         context: context,
         builder: (context) {
-          updateScoreToDB(gv.selected, skill, percentage);
+          updateScoreToDB(GlobalVariables.instance.selected, skill, percentage);
           return AlertDialog(
-            title: Text(_xmlHandler.getString('timeup')),
+            title:
+                Text(GlobalVariables.instance.xmlHandler.getString('timeup')),
             content: Text("Score:${calcPercent()}%"),
             actions: [
               TextButton(
@@ -183,7 +184,7 @@ class _MyWidgetState extends State<Assessment> {
                   valueListenable: timerNotifier!,
                   builder: (context, remainingTime, child) {
                     return Text(
-                      "${_xmlHandler.getString('timeleft')}: ${remainingTime ~/ 60}:${(remainingTime % 60).toString().padLeft(2, '0')}",
+                      "${GlobalVariables.instance.xmlHandler.getString('timeleft')}: ${remainingTime ~/ 60}:${(remainingTime % 60).toString().padLeft(2, '0')}",
                       style: TextStyle(fontSize: 16),
                     );
                   },
@@ -201,7 +202,9 @@ class _MyWidgetState extends State<Assessment> {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               canBack = true;
-              return Center(child: Text(_xmlHandler.getString('noquest')));
+              return Center(
+                  child: Text(GlobalVariables.instance.xmlHandler
+                      .getString('noquest')));
             }
 
             // Use the loaded questions to display in the UI
@@ -226,7 +229,7 @@ class _MyWidgetState extends State<Assessment> {
                       // Text('ID: ${questions[0]['id']}'),
 
                       Text(
-                        '${_xmlHandler.getString('quest')}: ${questions[random[currentQuestionIndex]]['question']}',
+                        '${GlobalVariables.instance.xmlHandler.getString('quest')}: ${questions[random[currentQuestionIndex]]['question']}',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -258,13 +261,16 @@ class _MyWidgetState extends State<Assessment> {
 
                                   double percentage = calcPercent();
                                   updateScoreToDB(
-                                      gv.selected, skill, percentage);
+                                      GlobalVariables.instance.selected,
+                                      skill,
+                                      percentage);
                                   Navigator.pop(context);
                                   showDialog(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text(_xmlHandler
+                                        title: Text(GlobalVariables
+                                            .instance.xmlHandler
                                             .getString('completeass')),
                                         content: Text("Score:$percentage%"),
                                         actions: [
