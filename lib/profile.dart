@@ -49,6 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
     fetchSkills();
     profilepic();
     super.initState();
+    GlobalVariables.instance.addListener(fetchSkills);
   }
 
   Future<void> profilepic() async {
@@ -251,9 +252,6 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       print('Error fetching skills: $e');
-      setState(() {
-        //isLoading = false; // Update loading state
-      });
     }
   }
 

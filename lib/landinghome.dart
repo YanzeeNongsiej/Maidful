@@ -162,6 +162,12 @@ class NestedTabBar extends StatefulWidget {
 class _NestedTabBarState extends State<NestedTabBar>
     with TickerProviderStateMixin {
   late TabController _nestedTabController;
+  List<String>? selectedskills;
+  List<String> myskills = [];
+
+  List<int>? myscores;
+  List<Map<String, dynamic>> skillsWithScores = [];
+  List<List<dynamic>> skillsWithNames = [];
   @override
   void initState() {
     super.initState();
@@ -195,6 +201,205 @@ class _NestedTabBarState extends State<NestedTabBar>
   Future<QuerySnapshot> fetchUserData(String userId) async {
     QuerySnapshot qs = await Usersdao().getUserDetails(userId);
     return qs;
+  }
+
+  Widget showSkills(thisid) {
+    return FutureBuilder<void>(
+      future: fetchSkills(thisid), // Wait for fetchSkills to complete
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While fetchSkills is running, show a loading spinner
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          // Handle any errors from fetchSkills
+          return Text('Error: ${snapshot.error}');
+        }
+
+        // After fetchSkills completes, return the actual widget
+        return Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Text(
+              GlobalVariables.instance.xmlHandler
+                  .getString('skills')
+                  .toString(),
+            ),
+            children: [
+              if (selectedskills == null && myskills.isEmpty)
+                Text(GlobalVariables.instance.xmlHandler.getString('noskills')),
+              if (selectedskills == null && myskills.isNotEmpty)
+                createSkillsFirst(myskills),
+              if (selectedskills != null && myskills.isNotEmpty)
+                Column(
+                  children: [
+                    createSkillsFirst(myskills),
+                    createSkillsFirst(selectedskills!.toList()),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> fetchSkills(thisid) async {
+    try {
+      // Reference to the user's skills subcollection
+      QuerySnapshot querySnapshot1 = await FirebaseFirestore.instance
+          .collection("users")
+          .where("userid", isEqualTo: thisid) // Adjust as needed
+          .get();
+      String myid = querySnapshot1.docs.first.id;
+      CollectionReference skillsCollection = FirebaseFirestore.instance
+          .collection('users')
+          .doc(myid)
+          .collection('skills');
+
+      // Get all documents in the skills subcollection
+      QuerySnapshot querySnapshot = await skillsCollection.get();
+      // Get all documents in the skills subcollection
+
+      final sc = FirebaseFirestore.instance.collection('skills');
+      final qs = await sc.get();
+
+      skillsWithNames = qs.docs.map((doc) {
+        return [
+          doc.id,
+          doc[GlobalVariables.instance.selected]
+        ]; // Get skill ID and English name
+      }).toList();
+      setState(() {
+        myskills = querySnapshot.docs.map((doc) => doc.id).toList();
+        skillsWithScores = querySnapshot.docs.map((doc) {
+          return {
+            'skill': doc.id, // Document ID (e.g., Skill1)
+            'score': doc['score'], // Get the score field
+          };
+        }).toList();
+
+        // Get skill document IDs
+        //isLoading = false; // Update loading state
+      });
+    } catch (e) {
+      print('Error fetching skills: $e');
+    }
+  }
+
+  Color _getColor(double level) {
+    if (level >= 75) {
+      return Colors.green; // High skill
+    } else if (level >= 50) {
+      return Colors.orange; // Medium skill
+    } else {
+      return Colors.red; // Low skill
+    }
+  }
+
+  String getSkillName(String sName) {
+    String s = sName;
+    for (var skill in skillsWithNames) {
+      if (skill[1] == sName) {
+        // Check if the English name matches
+        s = skill[0]; // Return the corresponding skill name (e.g., Skill1)
+      }
+    }
+    return s;
+  }
+
+  bool checkVerified(String skil) {
+    bool res = true;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == skil && s['score'] == -1) {
+        res = false;
+        // Return the score if found
+      }
+    }
+    return res;
+  }
+
+  Widget showLevels(currentSkill) {
+    double level = 0;
+    int res = 0;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == currentSkill) {
+        res = s['score'];
+        // Return the score if found
+      }
+      level = res.toDouble().abs();
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 150,
+          height: 20,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.grey[300],
+          ),
+          child: Stack(
+            children: [
+              Container(
+                width:
+                    level * 1.5, // Scale the width according to level (0-300)
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _getColor(level),
+                ),
+              ),
+              Center(
+                child: Text(
+                  '${level.toInt()}%',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget createSkillsFirst(List<String> res) {
+    return SingleChildScrollView(
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent, // Removes the divider line
+        ),
+        child: Column(
+          children: res.map((skill) {
+            // print("My skills is:$myskills");
+            // print("Current skill is$skill");
+            // print("$skillsWithScores is skills with scores");
+            // print(
+            //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
+            // print(
+            //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
+
+            return ListTile(
+              minVerticalPadding: 0,
+              contentPadding: EdgeInsets.all(0),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      skill == getSkillName(skill)
+                          ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
+                          : skill,
+                    ),
+                  ),
+                  myskills.contains(getSkillName(skill)) && checkVerified(skill)
+                      ? showLevels(getSkillName(skill))
+                      : Text('Unverified'),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   getServiceDetail(item, servItem) {
@@ -469,7 +674,113 @@ class _NestedTabBarState extends State<NestedTabBar>
                     child: Padding(
                       padding: const EdgeInsets.all(5.0),
                       child: GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('User Profile'),
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Center(
+                                        child: CircleAvatar(
+                                          radius: 40,
+                                          backgroundImage: NetworkImage(item.get(
+                                              'url')), // Replace with your image asset or network URL
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person_2_outlined,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text('${item.get('name')}'),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.house_outlined,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text('${item.get('address')}'),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.group_rounded,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text(item.get('gender') == 1
+                                              ? 'Female'
+                                              : 'Male'),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.date_range,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text('${item.get('dob')}'),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.abc_outlined,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text(item
+                                              .get('language')
+                                              .toString()
+                                              .replaceAll('[', '')
+                                              .replaceAll(']', '')),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.align_vertical_center,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          Text(
+                                            GlobalVariables.instance.xmlHandler
+                                                .getString('skills'),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      showSkills(item.get('userid')),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         child: const Row(
                           children: [
                             Icon(
@@ -792,7 +1103,54 @@ class _NestedTabBarState extends State<NestedTabBar>
                     child: Padding(
                       padding: const EdgeInsets.all(5.0),
                       child: GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('User Profile'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Center(
+                                      child: CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: NetworkImage(item.get(
+                                            'url')), // Replace with your image asset or network URL
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Icon(
+                                      Icons.person_2_outlined,
+                                      color: Colors.blueAccent,
+                                    ),
+                                    Text('${item.get('name')}'),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.house_outlined,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        Text('${item.get('addr')}'),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         child: const Row(
                           children: [
                             Icon(

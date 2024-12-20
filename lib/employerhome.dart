@@ -289,9 +289,7 @@ class _EmployerHomePageState extends State<EmployerHome>
         children: [
           LandingHomePage(uname: widget.uname.toString()),
           ChatListPage(),
-          Center(
-            child: ProfilePage(),
-          ),
+          ProfilePage(),
         ],
       ),
       floatingActionButton: const FAB(),
