@@ -219,10 +219,16 @@ class _NestedTabBarState extends State<NestedTabBar>
         return Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
-            title: Text(
-              GlobalVariables.instance.xmlHandler
-                  .getString('skills')
-                  .toString(),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.align_vertical_center,
+                  color: Colors.blueAccent,
+                ),
+                Text(
+                  GlobalVariables.instance.xmlHandler.getString('skills'),
+                ),
+              ],
             ),
             children: [
               if (selectedskills == null && myskills.isEmpty)
@@ -750,20 +756,6 @@ class _NestedTabBarState extends State<NestedTabBar>
                                         ],
                                       ),
                                       SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.align_vertical_center,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text(
-                                            GlobalVariables.instance.xmlHandler
-                                                .getString('skills'),
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
                                       SizedBox(height: 8),
                                       showSkills(item.get('userid')),
                                     ],
