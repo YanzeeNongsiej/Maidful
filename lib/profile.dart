@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +11,7 @@ import 'package:ibitf_app/DAO/skilldao.dart';
 import 'package:ibitf_app/jobprofile.dart';
 import 'package:ibitf_app/jobresume.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
+import 'package:intl/intl.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,14 +22,21 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String? _downloadUrl;
-  String? _myaddr;
+  String? _myaddr, _mydob, thelangs;
+  List<dynamic>? languages;
   String? userDocId;
   DocumentSnapshot? userDoc;
   final ImagePicker _picker = ImagePicker();
   String userID = FirebaseAuth.instance.currentUser!.uid;
   final List<File> _documentImages = [];
-
+  TextEditingController _languageController = TextEditingController();
+  final dobcontroller = TextEditingController();
   String? usrname;
+  DateTime dt = DateTime.now();
+  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
+  String dte = "Date of birth";
+  Color _dobColor = const Color(0xFFb2b7bf);
+
   List<String>? selectedskills;
   List<String> myskills = [];
 
@@ -69,8 +78,12 @@ class _ProfilePageState extends State<ProfilePage> {
           try {
             _downloadUrl = userDoc?['url'];
             _myaddr = userDoc?['address'];
+            _mydob = userDoc?['dob'];
+            languages = userDoc?['language'];
+
+            print("LANGUAGESZ IS:$languages");
           } catch (e) {
-            print("No profileimage yet");
+            print("No profileimage yet$e");
           } // Fetch the URL field
         });
       }
@@ -1158,20 +1171,235 @@ class _ProfilePageState extends State<ProfilePage> {
                                               builder: (BuildContext context) {
                                                 String newaddr = _myaddr
                                                     .toString(); // Use existing username
+                                                String newusrname =
+                                                    usrname.toString();
+                                                String newdob =
+                                                    _mydob.toString();
                                                 return AlertDialog(
-                                                  title: Text('Edit Address'),
-                                                  content: TextField(
-                                                    onChanged: (value) {
-                                                      newaddr =
-                                                          value; // Update username from input
-                                                    },
-                                                    controller:
-                                                        TextEditingController(
-                                                            text: _myaddr),
-                                                    decoration: InputDecoration(
-                                                        hintText:
-                                                            "Enter new Address"),
-                                                  ),
+                                                  title: Text('Edit Info'),
+                                                  content: StatefulBuilder(
+                                                      builder: (context,
+                                                          StateSetter
+                                                              setState) {
+                                                    return SingleChildScrollView(
+                                                      child: Column(
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Text(GlobalVariables
+                                                                  .instance
+                                                                  .xmlHandler
+                                                                  .getString(
+                                                                      'nam')),
+                                                              Expanded(
+                                                                child:
+                                                                    TextField(
+                                                                  onChanged:
+                                                                      (value) {
+                                                                    newusrname =
+                                                                        value; // Update username from input
+                                                                  },
+                                                                  controller:
+                                                                      TextEditingController(
+                                                                          text:
+                                                                              usrname),
+                                                                  decoration:
+                                                                      InputDecoration(
+                                                                          hintText:
+                                                                              "Enter new Name"),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Row(
+                                                            children: [
+                                                              Text(GlobalVariables
+                                                                  .instance
+                                                                  .xmlHandler
+                                                                  .getString(
+                                                                      'addr')),
+                                                              Expanded(
+                                                                child:
+                                                                    TextField(
+                                                                  onChanged:
+                                                                      (value) {
+                                                                    newaddr =
+                                                                        value; // Update username from input
+                                                                  },
+                                                                  controller:
+                                                                      TextEditingController(
+                                                                          text:
+                                                                              _myaddr),
+                                                                  decoration:
+                                                                      InputDecoration(
+                                                                          hintText:
+                                                                              "Enter new Address"),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Row(
+                                                            children: [
+                                                              Text(
+                                                                  "Date of Birth:"),
+                                                              Expanded(
+                                                                child:
+                                                                    TextFormField(
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value ==
+                                                                            null ||
+                                                                        value
+                                                                            .isEmpty) {
+                                                                      return 'Please Select Date of Birth';
+                                                                    }
+                                                                    return _mydob;
+                                                                  },
+                                                                  controller:
+                                                                      dobcontroller,
+
+                                                                  onTap: () {
+                                                                    showDialog(
+                                                                        context:
+                                                                            context,
+                                                                        builder:
+                                                                            (context) {
+                                                                          return AlertDialog(
+                                                                            title:
+                                                                                const Text('Select Date of Birth'),
+                                                                            content:
+                                                                                SizedBox(
+                                                                              height: 200,
+                                                                              width: 300,
+                                                                              child: CupertinoDatePicker(
+                                                                                mode: CupertinoDatePickerMode.date,
+                                                                                initialDateTime: _mydob == '' ? DateTime.now() : DateTime.parse(_mydob!),
+                                                                                onDateTimeChanged: (DateTime newDateTime) {
+                                                                                  dt = newDateTime;
+                                                                                  dte = dateFormat.format(dt);
+                                                                                  dobcontroller.text = dte;
+                                                                                  newdob = dobcontroller.text;
+                                                                                  _dobColor = const Color.fromARGB(255, 0, 0, 0);
+                                                                                  // Do something
+                                                                                },
+                                                                              ),
+                                                                            ),
+                                                                          );
+                                                                        });
+                                                                    FocusScope.of(
+                                                                            context)
+                                                                        .requestFocus(
+                                                                            FocusNode());
+                                                                  },
+
+                                                                  // controller: passwordcontroller,
+                                                                  decoration: InputDecoration(
+                                                                      border: InputBorder
+                                                                          .none,
+                                                                      hintText:
+                                                                          _mydob,
+                                                                      hintStyle: TextStyle(
+                                                                          color:
+                                                                              _dobColor,
+                                                                          fontSize:
+                                                                              18.0)),
+                                                                  readOnly:
+                                                                      true,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Text(
+                                                            'Languages:',
+                                                            style: TextStyle(
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                          SizedBox(
+                                                            height: 100,
+                                                            width: 300,
+                                                            child: ListView
+                                                                .builder(
+                                                              shrinkWrap: true,
+                                                              itemCount:
+                                                                  languages
+                                                                      ?.length,
+                                                              itemBuilder:
+                                                                  (context,
+                                                                      index) {
+                                                                String
+                                                                    language =
+                                                                    languages![
+                                                                            index]
+                                                                        .toString();
+                                                                return ListTile(
+                                                                  title: Text(
+                                                                      language),
+                                                                  trailing:
+                                                                      IconButton(
+                                                                          icon: Icon(
+                                                                              Icons.remove_circle,
+                                                                              color: Colors.red),
+                                                                          onPressed: () {
+                                                                            setState(() {
+                                                                              languages?.remove(language);
+                                                                            });
+                                                                          }),
+                                                                );
+                                                              },
+                                                            ),
+                                                          ),
+                                                          Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child:
+                                                                    TextField(
+                                                                  controller:
+                                                                      _languageController,
+                                                                  decoration:
+                                                                      InputDecoration(
+                                                                    labelText:
+                                                                        'Add a new language',
+                                                                    border:
+                                                                        OutlineInputBorder(),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 10),
+                                                              ElevatedButton(
+                                                                onPressed: () {
+                                                                  String
+                                                                      newLanguage =
+                                                                      _languageController
+                                                                          .text
+                                                                          .trim();
+                                                                  if (newLanguage
+                                                                          .isNotEmpty &&
+                                                                      !languages!
+                                                                          .contains(
+                                                                              newLanguage)) {
+                                                                    setState(
+                                                                        () {
+                                                                      languages
+                                                                          ?.add(
+                                                                              newLanguage);
+                                                                    });
+                                                                    _languageController
+                                                                        .clear();
+                                                                  }
+                                                                },
+                                                                child:
+                                                                    Text('Add'),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  }),
                                                   actions: <Widget>[
                                                     TextButton(
                                                       child: Text('Cancel'),
@@ -1185,8 +1413,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       onPressed: () {
                                                         setState(() {
                                                           _myaddr = newaddr;
-
+                                                          GlobalVariables
+                                                                  .instance
+                                                                  .username =
+                                                              newusrname;
+                                                          usrname = newusrname;
                                                           // Update username in UI
+                                                          _mydob = newdob;
                                                         });
                                                         if (userDocId!
                                                             .isNotEmpty) {
@@ -1196,7 +1429,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                                                   'users')
                                                               .doc(userDocId)
                                                               .update({
-                                                            'address': newaddr
+                                                            'address': newaddr,
+                                                            'name': newusrname,
+                                                            'dob': newdob,
+                                                            'language':
+                                                                languages,
                                                           }); // Update Firebase
                                                         }
                                                         Navigator.of(context)
@@ -1221,7 +1458,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
-                Row(children: [Expanded(child: showDocuments())]),
+                //Row(children: [Expanded(child: showDocuments())]),
                 if (GlobalVariables.instance.urole == 1)
                   Row(
                     children: [

@@ -1125,10 +1125,35 @@ class _NestedTabBarState extends State<NestedTabBar>
                                           Icons.house_outlined,
                                           color: Colors.blueAccent,
                                         ),
-                                        Text('${item.get('addr')}'),
+                                        Text('${item.get('address')}'),
                                       ],
                                     ),
                                     SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.group_rounded,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        Text(item.get('gender') == 1
+                                            ? 'Female'
+                                            : 'Male'),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.abc_outlined,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        Text(item
+                                            .get('language')
+                                            .toString()
+                                            .replaceAll('[', '')
+                                            .replaceAll(']', '')),
+                                      ],
+                                    ),
                                   ],
                                 ),
                                 actions: [

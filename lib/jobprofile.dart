@@ -7,7 +7,7 @@ import 'package:ibitf_app/model/service.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
-import 'package:ibitf_app/xmlhandle.dart';
+
 import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
 
@@ -38,14 +38,7 @@ class _JobProfileState extends State<JobProfile>
   int _selectedWageValue = 1;
   int _selectedNegoValue = 1;
   final _formkey = GlobalKey<FormState>();
-  List<String> variantsList = [
-    "Housekeeping",
-    "Cooking",
-    "Laundry",
-    "Babysitting",
-    "Elderly Care",
-    "Grocery Shopping",
-  ];
+  List<String> variantsList = [];
 
   List<String> daysList = [
     "Monday",
@@ -92,16 +85,13 @@ class _JobProfileState extends State<JobProfile>
   void getSkills() async {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('skills').get();
-    int i = 0;
+
     //fetch only skills from the user
     for (var doc in snapshot.docs) {
       // Get the skill for the selected language
 
       if (doc[GlobalVariables.instance.selected] != null) {
-        print('Prev${variantsList[i]}');
-        variantsList[i] = doc[GlobalVariables.instance.selected];
-        print(variantsList[i]);
-        i = i + 1;
+        variantsList.add(doc[GlobalVariables.instance.selected]);
       }
     }
     setState(() {});
