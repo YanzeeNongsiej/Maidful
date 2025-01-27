@@ -8,6 +8,7 @@ import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
 
 import 'package:ibitf_app/singleton.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class LandingHomePage extends StatefulWidget {
   final String? uname;
@@ -274,7 +275,7 @@ class _LandingHomePageState extends State<LandingHomePage> {
       } else {
         searchBy = 'services';
       }
-      var futures;
+      List<Future<Null>> futures;
       if (searchCriteria == 1 || searchCriteria == 2) {
         // Loop through each document in the initial QuerySnapshot
         futures = s.docs.map((i) {
@@ -635,9 +636,19 @@ class _NestedTabBarState extends State<NestedTabBar>
                 ),
               ),
               Center(
-                child: Text(
-                  '${level.toInt()}%',
-                  style: TextStyle(color: Colors.black),
+                child: LinearPercentIndicator(
+                  width: 150,
+                  lineHeight: 20,
+                  animation: true,
+                  animationDuration: 1000,
+                  percent: level / 100,
+                  center: Text(
+                    "${level.toInt()}%",
+                    style: TextStyle(color: Colors.black, fontSize: 13),
+                  ),
+                  linearStrokeCap: LinearStrokeCap.roundAll,
+                  progressColor: _getColor(level),
+                  backgroundColor: Colors.grey[300]!,
                 ),
               ),
             ],
@@ -664,6 +675,7 @@ class _NestedTabBarState extends State<NestedTabBar>
             //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
 
             return ListTile(
+              dense: true,
               minVerticalPadding: 0,
               contentPadding: EdgeInsets.all(0),
               title: Row(
@@ -1035,8 +1047,6 @@ class _NestedTabBarState extends State<NestedTabBar>
                                               .replaceAll(']', '')),
                                         ],
                                       ),
-                                      SizedBox(height: 8),
-                                      SizedBox(height: 8),
                                       showSkills(item.get('userid')),
                                     ],
                                   ),

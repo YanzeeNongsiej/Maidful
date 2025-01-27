@@ -12,6 +12,8 @@ import 'package:ibitf_app/jobprofile.dart';
 import 'package:ibitf_app/jobresume.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:intl/intl.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:ibitf_app/rating.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -29,14 +31,15 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   String userID = FirebaseAuth.instance.currentUser!.uid;
   final List<File> _documentImages = [];
-  TextEditingController _languageController = TextEditingController();
+  final TextEditingController _languageController = TextEditingController();
   final dobcontroller = TextEditingController();
   String? usrname;
   DateTime dt = DateTime.now();
   DateFormat dateFormat = DateFormat("yyyy-MM-dd");
   String dte = "Date of birth";
   Color _dobColor = const Color(0xFFb2b7bf);
-
+  String name = "";
+  List<String> allnames = [];
   List<String>? selectedskills;
   List<String> myskills = [];
 
@@ -331,9 +334,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               Center(
-                child: Text(
-                  '${level.toInt()}%',
-                  style: TextStyle(color: Colors.black),
+                child: LinearPercentIndicator(
+                  width: 150,
+                  lineHeight: 20,
+                  animation: true,
+                  animationDuration: 1000,
+                  percent: level / 100,
+                  center: Text(
+                    "${level.toInt()}%",
+                    style: TextStyle(color: Colors.black, fontSize: 13),
+                  ),
+                  linearStrokeCap: LinearStrokeCap.roundAll,
+                  progressColor: _getColor(level),
+                  backgroundColor: Colors.grey[300]!,
                 ),
               ),
             ],
@@ -360,17 +373,17 @@ class _ProfilePageState extends State<ProfilePage> {
             //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
 
             return ListTile(
+              dense: true,
               minVerticalPadding: 0,
               contentPadding: EdgeInsets.all(0),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text(
-                      skill == getSkillName(skill)
-                          ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
-                          : skill,
-                    ),
+                  Text(
+                    skill == getSkillName(skill)
+                        ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
+                        : skill,
+                    style: TextStyle(fontSize: 13),
                   ),
                   myskills.contains(getSkillName(skill)) && checkVerified(skill)
                       ? showLevels(getSkillName(skill))
@@ -457,149 +470,326 @@ class _ProfilePageState extends State<ProfilePage> {
     return qs;
   }
 
-  Widget _buildActiveServiceList() {
-    return FutureBuilder(
-        future: getActiveServices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("loading...");
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data!.docs.isEmpty) {
-              return Text(
-                  GlobalVariables.instance.xmlHandler.getString('noserv'));
-            } else {
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                shrinkWrap: true,
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.docs[index];
+  Future<List<String>> getActiveName(String receive) async {
+    return await maidDao().getActiveName(receive);
+  }
 
-                  Map<String, dynamic> time = item.get('timing');
-                  List<String> allShifts = [];
-                  time.forEach((key, value) {
-                    if (value is List<dynamic>) {
-                      allShifts.addAll(value.map((e) => e.toString()));
-                    }
-                  });
+  void completeService(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Are you sure you want to complete the service?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the first dialog
+              },
+              child: Text("No"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the first dialog
+                //showRatingDialog(context); // Show the rating dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => CompletionRequestWidget()),
+                );
+              },
+              child: Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-                  return SingleChildScrollView(
-                    child: Expanded(
-                      child: Card(
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GestureDetector(
-                                onTap: () => {},
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text.rich(TextSpan(
-                                        children: <InlineSpan>[
-                                          const TextSpan(
-                                            text: 'Schedule: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          TextSpan(
-                                            text: item.get("schedule"),
-                                          ),
-                                          const TextSpan(
-                                            text: '\nTiming: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          ...List.generate(
-                                            (allShifts.length / 2).ceil(),
-                                            (i) => TextSpan(
-                                              text:
-                                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                              style: const TextStyle(
-                                                  color: Colors.black),
-                                            ),
-                                          ),
-                                          const TextSpan(
-                                            text: '\nDays: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          TextSpan(
-                                            text: item.get("days").toString(),
-                                          ),
-                                        ],
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                        ))),
-                                  ],
-                                ),
+  Widget _buildRatingRow(
+      String title, int currentRating, ValueChanged<int> onRatingSelected) {
+    return Column(
+      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 12),
+        ),
+        Row(
+          children: List.generate(5, (index) {
+            return IconButton(
+              icon: Icon(
+                index < currentRating ? Icons.star : Icons.star_border,
+                color: index < currentRating ? Colors.yellow : Colors.grey,
+              ),
+              onPressed: () {
+                onRatingSelected(index + 1); // Set the rating
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  // void showRatingDialog(BuildContext context) {
+  //   int selectedRating = 0, selectedRating1 = 0; // Initial rating value
+
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return StatefulBuilder(
+  //         builder: (context, setState) {
+  //           return AlertDialog(
+  //             title: Text(
+  //               "Before completion request, please Rate the Maid",
+  //               style: TextStyle(fontSize: 20),
+  //             ),
+  //             content:
+  //                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+  //               Expanded(
+  //                 child: _buildRatingRow("", selectedRating, (rating) {
+  //                   setState(() {
+  //                     selectedRating = rating;
+  //                   });
+  //                 }),
+  //               ),
+  //             ]),
+  //             actions: <Widget>[
+  //               TextButton(
+  //                 onPressed: () {
+  //                   Navigator.of(context).pop(); // Close the dialog
+  //                   showRatingConfirmation(
+  //                       context, selectedRating); // Show thank-you message
+  //                 },
+  //                 child: Text("OK"),
+  //               ),
+  //             ],
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
+  // void showRatingConfirmation(BuildContext context, int rating) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: Text("Thank you!"),
+  //         content:
+  //             Text("You rated the maid $rating star${rating > 1 ? 's' : ''}."),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop(); // Close the confirmation dialog
+  //               showCompletionRequest(context);
+  //             },
+  //             child: Text("OK"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+  // void showCompletionRequest(BuildContext context) {
+  //   int punctualityRating = 0, qualityRating = 0, professionalismRating = 0;
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return StatefulBuilder(builder: (context, setState) {
+  //         return AlertDialog(
+  //           title: Text("Completion Request"),
+  //           content: SingleChildScrollView(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   "Please rate the following:",
+  //                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //                 ),
+  //                 SizedBox(height: 16),
+  //                 _buildRatingRow("Punctuality:", punctualityRating, (rating) {
+  //                   setState(() {
+  //                     punctualityRating = rating;
+  //                   });
+  //                 }),
+  //                 _buildRatingRow("Quality of Work:", qualityRating, (rating) {
+  //                   setState(() {
+  //                     qualityRating = rating;
+  //                   });
+  //                 }),
+  //                 _buildRatingRow("Professionalism:", professionalismRating,
+  //                     (rating) {
+  //                   setState(() {
+  //                     professionalismRating = rating;
+  //                   });
+  //                 }),
+  //                 SizedBox(height: 20),
+  //                 Text(
+  //                   "Write a Review:",
+  //                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //                 ),
+  //                 SizedBox(height: 8),
+  //                 TextField(
+  //                   controller: TextEditingController(),
+  //                   maxLines: 4,
+  //                   decoration: InputDecoration(
+  //                     hintText: "Please enter your review",
+  //                     border: OutlineInputBorder(),
+  //                     contentPadding:
+  //                         EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  //                   ),
+  //                 ),
+  //                 Text("Reason:"),
+  //                 TextField(
+  //                   controller: TextEditingController(),
+  //                   decoration: InputDecoration(
+  //                       hintText: "Please enter a reason",
+  //                       border: OutlineInputBorder()),
+  //                   style: TextStyle(fontWeight: FontWeight.w300),
+  //                 ),
+  //                 Text("Feedback:"),
+  //                 TextField(
+  //                   controller: TextEditingController(),
+  //                   decoration: InputDecoration(
+  //                       hintText:
+  //                           "Please enter a feedback for the Service/Maid",
+  //                       border: OutlineInputBorder()),
+  //                   style: TextStyle(fontWeight: FontWeight.w300),
+  //                   minLines: 3,
+  //                   maxLines: 5,
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           actions: <Widget>[
+  //             Text(
+  //               "*By clicking Submit, the Completion Request will be sent to the respective Maid/Employer for further actions.",
+  //               style: TextStyle(fontSize: 12),
+  //             ),
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pop();
+  //                 // Close the confirmation dialog
+  //               },
+  //               child: Text("Submit"),
+  //             ),
+  //           ],
+  //         );
+  //       });
+  //     },
+  //   );
+  // }
+
+  Widget _buildActiveServiceList(item) {
+    Map<String, dynamic> time = item.get('timing');
+    List<String> allShifts = [];
+    time.forEach((key, value) {
+      if (value is List<dynamic>) {
+        allShifts.addAll(value.map((e) => e.toString()));
+      }
+    });
+    return SingleChildScrollView(
+      child: Expanded(
+        child: Card(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () => {},
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(TextSpan(
+                          children: <InlineSpan>[
+                            const TextSpan(
+                              text: 'Schedule: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                              text: item.get("schedule"),
+                            ),
+                            const TextSpan(
+                              text: '\nTiming: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            ...List.generate(
+                              (allShifts.length / 2).ceil(),
+                              (i) => TextSpan(
+                                text:
+                                    '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                                style: const TextStyle(color: Colors.black),
                               ),
                             ),
-                            Row(
-                              // mainAxisAlignment: MainAxisAlignment.end,
+                            const TextSpan(
+                              text: '\nDays: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                              text: item.get("days").join(', '),
+                            ),
+                          ],
+                          style: const TextStyle(
+                            fontSize: 15,
+                          ))),
+                    ],
+                  ),
+                ),
+              ),
+              if (GlobalVariables.instance.userrole == 2)
+                Row(
+                  // mainAxisAlignment: MainAxisAlignment.end,
 
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Card(
+                        // elevation: 10,
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              completeService(context);
+                            },
+                            child: const Row(
                               children: [
-                                Expanded(
-                                  child: Card(
-                                    // elevation: 10,
-                                    color: Colors.blue,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5.0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          // Navigator.pop(context);
-                                          // Navigator.push(
-                                          //     context,
-                                          //     MaterialPageRoute(
-                                          //         builder: (context) => ChatPage(
-                                          //             name: item.get("name"),
-                                          //             receiverID: item.get("userid"),
-                                          //             postType: "services",
-                                          //             postTypeID: servItem.id)));
-                                        },
-                                        child: const Row(
-                                          children: [
-                                            Icon(
-                                              Icons.edit,
-                                              color: Colors.white,
-                                            ),
-                                            Text(
-                                              'View',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.done_outline_rounded,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  'Complete Service',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15),
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  );
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
 
-                  // return GestureDetector(
-                  //   onTap: () => {},
-                  //   child: Text(
-                  //     item.get("rate"),
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // );
-                },
-              );
-            }
-          } else {
-            return Text(
-                GlobalVariables.instance.xmlHandler.getString('noserv'));
-          }
-        });
+    // return GestureDetector(
+    //   onTap: () => {},
+    //   child: Text(
+    //     item.get("rate"),
+    //     textAlign: TextAlign.center,
+    //   ),
+    // );
   }
 
   Widget _buildServiceList() {
@@ -1464,7 +1654,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Expanded(
                         child: Card(
-                          color: Colors.blueAccent[100],
                           elevation: 10,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -1642,7 +1831,204 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .toString(),
                                       textAlign: TextAlign.center,
                                     ),
-                                    _buildActiveServiceList(),
+                                    SizedBox(height: 8),
+                                    FutureBuilder(
+                                        future: getActiveServices(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Text("loading...");
+                                          }
+                                          if (snapshot.hasData) {
+                                            if (snapshot.data!.docs.isEmpty) {
+                                              return Text(GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('noserv'));
+                                            } else {
+                                              return GridView.builder(
+                                                gridDelegate:
+                                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                                        crossAxisCount: 2),
+                                                shrinkWrap: true,
+                                                itemCount:
+                                                    snapshot.data!.docs.length,
+                                                itemBuilder: (context, index) {
+                                                  final item = snapshot
+                                                      .data!.docs[index];
+
+                                                  return SingleChildScrollView(
+                                                    child: Expanded(
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Expanded(
+                                                            child: Card(
+                                                              elevation:
+                                                                  4, // Adds a slight shadow for a polished look
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12), // Smooth edges for the card
+                                                              ),
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  GestureDetector(
+                                                                    onTap: () {
+                                                                      showDialog(
+                                                                        context:
+                                                                            context,
+                                                                        builder:
+                                                                            (BuildContext
+                                                                                context) {
+                                                                          return AlertDialog(
+                                                                            title:
+                                                                                FutureBuilder<List<String>>(
+                                                                              future: getActiveName(GlobalVariables.instance.userrole == 1 ? item.get('userid') : item.get('receiver')),
+                                                                              builder: (context, snapshot) {
+                                                                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                                                                  return Row(
+                                                                                    children: [
+                                                                                      CircularProgressIndicator(),
+                                                                                      SizedBox(width: 10),
+                                                                                      Text("Loading Title..."),
+                                                                                    ],
+                                                                                  ); // Display a loading indicator in the title
+                                                                                } else if (snapshot.hasError) {
+                                                                                  return Text('Error: ${snapshot.error}');
+                                                                                } else if (snapshot.hasData) {
+                                                                                  return Row(
+                                                                                    children: [
+                                                                                      CircleAvatar(
+                                                                                        radius: 12,
+                                                                                        backgroundImage: NetworkImage(snapshot.data![1]),
+                                                                                      ),
+                                                                                      SizedBox(width: 7),
+                                                                                      Expanded(
+                                                                                          child: Text(
+                                                                                        snapshot.data!.first,
+                                                                                        style: TextStyle(fontSize: 20),
+                                                                                      )),
+                                                                                    ],
+                                                                                  ); // Display the fetched title
+                                                                                } else {
+                                                                                  return Text('No Title Available');
+                                                                                }
+                                                                              },
+                                                                            ),
+                                                                            content:
+                                                                                _buildActiveServiceList(item),
+                                                                            actions: [
+                                                                              TextButton(
+                                                                                onPressed: () {
+                                                                                  Navigator.of(context).pop(false); // Return false
+                                                                                },
+                                                                                child: Text('Cancel'),
+                                                                              ),
+                                                                            ],
+                                                                          );
+                                                                        },
+                                                                      );
+                                                                    }, // Action when tapped
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          16.0), // Adjust padding for better spacing
+                                                                      child:
+                                                                          Column(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Center(
+                                                                            child:
+                                                                                Text(
+                                                                              '${GlobalVariables.instance.xmlHandler.getString('current')}${GlobalVariables.instance.userrole == 1 ? GlobalVariables.instance.xmlHandler.getString('employer') : GlobalVariables.instance.xmlHandler.getString('maiden')}',
+                                                                              style: TextStyle(
+                                                                                fontSize: 18, // Slightly larger font for prominence
+                                                                                fontWeight: FontWeight.bold, // Bold text for emphasis
+                                                                                color: Colors.black87, // Darker text for readability
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          SizedBox(
+                                                                              height: 8), // Spacing between title and subtitle
+                                                                          FutureBuilder<
+                                                                              List<String>>(
+                                                                            future: getActiveName(GlobalVariables.instance.userrole == 1
+                                                                                ? item.get('userid')
+                                                                                : item.get('receiver')), // Your future function
+                                                                            builder:
+                                                                                (context, snapshot) {
+                                                                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                                                                // While waiting for the result, show a loading indicator or text
+                                                                                return CircularProgressIndicator();
+                                                                              } else if (snapshot.hasError) {
+                                                                                // If there's an error, show an error message
+                                                                                return Text(
+                                                                                  'Error: ${snapshot.error}',
+                                                                                  style: TextStyle(fontSize: 14, color: Colors.red),
+                                                                                );
+                                                                              } else if (snapshot.hasData) {
+                                                                                // If data is received, use the result from the snapshot
+
+                                                                                name = snapshot.data![0];
+                                                                                return Row(
+                                                                                  children: [
+                                                                                    CircleAvatar(
+                                                                                      radius: 12,
+                                                                                      backgroundImage: NetworkImage(snapshot.data![1]),
+                                                                                    ),
+                                                                                    SizedBox(width: 7),
+                                                                                    Expanded(
+                                                                                      child: Text(
+                                                                                        name,
+                                                                                        style: TextStyle(
+                                                                                          fontSize: 14, // Smaller font for supporting text
+                                                                                          color: Colors.grey[700], // Subtle color for less emphasis
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                );
+                                                                              } else {
+                                                                                // If no data is available, show a fallback message
+                                                                                return Text(
+                                                                                  'No data available',
+                                                                                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                                                                                );
+                                                                              }
+                                                                            },
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          } else {
+                                            return Text(GlobalVariables
+                                                .instance.xmlHandler
+                                                .getString('noserv'));
+                                          }
+                                        }),
+
+                                    //_buildActiveServiceList(),
                                   ],
                                 ),
                               ),

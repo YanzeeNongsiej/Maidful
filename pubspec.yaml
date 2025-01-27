@@ -51,6 +51,7 @@ dependencies:
   xml: ^6.3.0
   get: ^4.6.6
   styled_text: 8.1.0
+  percent_indicator: ^4.2.2
   
 
 dev_dependencies:

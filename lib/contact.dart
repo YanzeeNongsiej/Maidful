@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class HelpSupportPage extends StatefulWidget {
+  const HelpSupportPage({super.key});
+
   @override
   _HelpSupportPageState createState() => _HelpSupportPageState();
 }
@@ -98,12 +100,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: _isSubmitting ? null : _submitGrievance,
-              child: _isSubmitting
-                  ? CircularProgressIndicator(color: Colors.white)
-                  : Text("Submit"),
               style: ElevatedButton.styleFrom(
                 iconColor: Colors.blueAccent,
               ),
+              child: _isSubmitting
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text("Submit"),
             ),
           ],
         ),

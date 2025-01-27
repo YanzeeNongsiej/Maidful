@@ -73,15 +73,26 @@ class maidDao {
   //   }
   //   return ser;
   // }
+  Future<List<String>> getActiveName(String receive) async {
+    List<String> res = [];
+    QuerySnapshot qs = await FirebaseFirestore.instance
+        .collection("users")
+        .where("userid", isEqualTo: receive)
+        .get();
+
+    res.add(qs.docs.first['name']);
+    res.add(qs.docs.first['url']);
+    return res;
+  }
 
   Future<QuerySnapshot> getActiveServices(String curUser) async {
     // Query acknowledgements
     QuerySnapshot ackSnapshot = await FirebaseFirestore.instance
         .collection("acknowledgements")
         .where(Filter.or(
-          Filter("receiver", isEqualTo: curUser),
-          Filter("sender", isEqualTo: curUser),
-        ))
+            Filter("receiver", isEqualTo: curUser),
+            Filter("userid", isEqualTo: curUser),
+            Filter("sender", isEqualTo: curUser)))
         .where("status", isEqualTo: 2)
         .get();
 
