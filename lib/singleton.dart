@@ -24,5 +24,6 @@ class GlobalVariables extends ChangeNotifier {
   int get userrole => urole;
   set userrole(int r) {
     urole = r;
+    notifyListeners();
   }
 }

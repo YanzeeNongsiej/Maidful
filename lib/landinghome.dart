@@ -24,6 +24,34 @@ late Future<QuerySnapshot> aqs, searchqs;
 int searchCriteria = 1; //1=Address,2=Name,3=Service
 SearchController? sCont;
 
+void updateSearchqs() {
+  if (GlobalVariables.instance.userrole == 2) {
+    aqs = fetchServices();
+  } else if (GlobalVariables.instance.userrole == 1) {
+    aqs = fetchJobProfiles();
+  }
+  searchqs = aqs;
+  aqs.then((QuerySnapshot s) {});
+}
+
+Future<QuerySnapshot> fetchServices() async {
+  String userID = FirebaseAuth.instance.currentUser!.uid;
+  // QuerySnapshot? tempqs;
+  QuerySnapshot qs = await maidDao().getAllServices(userID);
+  // tempqs = qs;
+  // for (var i in qs.docs) {
+
+  // }
+  // qs.forEach((doc) => {});
+  return qs;
+}
+
+Future<QuerySnapshot> fetchJobProfiles() async {
+  String userID = FirebaseAuth.instance.currentUser!.uid;
+  QuerySnapshot qs = await maidDao().getAllJobProfiles(userID);
+  return qs;
+}
+
 class _LandingHomePageState extends State<LandingHomePage> {
   String searchText = "Search by Address...";
 
@@ -435,17 +463,7 @@ class _NestedTabBarState extends State<NestedTabBar>
       setState(() {});
       // GlobalVariables.instance.username = widget.uname.toString();
     });
-    if (GlobalVariables.instance.urole == 2) {
-      aqs = fetchServices();
-    } else if (GlobalVariables.instance.urole == 1) {
-      aqs = fetchJobProfiles();
-    }
-    searchqs = aqs;
-    aqs.then((QuerySnapshot s) {
-      for (var i in s.docs) {
-        print(i.get("userid"));
-      }
-    });
+    updateSearchqs();
     _nestedTabController = TabController(length: 1, vsync: this);
   }
 
@@ -457,24 +475,6 @@ class _NestedTabBarState extends State<NestedTabBar>
 
   void refresh() {
     widget.refreshCallback();
-  }
-
-  Future<QuerySnapshot> fetchServices() async {
-    String userID = FirebaseAuth.instance.currentUser!.uid;
-    // QuerySnapshot? tempqs;
-    QuerySnapshot qs = await maidDao().getAllServices(userID);
-    // tempqs = qs;
-    // for (var i in qs.docs) {
-
-    // }
-    // qs.forEach((doc) => {});
-    return qs;
-  }
-
-  Future<QuerySnapshot> fetchJobProfiles() async {
-    String userID = FirebaseAuth.instance.currentUser!.uid;
-    QuerySnapshot qs = await maidDao().getAllJobProfiles(userID);
-    return qs;
   }
 
   void _onServiceListUpdated() {
@@ -1551,7 +1551,7 @@ class _NestedTabBarState extends State<NestedTabBar>
         builder: (context, child) {
           return Column(
             children: [
-              if (GlobalVariables.instance.urole == 2)
+              if (GlobalVariables.instance.userrole == 2)
                 Column(
                   children: [
                     Container(
@@ -1738,7 +1738,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                             ]))
                   ],
                 ),
-              if (GlobalVariables.instance.urole == 1)
+              if (GlobalVariables.instance.userrole == 1)
                 Column(
                   children: [
                     Container(
