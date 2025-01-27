@@ -34,7 +34,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   String newaddress = "", newname = "", userid = "";
 
   String? usrname;
-  final List<bool> _iss = [true, false], _isrs = [true, false];
+  List<bool> _iss = [true, false], _isrs = [true, false];
   List<String> lang = ['English', 'Khasi'];
   Color scolor = Colors.white;
   // Stream<QuerySnapshot> fetchChats() {
@@ -106,6 +106,10 @@ class _EmployerHomePageState extends State<EmployerHome>
           ValueNotifier<String>(GlobalVariables.instance.selected);
     });
     profilepic();
+    _isrs = [
+      GlobalVariables.instance.userrole == 1 ? true : false,
+      GlobalVariables.instance.userrole == 2 ? true : false
+    ];
   }
 
   @override
@@ -249,11 +253,11 @@ class _EmployerHomePageState extends State<EmployerHome>
                                 _isrs[1] = true;
                               }
 
-                              // GlobalVariables.instance.selected = lang[index];
+                              GlobalVariables.instance.userrole = index + 1;
                               GlobalVariables.instance.xmlHandler.loadStrings(
                                   GlobalVariables.instance.selected.toString());
-                              updateParentState();
                             });
+                            updateSearchqs();
                           },
                           children: const [
                             Text('Maid'),

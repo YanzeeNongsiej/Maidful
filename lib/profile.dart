@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ibitf_app/starrating.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -29,14 +30,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   String userID = FirebaseAuth.instance.currentUser!.uid;
   final List<File> _documentImages = [];
-  TextEditingController _languageController = TextEditingController();
+  final TextEditingController _languageController = TextEditingController();
   final dobcontroller = TextEditingController();
   String? usrname;
   DateTime dt = DateTime.now();
   DateFormat dateFormat = DateFormat("yyyy-MM-dd");
   String dte = "Date of birth";
   Color _dobColor = const Color(0xFFb2b7bf);
-
+  double rating = 3.5;
   List<String>? selectedskills;
   List<String> myskills = [];
 
@@ -542,14 +543,112 @@ class _ProfilePageState extends State<ProfilePage> {
 
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
+                                Card(
+                                  // elevation: 10,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigator.pop(context);
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) => ChatPage(
+                                        //             name: item.get("name"),
+                                        //             receiverID: item.get("userid"),
+                                        //             postType: "services",
+                                        //             postTypeID: servItem.id)));
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.remove_red_eye_outlined,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            'View',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
                                   child: Card(
-                                    // elevation: 10,
+                                    // elevation: 20,
                                     color: Colors.blue,
                                     child: Padding(
                                       padding: const EdgeInsets.all(5.0),
                                       child: GestureDetector(
                                         onTap: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                // Use existing username
+                                                return AlertDialog(
+                                                  scrollable: true,
+                                                  titlePadding:
+                                                      EdgeInsets.all(0),
+                                                  title: Container(
+                                                    padding: EdgeInsets.all(16),
+                                                    decoration: BoxDecoration(
+                                                        color: Colors.blue,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        20),
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        20))),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.info_outline,
+                                                          size: 30,
+                                                          color: Colors.white,
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Text(
+                                                          'Completion Request',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  content: Container(
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Flexible(
+                                                              child: Text(
+                                                                "*This action will send a \"Completion Request\". Before \"Completion request\", please rate the service.",
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            StarRating(
+                                                              rating: rating,
+                                                              onRatingChanged: (rating) =>
+                                                                  setState(() =>
+                                                                      this.rating =
+                                                                          rating),
+                                                            )
+                                                          ],
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              });
                                           // Navigator.pop(context);
                                           // Navigator.push(
                                           //     context,
@@ -560,16 +659,19 @@ class _ProfilePageState extends State<ProfilePage> {
                                           //             postType: "services",
                                           //             postTypeID: servItem.id)));
                                         },
-                                        child: const Row(
+                                        child: Row(
                                           children: [
                                             Icon(
-                                              Icons.edit,
+                                              Icons.handshake,
                                               color: Colors.white,
                                             ),
-                                            Text(
-                                              'View',
-                                              style: TextStyle(
-                                                  color: Colors.white),
+                                            Expanded(
+                                              child: Text(
+                                                'Complete',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12),
+                                              ),
                                             ),
                                           ],
                                         ),
