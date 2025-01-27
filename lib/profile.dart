@@ -576,105 +576,101 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Card(
-                                    // elevation: 20,
-                                    color: Colors.blue,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5.0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                // Use existing username
-                                                return AlertDialog(
-                                                  scrollable: true,
-                                                  titlePadding:
-                                                      EdgeInsets.all(0),
-                                                  title: Container(
-                                                    padding: EdgeInsets.all(16),
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.blue,
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        20),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        20))),
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.info_outline,
-                                                          size: 30,
-                                                          color: Colors.white,
-                                                        ),
-                                                        SizedBox(width: 10),
-                                                        Text(
-                                                          'Completion Request',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ],
-                                                    ),
+                                Card(
+                                  // elevation: 20,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              // Use existing username
+                                              return AlertDialog(
+                                                scrollable: true,
+                                                titlePadding: EdgeInsets.all(0),
+                                                title: Container(
+                                                  padding: EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.blue,
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                              topLeft: Radius
+                                                                  .circular(20),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                      20))),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.info_outline,
+                                                        size: 30,
+                                                        color: Colors.white,
+                                                      ),
+                                                      SizedBox(width: 10),
+                                                      Text(
+                                                        'Completion Request',
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  content: Container(
-                                                    child: Column(
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Flexible(
-                                                              child: Text(
-                                                                "*This action will send a \"Completion Request\". Before \"Completion request\", please rate the service.",
-                                                              ),
+                                                ),
+                                                content: Container(
+                                                  child: Column(
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Flexible(
+                                                            child: Text(
+                                                              "*This action will send a \"Completion Request\". Before \"Completion request\", please rate the service.",
                                                             ),
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            StarRating(
-                                                              rating: rating,
-                                                              onRatingChanged: (rating) =>
-                                                                  setState(() =>
-                                                                      this.rating =
-                                                                          rating),
-                                                            )
-                                                          ],
-                                                        )
-                                                      ],
-                                                    ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          StarRating(
+                                                            rating: rating,
+                                                            onRatingChanged: (rating) =>
+                                                                setState(() =>
+                                                                    this.rating =
+                                                                        rating),
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
                                                   ),
-                                                );
-                                              });
-                                          // Navigator.pop(context);
-                                          // Navigator.push(
-                                          //     context,
-                                          //     MaterialPageRoute(
-                                          //         builder: (context) => ChatPage(
-                                          //             name: item.get("name"),
-                                          //             receiverID: item.get("userid"),
-                                          //             postType: "services",
-                                          //             postTypeID: servItem.id)));
-                                        },
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.handshake,
-                                              color: Colors.white,
+                                                ),
+                                              );
+                                            });
+                                        // Navigator.pop(context);
+                                        // Navigator.push(
+                                        //     context,
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) => ChatPage(
+                                        //             name: item.get("name"),
+                                        //             receiverID: item.get("userid"),
+                                        //             postType: "services",
+                                        //             postTypeID: servItem.id)));
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.handshake,
+                                            color: Colors.white,
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              'Complete',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12),
                                             ),
-                                            Expanded(
-                                              child: Text(
-                                                'Complete',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
