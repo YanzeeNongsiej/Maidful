@@ -15,6 +15,7 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:ibitf_app/rating.dart';
+import 'package:ibitf_app/sendnotif.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -475,7 +476,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return await maidDao().getActiveName(receive);
   }
 
-  void completeService(BuildContext context) {
+  void completeService(BuildContext context, item) {
     showDialog(
       context: context,
       builder: (context) {
@@ -492,12 +493,12 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop(); // Close the first dialog
-                //showRatingDialog(context); // Show the rating dialog
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => CompletionRequestWidget()),
-                );
+                showCompleteDoneDialog(context, item); // Show the rating dialog
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //       builder: (context) => CompletionRequestWidget()),
+                // );
               },
               child: Text("Yes"),
             ),
@@ -507,73 +508,62 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildRatingRow(
-      String title, int currentRating, ValueChanged<int> onRatingSelected) {
-    return Column(
-      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 12),
-        ),
-        Row(
-          children: List.generate(5, (index) {
-            return IconButton(
-              icon: Icon(
-                index < currentRating ? Icons.star : Icons.star_border,
-                color: index < currentRating ? Colors.yellow : Colors.grey,
+  void showCompleteDoneDialog(BuildContext context, item) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                "Completion Request Sent!",
+                style: TextStyle(
+                  fontSize: 18, // Slightly larger font for prominence
+                  fontWeight: FontWeight.bold, // Bold text for emphasis
+                  color: Colors.black87,
+                ),
               ),
-              onPressed: () {
-                onRatingSelected(index + 1); // Set the rating
-              },
+              content: Text(
+                'A completion request has been sent to $name',
+                style: TextStyle(
+                  fontSize: 14, // Slightly larger font for prominence
+                  // Bold text for emphasis
+                  color: Colors.black87,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    updateStatus(4, item);
+                    sendPushNotification(
+                        item.get('receiver'), "Skhem", "Iaineh");
+                    Navigator.of(context).pop();
+                    //status=3 means the completion request has been sent
+
+                    // Close the dialog
+                    // showRatingConfirmation(
+                    //     context, selectedRating); // Show thank-you message
+                  },
+                  child: Text("OK"),
+                ),
+              ],
             );
-          }),
-        ),
-      ],
+          },
+        );
+      },
     );
   }
 
-  // void showRatingDialog(BuildContext context) {
-  //   int selectedRating = 0, selectedRating1 = 0; // Initial rating value
-
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return StatefulBuilder(
-  //         builder: (context, setState) {
-  //           return AlertDialog(
-  //             title: Text(
-  //               "Before completion request, please Rate the Maid",
-  //               style: TextStyle(fontSize: 20),
-  //             ),
-  //             content:
-  //                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-  //               Expanded(
-  //                 child: _buildRatingRow("", selectedRating, (rating) {
-  //                   setState(() {
-  //                     selectedRating = rating;
-  //                   });
-  //                 }),
-  //               ),
-  //             ]),
-  //             actions: <Widget>[
-  //               TextButton(
-  //                 onPressed: () {
-  //                   Navigator.of(context).pop(); // Close the dialog
-  //                   showRatingConfirmation(
-  //                       context, selectedRating); // Show thank-you message
-  //                 },
-  //                 child: Text("OK"),
-  //               ),
-  //             ],
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
+  updateStatus(int val, item) {
+    FirebaseFirestore.instance
+        .collection("acknowledgements")
+        .doc(item.id)
+        .update({
+      "status": val,
+    }).whenComplete(() {
+      setState(() {});
+    });
+  }
 
   // void showRatingConfirmation(BuildContext context, int rating) {
   //   showDialog(
@@ -743,7 +733,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              if (GlobalVariables.instance.userrole == 2)
+              if (GlobalVariables.instance.userrole == 2 &&
+                  item.get('status') == 2)
                 Row(
                   // mainAxisAlignment: MainAxisAlignment.end,
 
@@ -757,7 +748,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.all(5.0),
                           child: GestureDetector(
                             onTap: () {
-                              completeService(context);
+                              completeService(context, item);
                             },
                             child: const Row(
                               children: [
@@ -2011,6 +2002,24 @@ class _ProfilePageState extends State<ProfilePage> {
                                                                       ),
                                                                     ),
                                                                   ),
+                                                                  item.get('status') ==
+                                                                          4
+                                                                      ? Card(
+                                                                          color:
+                                                                              Colors.amber[300],
+                                                                          child:
+                                                                              Text(
+                                                                            'Completion Request Pending',
+                                                                            textAlign:
+                                                                                TextAlign.center,
+                                                                            style:
+                                                                                TextStyle(
+                                                                              color: Colors.blueGrey,
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          ),
+                                                                        )
+                                                                      : Text('')
                                                                 ],
                                                               ),
                                                             ),

@@ -4,12 +4,34 @@ import 'package:ibitf_app/service/auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:ibitf_app/firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // TODO: Request permission
+  final messaging = FirebaseMessaging.instance;
+
+  final settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (kDebugMode) {
+    print('Permission granted: ${settings.authorizationStatus}');
+  }
+  // TODO: Register with FCM
+
+  // TODO: Set up foreground message handler
+  // TODO: Set up background message handler
   runApp(const MyApp());
 }
 

@@ -36,7 +36,7 @@ class _CompletionRequestWidgetState extends State<CompletionRequestWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Completion Request"),
+        title: Text("Rating and Review"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

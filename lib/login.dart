@@ -8,6 +8,7 @@ import 'package:ibitf_app/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/singleton.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -321,12 +322,82 @@ class _LogInState extends State<LogIn> {
             MaterialPageRoute(builder: (context) => const Home())));
   }
 
+  Future<void> saveFcmToken(String userId) async {
+    String? token = await FirebaseMessaging.instance.getToken();
+
+    if (token != null) {
+      // Save the token in Firestore under the user document
+      try {
+        // Reference to the Firestore collection
+        FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+        // Query the users collection to find the document with the given userId
+        QuerySnapshot querySnapshot = await firestore
+            .collection('users') // assuming 'users' is your collection name
+            .where('userid', isEqualTo: userId) // querying by 'userid'
+            .get();
+
+        // Check if a document was found
+        if (querySnapshot.docs.isNotEmpty) {
+          // Get the first document from the query result
+          DocumentSnapshot document = querySnapshot.docs.first;
+
+          // Set the fcmtoken in the document
+          await firestore.collection('users').doc(document.id).update({
+            'fcmtoken': token, // Set the 'fcmtoken' field
+          });
+
+          print('FCM token updated successfully.');
+        } else {
+          print('No user found with the given userid.');
+        }
+      } catch (e) {
+        print('Error setting FCM token: $e');
+      }
+    }
+  }
+
+  void handleTokenRefresh(String userId) {
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      try {
+        // Reference to the Firestore collection
+        FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+        // Query the users collection to find the document with the given userId
+        QuerySnapshot querySnapshot = await firestore
+            .collection('users') // assuming 'users' is your collection name
+            .where('userid', isEqualTo: userId) // querying by 'userid'
+            .get();
+
+        // Check if a document was found
+        if (querySnapshot.docs.isNotEmpty) {
+          // Get the first document from the query result
+          DocumentSnapshot document = querySnapshot.docs.first;
+
+          // Set the fcmtoken in the document
+          await firestore.collection('users').doc(document.id).update({
+            'fcmtoken': newToken, // Set the 'fcmtoken' field
+          });
+
+          print('FCM token updated successfully.');
+        } else {
+          print('No user found with the given userid.');
+        }
+      } catch (e) {
+        print('Error setting FCM token: $e');
+      }
+    });
+  }
+
   userLogin() async {
     try {
       //last code
+
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password)
           .whenComplete(() {
+        saveFcmToken(FirebaseAuth.instance.currentUser!.uid);
+        handleTokenRefresh(FirebaseAuth.instance.currentUser!.uid);
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const Home()));
       });

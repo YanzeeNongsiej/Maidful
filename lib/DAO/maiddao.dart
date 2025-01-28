@@ -1,5 +1,6 @@
 import "package:cloud_firestore/cloud_firestore.dart";
 import "package:ibitf_app/model/service.dart";
+import "package:ibitf_app/singleton.dart";
 
 class maidDao {
   Future<QuerySnapshot> getAllMaids() async {
@@ -87,14 +88,18 @@ class maidDao {
 
   Future<QuerySnapshot> getActiveServices(String curUser) async {
     // Query acknowledgements
-    QuerySnapshot ackSnapshot = await FirebaseFirestore.instance
-        .collection("acknowledgements")
-        .where(Filter.or(
-            Filter("receiver", isEqualTo: curUser),
-            Filter("userid", isEqualTo: curUser),
-            Filter("sender", isEqualTo: curUser)))
-        .where("status", isEqualTo: 2)
-        .get();
+    QuerySnapshot ackSnapshot;
+    if (GlobalVariables.instance.userrole == 1) {
+      ackSnapshot = await FirebaseFirestore.instance
+          .collection("acknowledgements")
+          .where("receiver", isEqualTo: curUser)
+          .where("status", whereIn: [2, 4]).get();
+    } else {
+      ackSnapshot = await FirebaseFirestore.instance
+          .collection("acknowledgements")
+          .where("userid", isEqualTo: curUser)
+          .where("status", whereIn: [2, 4]).get();
+    }
 
     // Collect ack IDs to fetch messages in a batch
     List<String> ackIDs = ackSnapshot.docs.map((doc) => doc.id).toList();

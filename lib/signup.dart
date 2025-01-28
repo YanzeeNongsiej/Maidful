@@ -25,19 +25,19 @@ class _SignUpState extends State<SignUp> {
         namecontroller.text != "" &&
         mailcontroller.text != "") {
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+        // UserCredential userCredential = await FirebaseAuth.instance
+        // .createUserWithEmailAndPassword(email: email, password: password);
         final User? user = FirebaseAuth.instance.currentUser;
         Map<String, dynamic> uploadUser = {
           "userid": user?.uid,
           "username": mailcontroller.text,
           "name": namecontroller.text,
           "role": "No role",
-          "gender": " ",
-          "address": " ",
+          "gender": "",
+          "address": "",
           "dob": "2024-01-01",
-          "language": " ",
-          "remarks": " ",
+          "language": "",
+          "remarks": "",
         };
         await Usersdao().addUserDetails(uploadUser).whenComplete(
             () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
