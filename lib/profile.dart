@@ -15,7 +15,7 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:ibitf_app/rating.dart';
-import 'package:ibitf_app/sendnotif.dart';
+import 'package:ibitf_app/notifservice.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -535,8 +535,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () {
                     updateStatus(4, item);
-                    sendPushNotification(
-                        item.get('receiver'), "Skhem", "Iaineh");
+                    notifyUser(item.get('receiver'), "Completion Request",
+                        "A completion request was sent by $usrname");
                     Navigator.of(context).pop();
                     //status=3 means the completion request has been sent
 

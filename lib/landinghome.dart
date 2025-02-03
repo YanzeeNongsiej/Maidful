@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
+import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -54,7 +55,7 @@ Future<QuerySnapshot> fetchJobProfiles() async {
 
 class _LandingHomePageState extends State<LandingHomePage> {
   String searchText = "Search by Address...";
-
+  final NotificationService _notificationService = NotificationService();
   @override
   void initState() {
     // TODO: implement initState
@@ -64,6 +65,14 @@ class _LandingHomePageState extends State<LandingHomePage> {
         .then((val) {
       setState(() {});
     });
+    _initializeNotifications();
+  }
+
+  void _initializeNotifications() {
+    _notificationService.requestPermission();
+    _notificationService.getFCMToken();
+    _notificationService.listenToForegroundMessages(context);
+    _notificationService.handleNotificationClicks(context);
   }
 
   @override
