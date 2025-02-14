@@ -22,7 +22,8 @@ class Home extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<Home>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   String address = "", dob = "";
   String? name, docid;
 
@@ -46,6 +47,14 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   List<String> selectedCheckBoxValue = [];
 
   final _formkey = GlobalKey<FormState>();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      await GlobalVariables.instance.loadHasNewMsg();
+    } else if (state == AppLifecycleState.paused) {
+      await GlobalVariables.instance.loadHasNewMsg();
+    }
+  }
 
   register() async {
     if (addressController.text != "" && dobcontroller.text != "") {
@@ -82,6 +91,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 3, vsync: this);
     print("USer Details:$user");
     super.initState();
@@ -96,6 +106,7 @@ class _HomePageState extends State<Home> with SingleTickerProviderStateMixin {
   void dispose() {
     super.dispose();
     _tabController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   getRole() async {

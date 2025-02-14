@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ibitf_app/editService.dart';
 import 'package:ibitf_app/starrating.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -534,9 +535,10 @@ class _ProfilePageState extends State<ProfilePage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
-                    updateStatus(4, item);
                     notifyUser(item.get('receiver'), "Completion Request",
-                        "A completion request was sent by $usrname");
+                        "A completion request was sent by $usrname", item.id);
+                    updateStatus(4, item);
+
                     Navigator.of(context).pop();
                     //status=3 means the completion request has been sent
 
@@ -784,277 +786,303 @@ class _ProfilePageState extends State<ProfilePage> {
     // );
   }
 
-  Widget _buildServiceList() {
-    return FutureBuilder(
-        future: fetchOwnServices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("Loading...");
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data!.docs.isEmpty) {
-              return Text(
-                  GlobalVariables.instance.xmlHandler.getString('noserv'));
-            } else {
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                shrinkWrap: true,
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.docs[index];
-                  Map<String, dynamic> time = item.get('timing');
-                  List<String> allShifts = [];
-                  time.forEach((key, value) {
-                    if (value is List<dynamic>) {
-                      allShifts.addAll(value.map((e) => e.toString()));
-                    }
-                  });
-
-                  return Expanded(
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () => {},
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text.rich(TextSpan(
-                                      children: <InlineSpan>[
-                                        const TextSpan(
-                                          text: 'Schedule: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("schedule"),
-                                        ),
-                                        const TextSpan(
-                                          text: '\nTiming: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        ...List.generate(
-                                          (allShifts.length / 2).ceil(),
-                                          (i) => TextSpan(
-                                            text:
-                                                '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                            style: const TextStyle(
-                                                color: Colors.black),
-                                          ),
-                                        ),
-                                        const TextSpan(
-                                          text: '\nDays: ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: item.get("days").toString(),
-                                        ),
-                                      ],
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                      ))),
-                                ],
-                              ),
+  Widget _buildServiceList(item) {
+    Map<String, dynamic> time = item.get('timing');
+    List<String> allShifts = [];
+    time.forEach((key, value) {
+      if (value is List<dynamic>) {
+        allShifts.addAll(value.map((e) => e.toString()));
+      }
+    });
+    return SingleChildScrollView(
+      child: Expanded(
+        child: Card(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: <InlineSpan>[
+                          const TextSpan(
+                            text: 'Schedule: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("schedule")),
+                          const TextSpan(
+                            text: '\nTiming: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          ...List.generate(
+                            (allShifts.length / 2).ceil(),
+                            (i) => TextSpan(
+                              text:
+                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                              style: const TextStyle(color: Colors.black),
                             ),
                           ),
-                          Row(
-                            // mainAxisAlignment: MainAxisAlignment.end,
-
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // Navigator.pop(context);
-                                        // Navigator.push(
-                                        //     context,
-                                        //     MaterialPageRoute(
-                                        //         builder: (context) => ChatPage(
-                                        //             name: item.get("name"),
-                                        //             receiverID: item.get("userid"),
-                                        //             postType: "services",
-                                        //             postTypeID: servItem.id)));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.edit,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Edit',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          const TextSpan(
+                            text: 'Posted on: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
+                          TextSpan(
+                              text: DateFormat('dd-MMM-yyyy')
+                                  .format((item.get('timestamp')).toDate())),
+                          const TextSpan(
+                            text: '\nDays: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("days").join(', ')),
+                          const TextSpan(
+                            text: '\nServices: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("services").join(', ')),
+                          const TextSpan(
+                            text: '\nWage: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("wage")),
+                          const TextSpan(
+                            text: '\nNegotiable: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("negotiable")),
+                          const TextSpan(
+                            text: '\nWork History: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("work_history").join(', ')),
                         ],
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
-                  );
-
-                  // return GestureDetector(
-                  //   onTap: () => {},
-                  //   child: Text(
-                  //     item.get("rate"),
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // );
-                },
-              );
-            }
-          } else {
-            return Text(
-                GlobalVariables.instance.xmlHandler.getString('noserv'));
-          }
-        });
-  }
-
-  Widget _buildJobProfileList() {
-    return FutureBuilder(
-        future: fetchOwnJobProfile(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("Loading...");
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data!.docs.isEmpty) {
-              return Text(
-                  GlobalVariables.instance.xmlHandler.getString('noserv'));
-            } else {
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                shrinkWrap: true,
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.docs[index];
-                  Map<String, dynamic> time = item.get('timing');
-                  List<String> allShifts = [];
-                  time.forEach((key, value) {
-                    if (value is List<dynamic>) {
-                      allShifts.addAll(value.map((e) => e.toString()));
-                    }
-                  });
-                  return SingleChildScrollView(
-                    child: Expanded(
+                  ],
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {},
                       child: Card(
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GestureDetector(
-                                onTap: () => {},
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text.rich(TextSpan(
-                                        children: <InlineSpan>[
-                                          const TextSpan(
-                                            text: 'Schedule: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          TextSpan(
-                                            text: item.get("schedule"),
-                                          ),
-                                          const TextSpan(
-                                            text: '\nTiming: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          ...List.generate(
-                                            (allShifts.length / 2).ceil(),
-                                            (i) => TextSpan(
-                                              text:
-                                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                              style: const TextStyle(
-                                                  color: Colors.black),
-                                            ),
-                                          ),
-                                          const TextSpan(
-                                            text: '\nDays: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          TextSpan(
-                                            text: item.get("days").toString(),
-                                          ),
-                                        ],
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                        ))),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Card(
-                                  // elevation: 10,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // Navigator.pop(context);
-                                        // Navigator.push(
-                                        //     context,
-                                        //     MaterialPageRoute(
-                                        //         builder: (context) => ChatPage(
-                                        //             name: item.get("name"),
-                                        //             receiverID: item.get("userid"),
-                                        //             postType: "services",
-                                        //             postTypeID: servItem.id)));
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.edit,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            'Edit',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, color: Colors.white),
+                              const Text('Edit',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  );
-                },
-              );
-            }
-          } else {
-            return Text(
-                GlobalVariables.instance.xmlHandler.getString('noserv'));
-          }
-        });
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        _confirmDelete(context, item.id, 'services');
+                      },
+                      child: Card(
+                        color: Colors.red[400],
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete, color: Colors.white),
+                              const Text('Remove',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJobProfileList(item) {
+    Map<String, dynamic> time = item.get('timing');
+    List<String> allShifts = [];
+    time.forEach((key, value) {
+      if (value is List<dynamic>) {
+        allShifts.addAll(value.map((e) => e.toString()));
+      }
+    });
+
+    return SingleChildScrollView(
+      child: Expanded(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: <InlineSpan>[
+                          const TextSpan(
+                            text: 'Schedule: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("schedule")),
+                          const TextSpan(
+                            text: '\nTiming: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          ...List.generate(
+                            (allShifts.length / 2).ceil(),
+                            (i) => TextSpan(
+                              text:
+                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+                              style: const TextStyle(color: Colors.black),
+                            ),
+                          ),
+                          const TextSpan(
+                            text: 'Posted on: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                              text: DateFormat('dd-MMM-yyyy')
+                                  .format((item.get('timestamp')).toDate())),
+                          const TextSpan(
+                            text: '\nDays: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("days").join(', ')),
+                          const TextSpan(
+                            text: '\nServices: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("services").join(', ')),
+                          const TextSpan(
+                            text: '\nWage: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("wage")),
+                          const TextSpan(
+                            text: '\nNegotiable: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: item.get("negotiable")),
+                        ],
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditServiceScreen(item: item),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, color: Colors.white),
+                              const Text('Edit',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        _confirmDelete(context, item.id, 'jobprofile');
+                      },
+                      child: Card(
+                        color: Colors.red[400],
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete, color: Colors.white),
+                              const Text('Remove',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String docId, String kind) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Confirm Deletion"),
+          content: const Text("Are you sure you want to remove this service?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext), // Close dialog
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // Close dialog
+                _removeService(docId, kind);
+                Navigator.pop(context);
+                setState(() {});
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _removeService(String docId, String kind) {
+    FirebaseFirestore.instance.collection(kind).doc(docId).delete().then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Service removed successfully!")),
+      );
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $error")),
+      );
+    });
   }
 
   @override
@@ -2065,43 +2093,121 @@ class _ProfilePageState extends State<ProfilePage> {
                                         style: const TextStyle(
                                             color: Colors.white),
                                       ),
-                                      _buildServiceList(),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Card(
-                                            // elevation: 10,
-                                            color: Colors.blue,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(5.0),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const JobResume()));
-                                                },
-                                                child: const Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.add,
-                                                      color: Colors.white,
-                                                    ),
-                                                    Text(
-                                                      'Add',
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ),
-                                                  ],
+                                      FutureBuilder(
+                                        future: fetchOwnServices(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Text("loading...");
+                                          }
+                                          if (snapshot.hasData) {
+                                            if (snapshot.data!.docs.isEmpty) {
+                                              return Text(GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('noserv'));
+                                            } else {
+                                              return GridView.builder(
+                                                gridDelegate:
+                                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 3,
+                                                  mainAxisSpacing: 1,
                                                 ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                                shrinkWrap: true,
+                                                itemCount:
+                                                    snapshot.data!.docs.length,
+                                                itemBuilder: (context, index) {
+                                                  final item = snapshot
+                                                      .data!.docs[index];
+                                                  print(item.data());
+                                                  return SingleChildScrollView(
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Card(
+                                                            elevation:
+                                                                4, // Adds a slight shadow for a polished look
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          12), // Smooth edges for the card
+                                                            ),
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                GestureDetector(
+                                                                  onTap: () {
+                                                                    showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (BuildContext
+                                                                              context) {
+                                                                        return AlertDialog(
+                                                                          title:
+                                                                              Text('Service Details'),
+                                                                          content:
+                                                                              _buildServiceList(item),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () {
+                                                                                Navigator.of(context).pop(false); // Return false
+                                                                              },
+                                                                              child: const Text('Cancel'),
+                                                                            ),
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  }, // Action when tapped
+                                                                  child:
+                                                                      Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .all(
+                                                                        16.0), // Adjust padding for better spacing
+                                                                    child:
+                                                                        Column(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      children: [
+                                                                        Center(
+                                                                          child:
+                                                                              Column(
+                                                                            children: [
+                                                                              const Text('Posted on'),
+                                                                              Text(
+                                                                                DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          }
+                                          return const SizedBox(); // Fallback in case of no data
+                                        },
                                       ),
+
+                                      //_buildServiceList(),
                                     ],
                                   ),
                                 ),
@@ -2127,7 +2233,120 @@ class _ProfilePageState extends State<ProfilePage> {
                                         style: const TextStyle(
                                             color: Colors.white),
                                       ),
-                                      _buildJobProfileList(),
+                                      //_buildJobProfileList(),
+                                      FutureBuilder(
+                                        future: fetchOwnJobProfile(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Text("loading...");
+                                          }
+                                          if (snapshot.hasData) {
+                                            if (snapshot.data!.docs.isEmpty) {
+                                              return Text(GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('noserv'));
+                                            } else {
+                                              return GridView.builder(
+                                                gridDelegate:
+                                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 3,
+                                                  mainAxisSpacing: 1,
+                                                ),
+                                                shrinkWrap: true,
+                                                itemCount:
+                                                    snapshot.data!.docs.length,
+                                                itemBuilder: (context, index) {
+                                                  final item = snapshot
+                                                      .data!.docs[index];
+                                                  print(item.data());
+                                                  return SingleChildScrollView(
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Card(
+                                                            elevation:
+                                                                4, // Adds a slight shadow for a polished look
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          12), // Smooth edges for the card
+                                                            ),
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                GestureDetector(
+                                                                  onTap: () {
+                                                                    showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (BuildContext
+                                                                              context) {
+                                                                        return AlertDialog(
+                                                                          title:
+                                                                              Text('Service Details'),
+                                                                          content:
+                                                                              _buildJobProfileList(item),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () {
+                                                                                Navigator.of(context).pop(false); // Return false
+                                                                              },
+                                                                              child: const Text('Cancel'),
+                                                                            ),
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  }, // Action when tapped
+                                                                  child:
+                                                                      Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .all(
+                                                                        16.0), // Adjust padding for better spacing
+                                                                    child:
+                                                                        Column(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      children: [
+                                                                        Center(
+                                                                          child:
+                                                                              Column(
+                                                                            children: [
+                                                                              const Text('Posted on'),
+                                                                              Text(
+                                                                                DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          }
+                                          return const SizedBox(); // Fallback in case of no data
+                                        },
+                                      ),
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.end,

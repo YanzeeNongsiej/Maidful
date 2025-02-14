@@ -50,6 +50,7 @@
 <string name="Monthly">Monthly</string>
 <string name="sendack">Send Acknowledgement Request</string>
 <string name="maiddetails">Maid Details</string>
+<string name="servdetails">Service Details</string>
 <string name="addedsucc">Added Successfully</string>
 <string name="avail">Already Available</string>
 <string name="addjob">Add Job Profile</string>

@@ -17,7 +17,6 @@ class _ChatListPageState extends State<ChatListPage> {
   final ChatController chatcontroller = ChatController();
   Stream? ChatroomStream;
   String userID = FirebaseAuth.instance.currentUser!.uid;
-
   ontheload() async {
     ChatroomStream = await chatcontroller.getChats(userID);
     print("CHatroom Data: ${ChatroomStream?.first}");
@@ -81,7 +80,11 @@ class _ChatListPageState extends State<ChatListPage> {
                   } else {
                     lastMsg = "${chatRoomItem.get("lastMessage")}";
                   }
-                  DateTime getDate = chatRoomItem.get("timestamp").toDate();
+
+                  Timestamp? timestamp =
+                      chatRoomItem.get("timestamp"); // Check for null
+                  DateTime getDate =
+                      timestamp != null ? timestamp.toDate() : DateTime.now();
                   final now = DateTime.now();
                   if (getDate.day == now.day &&
                       getDate.month == now.month &&
@@ -141,18 +144,23 @@ class _ChatListPageState extends State<ChatListPage> {
                                 itemBuilder: (context, index) {
                                   final item = snapshot.data!.docs[index];
                                   return GestureDetector(
-                                    onTap: () => {
+                                    onTap: () {
+                                      //code to firebase to set read=true
+                                      setRead(chatRoomItem.id);
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) => ChatPage(
-                                                  name: item.get("name"),
-                                                  receiverID:
-                                                      item.get("userid"),
-                                                  postType: chatRoomItem
-                                                      .get("postType"),
-                                                  postTypeID: chatRoomItem
-                                                      .get("postTypeID"))))
+                                                    name: item.get("name"),
+                                                    receiverID:
+                                                        item.get("userid"),
+                                                    postType: chatRoomItem
+                                                        .get("postType"),
+                                                    postTypeID: chatRoomItem
+                                                        .get("postTypeID"),
+                                                    readMsg: chatRoomItem
+                                                        .get('read_Msg'),
+                                                  )));
                                     },
                                     child: ListTile(
                                       leading: CircleAvatar(
@@ -164,15 +172,25 @@ class _ChatListPageState extends State<ChatListPage> {
                                       title: Text(item.get("name")),
                                       subtitle: Text(
                                         lastMsg,
-                                        style: const TextStyle(fontSize: 13),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: chatRoomItem
+                                                          .get('read_Msg') ==
+                                                      true ||
+                                                  userID ==
+                                                      chatRoomItem
+                                                          .get("lastSender")
+                                              ? FontWeight
+                                                  .normal // Normal if user sent it
+                                              : FontWeight.bold,
+                                        ),
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
                                             lastTime,
-                                            style:
-                                                const TextStyle(fontSize: 13),
+                                            style: TextStyle(fontSize: 13),
                                           ),
                                         ],
                                       ),
@@ -191,5 +209,12 @@ class _ChatListPageState extends State<ChatListPage> {
               );
       },
     );
+  }
+
+  void setRead(var chatRoomID) {
+    FirebaseFirestore.instance
+        .collection("chat_rooms")
+        .doc(chatRoomID)
+        .update({"read_Msg": true}).whenComplete(() {});
   }
 }

@@ -289,10 +289,12 @@ class _MaidListState extends State<MaidList>
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatPage(
-                                      name: item.get("name"),
-                                      receiverID: item.get("userid"),
-                                      postType: "services",
-                                      postTypeID: servItem.id)));
+                                        name: item.get("name"),
+                                        receiverID: item.get("userid"),
+                                        postType: "services",
+                                        postTypeID: servItem.id,
+                                        readMsg: item.get('read_Msg'),
+                                      )));
                         },
                         child: const Row(
                           children: [
@@ -455,8 +457,9 @@ class _MaidListState extends State<MaidList>
                                                                 postType:
                                                                     "services",
                                                                 postTypeID:
-                                                                    servitem
-                                                                        .id)));
+                                                                    servitem.id,
+                                                                readMsg: item.get(
+                                                                    'read_Msg'))));
                                                   },
                                                   icon: const Icon(
                                                       Icons.chat_rounded),

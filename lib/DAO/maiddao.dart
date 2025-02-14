@@ -126,7 +126,7 @@ class maidDao {
     return await FirebaseFirestore.instance
         .collection("services")
         .where("userid", isEqualTo: curUser)
-        .get();
+        .get(const GetOptions(source: Source.server));
   }
 
   Future<QuerySnapshot> getOwnJobProfile(String curUser) async {
@@ -137,8 +137,17 @@ class maidDao {
   }
 
   Future<DocumentSnapshot> getService(String postTypeID) async {
+    print('PTID  $postTypeID');
     return await FirebaseFirestore.instance
         .collection("services")
+        .doc(postTypeID)
+        .get();
+  }
+
+  Future<DocumentSnapshot> getPosted(String postTypeID) async {
+    print('PTID  $postTypeID');
+    return await FirebaseFirestore.instance
+        .collection("jobprofile")
         .doc(postTypeID)
         .get();
   }

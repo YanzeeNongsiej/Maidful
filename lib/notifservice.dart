@@ -1,11 +1,23 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:http/http.dart' as http;
 import "package:googleapis_auth/auth_io.dart";
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:ibitf_app/singleton.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+updateStatus(int val, itemid, context) {
+  FirebaseFirestore.instance.collection("acknowledgements").doc(itemid).update({
+    "status": val,
+  }).whenComplete(() {
+    Navigator.of(context).pop();
+  });
+}
 
 Future<auth.AuthClient> getAuthClient() async {
   final serviceAccountJson =
@@ -23,7 +35,7 @@ Future<auth.AuthClient> getAuthClient() async {
 
 /// Send Push Notification
 Future<void> sendPushNotification(
-    String token, String title, String body) async {
+    String token, String title, String body, itemid) async {
   final client = await getAuthClient();
 
   final url = Uri.parse(
@@ -38,6 +50,7 @@ Future<void> sendPushNotification(
       },
       "data": {
         "click_action": "FLUTTER_NOTIFICATION_CLICK",
+        "itemid": itemid,
       }
     }
   };
@@ -63,11 +76,11 @@ Future<String?> getUserFcmToken(String userId) async {
   return userDoc.docs.first['fcmtoken'];
 }
 
-void notifyUser(String recipientUserId, title, body) async {
+void notifyUser(String recipientUserId, title, body, dynamic itemid) async {
   String? token = await getUserFcmToken(recipientUserId);
 
   if (token != null) {
-    sendPushNotification(token, title, body);
+    sendPushNotification(token, title, body, itemid);
   } else {
     print("User's FCM token not found.");
   }
@@ -90,59 +103,92 @@ class NotificationService {
     }
   }
 
-  Future<void> getFCMToken() async {
+  Future<void> setFCMToken() async {
+    User? user = FirebaseAuth.instance.currentUser;
     String? token = await _messaging.getToken();
     print("FCM Token: $token");
+
+    if (user != null && token != null) {
+      FirebaseFirestore.instance
+          .collection("users")
+          .where("userid",
+              isEqualTo: user.uid) // Find document where userid matches
+          .get()
+          .then((querySnapshot) {
+        if (querySnapshot.docs.isNotEmpty) {
+          // Get the existing document ID
+          String docId = querySnapshot.docs.first.id;
+
+          // Update the existing document with the new FCM token
+          FirebaseFirestore.instance
+              .collection("users")
+              .doc(docId)
+              .update({"fcmtoken": token}).then((_) {
+            print("FCM token updated for user: ${user.uid}");
+          }).catchError((error) {
+            print("Error updating FCM token: $error");
+          });
+        }
+      }).catchError((error) {
+        print("Error querying user document: $error");
+      });
+    }
   }
 
-  void listenToForegroundMessages(context) {
+  void listenToForegroundMessages() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Foreground Notification received: ${message.notification?.title}");
-      if (message.notification?.title == 'Completion Request') {
-        showCompletion(context, message);
-      }
+      // Show red dot on Chat icon
+      GlobalVariables.instance.hasnewmsg = true;
+      // if (message.notification?.title == 'Completion Request') {
+      //   showCompletion(message);
+      // }
     });
   }
 
-  void handleNotificationClicks(context) {
+  void handleNotificationClicks() {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print("User tapped on notification: ${message.notification?.title}");
-      if (message.notification?.title == 'Completion Request') {
-        showCompletion(context, message);
-      }
+
+      // if (message.notification?.title == 'Completion Request') {
+      //   showCompletion(message);
+      // }
     });
   }
 
-  void showCompletion(context, message) {
+  void showCompletion(message) {
     String? ti = message.notification?.title;
     String? bod = message.notification?.body;
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-              title: Text(ti!),
-              content: Row(
-                children: [
-                  Text(bod!),
-                  Text('Are you sure you want to complete this service?'),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  child: const Text('Yes'),
-                  onPressed: () {
-                    // Add your "Yes" logic here
-                    Navigator.of(context).pop();
-                  },
+
+    if (navigatorKey.currentContext == null) {
+      showCompletion(message);
+    } else {
+      showDialog(
+          context: navigatorKey.currentContext!,
+          builder: (BuildContext context) {
+            return AlertDialog(
+                title: Text(ti!),
+                content: Row(
+                  children: [
+                    Text(bod!),
+                  ],
                 ),
-                TextButton(
-                  child: const Text('No'),
-                  onPressed: () {
-                    // Add your "No" logic here
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ]);
-        });
+                actions: [
+                  TextButton(
+                    child: const Text('Agree'),
+                    onPressed: () {
+                      updateStatus(5, message.data["itemid"], context);
+                    },
+                  ),
+                  TextButton(
+                    child: const Text('Disagree'),
+                    onPressed: () {
+                      // Add your "No" logic here
+                      updateStatus(2, message.data["itemid"], context);
+                    },
+                  ),
+                ]);
+          });
+    }
   }
 }

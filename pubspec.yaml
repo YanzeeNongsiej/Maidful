@@ -56,6 +56,8 @@ dependencies:
   googleapis_auth: ^1.4.0
   http: ^1.2.1
   googleapis: ^11.0.0
+  translator: 1.0.3+1
+  shared_preferences: ^2.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

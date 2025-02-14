@@ -1,17 +1,27 @@
 import 'package:ibitf_app/home.dart';
 import 'package:ibitf_app/login.dart';
+import 'package:ibitf_app/notifservice.dart';
 import 'package:ibitf_app/service/auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:ibitf_app/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ibitf_app/singleton.dart';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Background Message received: ${message.notification?.title}");
+  GlobalVariables.instance.hasnewmsg = true;
+  print("hehe background${GlobalVariables.instance.hasnewmsg}");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await GlobalVariables.instance.loadHasNewMsg();
   // TODO: Request permission
   final messaging = FirebaseMessaging.instance;
 
@@ -24,6 +34,8 @@ void main() async {
     provisional: false,
     sound: true,
   );
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
     print('Permission granted: ${settings.authorizationStatus}');
@@ -42,6 +54,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorSchemeSeed: Colors.deepOrange,

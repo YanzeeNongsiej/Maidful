@@ -70,9 +70,9 @@ class _LandingHomePageState extends State<LandingHomePage> {
 
   void _initializeNotifications() {
     _notificationService.requestPermission();
-    _notificationService.getFCMToken();
-    _notificationService.listenToForegroundMessages(context);
-    _notificationService.handleNotificationClicks(context);
+    _notificationService.setFCMToken();
+    _notificationService.listenToForegroundMessages();
+    _notificationService.handleNotificationClicks();
   }
 
   @override
@@ -1099,10 +1099,12 @@ class _NestedTabBarState extends State<NestedTabBar>
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatPage(
-                                      name: item.get("name"),
-                                      receiverID: item.get("userid"),
-                                      postType: "services",
-                                      postTypeID: servItem.id)));
+                                        name: item.get("name"),
+                                        receiverID: item.get("userid"),
+                                        postType: "services",
+                                        postTypeID: servItem.id,
+                                        readMsg: true,
+                                      )));
                         },
                         child: const Row(
                           children: [
@@ -1171,7 +1173,7 @@ class _NestedTabBarState extends State<NestedTabBar>
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
             title: Text(
-                GlobalVariables.instance.xmlHandler.getString('maiddetails'),
+                GlobalVariables.instance.xmlHandler.getString('servdetails'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
@@ -1320,63 +1322,63 @@ class _NestedTabBarState extends State<NestedTabBar>
                                       fontSize: 25)),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Card(
-                                // elevation: 10,
-                                color: Colors.green,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      // Navigator.push(
-                                      //     context,
-                                      //     MaterialPageRoute(
-                                      //         builder: (context) => ChatPage(
-                                      //             name: item.get("name"),
-                                      //             receiverID: item.get("userid"),
-                                      //             postType: "services",
-                                      //             postTypeID: servItem.id)));
-                                    },
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.handshake,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          GlobalVariables.instance.xmlHandler
-                                              .getString('hire'),
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              //     Card(
-                              //       // elevation: 10,
-                              //       color: Colors.amber[600],
-                              //       child: Padding(
-                              //         padding: const EdgeInsets.all(5.0),
-                              //         child: GestureDetector(
-                              //           onTap: () {
-                              //             // Navigator.pop(context);
-                              //           },
-                              //           child: const Row(
-                              //             children: [
-                              //               Icon(Icons.threesixty_sharp),
-                              //               Text('Counter'),
-                              //             ],
-                              //           ),
-                              //         ),
-                              //       ),
-                              //     ),
-                            ],
-                          ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: [
+                          //     Card(
+                          //       // elevation: 10,
+                          //       color: Colors.green,
+                          //       child: Padding(
+                          //         padding: const EdgeInsets.all(5.0),
+                          //         child: GestureDetector(
+                          //           onTap: () {
+                          //             Navigator.pop(context);
+                          //             // Navigator.push(
+                          //             //     context,
+                          //             //     MaterialPageRoute(
+                          //             //         builder: (context) => ChatPage(
+                          //             //             name: item.get("name"),
+                          //             //             receiverID: item.get("userid"),
+                          //             //             postType: "services",
+                          //             //             postTypeID: servItem.id)));
+                          //           },
+                          //           child: Row(
+                          //             children: [
+                          //               const Icon(
+                          //                 Icons.handshake,
+                          //                 color: Colors.white,
+                          //               ),
+                          //               Text(
+                          //                 GlobalVariables.instance.xmlHandler
+                          //                     .getString('hire'),
+                          //                 style: const TextStyle(
+                          //                     color: Colors.white),
+                          //               ),
+                          //             ],
+                          //           ),
+                          //         ),
+                          //       ),
+                          //     ),
+                          //     //     Card(
+                          //     //       // elevation: 10,
+                          //     //       color: Colors.amber[600],
+                          //     //       child: Padding(
+                          //     //         padding: const EdgeInsets.all(5.0),
+                          //     //         child: GestureDetector(
+                          //     //           onTap: () {
+                          //     //             // Navigator.pop(context);
+                          //     //           },
+                          //     //           child: const Row(
+                          //     //             children: [
+                          //     //               Icon(Icons.threesixty_sharp),
+                          //     //               Text('Counter'),
+                          //     //             ],
+                          //     //           ),
+                          //     //         ),
+                          //     //       ),
+                          //     //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),
@@ -1494,10 +1496,12 @@ class _NestedTabBarState extends State<NestedTabBar>
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatPage(
-                                      name: item.get("name"),
-                                      receiverID: item.get("userid"),
-                                      postType: "services",
-                                      postTypeID: servItem.id)));
+                                        name: item.get("name"),
+                                        receiverID: item.get("userid"),
+                                        postType: "services",
+                                        postTypeID: servItem.id,
+                                        readMsg: true,
+                                      )));
                         },
                         child: const Row(
                           children: [
@@ -1705,7 +1709,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                           onPressed:
                                                                               () async {
                                                                             Navigator.push(context,
-                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id, readMsg: true)));
                                                                           },
                                                                           icon:
                                                                               const Icon(Icons.chat_rounded),
@@ -1890,7 +1894,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                           onPressed:
                                                                               () async {
                                                                             Navigator.push(context,
-                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id)));
+                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id, readMsg: true)));
                                                                           },
                                                                           icon:
                                                                               const Icon(Icons.chat_rounded),

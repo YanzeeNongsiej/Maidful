@@ -7,6 +7,9 @@
 // import 'package:flutter_chat_bubble/bubble_type.dart';
 // import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/chatdao.dart';
@@ -44,6 +47,64 @@ class _ChatBubbleState extends State<ChatBubble> {
         .then((onValue) {
       setState(() {});
     });
+  }
+
+  Future<String> translateMessage(
+      String message, String from, String to) async {
+    final Uri url = Uri.parse(
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=$from&tl=$to&dt=t&q=${Uri.encodeComponent(message)}",
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      return jsonResponse[0][0][0]; // Extract translated text
+    } else {
+      return "Translation failed";
+    }
+  }
+
+  void _showTranslationPopup(BuildContext context, String message) async {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final result = await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        overlay.size.width / 2,
+        overlay.size.height / 2,
+        overlay.size.width / 2,
+        0,
+      ),
+      items: [
+        const PopupMenuItem(value: 'kha', child: Text('Translate to Khasi')),
+        const PopupMenuItem(value: 'en', child: Text('Translate to English')),
+      ],
+    );
+
+    if (result != null) {
+      String translatedText = await translateMessage(
+          message, result == 'kha' ? 'en' : 'kha', result);
+      _showTranslatedMessage(context, translatedText);
+    }
+  }
+
+  void _showTranslatedMessage(BuildContext context, String translatedText) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Translated Message'),
+          content: Text(translatedText),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -206,8 +267,10 @@ class _ChatBubbleState extends State<ChatBubble> {
             );
           });
     } else {
-      return Container(
-        decoration: BoxDecoration(
+      return GestureDetector(
+        onTap: () => _showTranslationPopup(context, widget.data['message']),
+        child: Container(
+          decoration: BoxDecoration(
             color: widget.isCurrentUser ? Colors.green : Colors.grey.shade500,
             borderRadius: widget.isCurrentUser
                 ? const BorderRadius.only(
@@ -217,12 +280,14 @@ class _ChatBubbleState extends State<ChatBubble> {
                 : const BorderRadius.only(
                     bottomLeft: Radius.circular(10),
                     bottomRight: Radius.circular(10),
-                    topRight: Radius.circular(10))),
-        padding: const EdgeInsets.all(10),
-        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        child: Text(
-          widget.data['message'],
-          style: const TextStyle(color: Colors.white),
+                    topRight: Radius.circular(10)),
+          ),
+          padding: const EdgeInsets.all(10),
+          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          child: Text(
+            widget.data['message'],
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       );
     }

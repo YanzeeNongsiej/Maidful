@@ -5,6 +5,7 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/hiremaid.dart';
+
 import 'package:ibitf_app/singleton.dart';
 
 // import 'package:marquee/marquee.dart';
@@ -14,12 +15,14 @@ class ChatPage extends StatefulWidget {
   final String receiverID;
   final String postType;
   final String postTypeID;
+  final bool readMsg;
   const ChatPage(
       {super.key,
       required this.name,
       required this.receiverID,
       required this.postType,
-      required this.postTypeID});
+      required this.postTypeID,
+      required this.readMsg});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -27,6 +30,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   bool ownServ = false;
+  OverlayEntry? overlayEntry;
   String userID = FirebaseAuth.instance.currentUser!.uid;
 // textController
   final TextEditingController _messageController = TextEditingController();
@@ -40,7 +44,6 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
     checkOwnServ().then((a) {
       GlobalVariables.instance.xmlHandler
           .loadStrings(GlobalVariables.instance.selected)
@@ -51,16 +54,28 @@ class _ChatPageState extends State<ChatPage> {
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await chatcontroller.sendMessage(widget.receiverID,
-          _messageController.text, "", widget.postType, widget.postTypeID);
+      await chatcontroller.sendMessage(
+          widget.receiverID,
+          _messageController.text,
+          "",
+          widget.postType,
+          widget.postTypeID,
+          false);
       _messageController.clear();
     }
   }
 
   Future<void> checkOwnServ() async {
-    DocumentSnapshot ds = await maidDao().getService(widget.postTypeID);
+    DocumentSnapshot ds;
+    bool posted = false;
+    ds = await maidDao().getService(widget.postTypeID);
+    if (!ds.exists) {
+      ds = await maidDao().getPosted(widget.postTypeID);
+      posted = true;
+    }
+
     // var item = ds.data();
-    if (userID == ds.get("userid")) {
+    if (userID == ds.get("userid") && posted == false) {
       ownServ = false;
     } else {
       if (ds.get("ack") == true) {
@@ -74,6 +89,9 @@ class _ChatPageState extends State<ChatPage> {
 // class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
+    if (GlobalVariables.instance.userrole == 1) {
+      ownServ = false;
+    }
     return Scaffold(
         appBar: AppBar(
           title: Row(
@@ -191,6 +209,9 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<DocumentSnapshot> getService(postTypeID) async {
     DocumentSnapshot qs = await maidDao().getService(postTypeID);
+    if (!qs.exists) {
+      qs = await maidDao().getPosted(postTypeID);
+    }
     return qs;
   }
 
@@ -218,7 +239,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  //build message item
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isCurrentUser =

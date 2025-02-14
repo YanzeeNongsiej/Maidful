@@ -3,16 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/model/chat.dart';
 import 'package:ibitf_app/DAO/chatdao.dart';
+import 'package:ibitf_app/notifservice.dart';
 
 class ChatController extends ChangeNotifier {
   final User? user = FirebaseAuth.instance.currentUser;
 
   Future<void> sendMessage(
-      String receiverID, message, ackid, postType, postTypeID) async {
+      String receiverID, message, ackid, postType, postTypeID, readMsg) async {
     //get current user info
     final String currentUserID = user!.uid;
     final String currentUserEmail = user!.email as String;
-    final Timestamp timestamp = Timestamp.now();
+    final timestamp = FieldValue.serverTimestamp();
 
     //create new message
 
@@ -26,7 +27,8 @@ class ChatController extends ChangeNotifier {
           timestamp: timestamp,
           ackID: "",
           post_Type: postType,
-          post_TypeID: postTypeID);
+          post_TypeID: postTypeID,
+          read_Msg: readMsg);
     } else {
       chat = Chat(
           senderID: currentUserID,
@@ -36,7 +38,8 @@ class ChatController extends ChangeNotifier {
           timestamp: timestamp,
           ackID: ackid,
           post_Type: postType,
-          post_TypeID: postTypeID);
+          post_TypeID: postTypeID,
+          read_Msg: readMsg);
     }
 
     //construct chatroom ID for two users(sorted)
@@ -45,7 +48,8 @@ class ChatController extends ChangeNotifier {
     String chatRoomID = ids.join('_');
 
     //add new message to database
-    await Chatdao().addNewMessage(chatRoomID, chat);
+    await Chatdao().addNewMessage(chatRoomID, chat).then((a) {});
+    notifyUser(receiverID, currentUserID, message, "INbox");
   }
 
   // get messages

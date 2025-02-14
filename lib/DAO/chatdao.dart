@@ -17,7 +17,8 @@ class Chatdao {
         "postType": newMessage.post_Type,
         "postTypeID": newMessage.post_TypeID,
         "users": users,
-        "timestamp": newMessage.timestamp,
+        "timestamp": FieldValue.serverTimestamp(),
+        "read_Msg": newMessage.read_Msg,
       };
       await FirebaseFirestore.instance
           .collection("chat_rooms")
@@ -35,13 +36,20 @@ class Chatdao {
           .update({
         "lastSender": newMessage.senderID,
         "lastMessage": newMessage.message,
-        "timestamp": newMessage.timestamp
+        "timestamp": FieldValue.serverTimestamp(),
+        "read_Msg": newMessage.read_Msg,
       });
       return await FirebaseFirestore.instance
           .collection("chat_rooms")
           .doc(chatRoomID)
           .collection("messages")
           .add(newMessage.toMap());
+      // return await FirebaseFirestore.instance
+      //     .collection("chat_rooms")
+      //     .doc(chatRoomID)
+      //     .collection("messages")
+      //     .doc()
+      //     .update({"timestamp": FieldValue.serverTimestamp()});
     }
   }
 

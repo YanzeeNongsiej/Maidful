@@ -161,9 +161,10 @@ class _JobProfileState extends State<JobProfile>
           "days": daysList,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }
@@ -184,9 +185,10 @@ class _JobProfileState extends State<JobProfile>
           "days": daysList,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }
@@ -207,9 +209,10 @@ class _JobProfileState extends State<JobProfile>
           "days": selectedDaysValue,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }

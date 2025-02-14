@@ -159,11 +159,12 @@ class _JobResumeState extends State<JobResume>
           "days": daysList,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
           "ack": false,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }
@@ -184,11 +185,12 @@ class _JobResumeState extends State<JobResume>
           "days": daysList,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
           "ack": false,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }
@@ -209,11 +211,12 @@ class _JobResumeState extends State<JobResume>
           "days": selectedDaysValue,
           "timing": timing,
           "services": selectedCheckBoxValue,
-          "negotiable": _selectedNegoValue == 1 ? "1" : "0",
+          "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
           "wage": wageBasis,
           "rate": ratecontroller.text,
           "work_history": workHistory,
           "ack": false,
+          "timestamp": FieldValue.serverTimestamp(),
         };
         isOK = true;
       }
