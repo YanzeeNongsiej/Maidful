@@ -64,7 +64,7 @@ class _ProfilePageState extends State<ProfilePage> {
     fetchSkills();
     profilepic();
     super.initState();
-    GlobalVariables.instance.addListener(fetchSkills);
+    //GlobalVariables.instance.addListener(fetchSkills);
   }
 
   Future<void> profilepic() async {
@@ -1677,156 +1677,144 @@ class _ProfilePageState extends State<ProfilePage> {
                           elevation: 10,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Expanded(
-                              child: Column(
-                                children: [
-                                  // _buildServiceList(),
+                            child: Column(
+                              children: [
+                                // _buildServiceList(),
 
-                                  showSkills(),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Card(
-                                        // elevation: 10,
-                                        color: Colors.blue,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(5.0),
-                                          child: GestureDetector(
-                                            onTap: () async {
-                                              List<String> options = [];
+                                showSkills(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Card(
+                                      // elevation: 10,
+                                      color: Colors.blue,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            List<String> options = [];
 
-                                              // Fetch skills from Firestore
-                                              QuerySnapshot snapshot =
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('skills')
-                                                      .get();
+                                            // Fetch skills from Firestore
+                                            QuerySnapshot snapshot =
+                                                await FirebaseFirestore.instance
+                                                    .collection('skills')
+                                                    .get();
 
-                                              //fetch only skills from the user
+                                            //fetch only skills from the user
 
-                                              print(snapshot.docs.first.id);
-                                              // print(myskills);
-                                              for (var doc in snapshot.docs) {
-                                                // Get the skill for the selected language
+                                            print(snapshot.docs.first.id);
+                                            // print(myskills);
+                                            for (var doc in snapshot.docs) {
+                                              // Get the skill for the selected language
 
-                                                if (doc[GlobalVariables.instance
-                                                            .selected] !=
-                                                        null &&
-                                                    !myskills
-                                                        .contains(doc.id)) {
-                                                  options.add(doc[
-                                                      GlobalVariables
-                                                          .instance.selected]);
-                                                }
+                                              if (doc[GlobalVariables
+                                                          .instance.selected] !=
+                                                      null &&
+                                                  !myskills.contains(doc.id)) {
+                                                options.add(doc[GlobalVariables
+                                                    .instance.selected]);
                                               }
-                                              List<String> selectedOptions = [];
+                                            }
+                                            List<String> selectedOptions = [];
 
-                                              await showDialog<List<String>>(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    title:
-                                                        Text("Select Options"),
-                                                    content:
-                                                        SingleChildScrollView(
-                                                      child: ListBody(
-                                                        children: options
-                                                            .map((option) {
-                                                          return CheckboxListTile(
-                                                            title: Text(option),
-                                                            value:
-                                                                selectedOptions
-                                                                    .contains(
-                                                                        option),
-                                                            onChanged:
-                                                                (bool? value) {
-                                                              if (value ==
-                                                                  true) {
-                                                                selectedOptions
-                                                                    .add(
-                                                                        option);
-                                                              } else {
-                                                                selectedOptions
-                                                                    .remove(
-                                                                        option);
-                                                              }
-                                                              // Update the UI
-                                                              (context
-                                                                      as Element)
-                                                                  .markNeedsBuild();
-                                                            },
-                                                          );
-                                                        }).toList(),
-                                                      ),
+                                            await showDialog<List<String>>(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text("Select Options"),
+                                                  content:
+                                                      SingleChildScrollView(
+                                                    child: ListBody(
+                                                      children:
+                                                          options.map((option) {
+                                                        return CheckboxListTile(
+                                                          title: Text(option),
+                                                          value: selectedOptions
+                                                              .contains(option),
+                                                          onChanged:
+                                                              (bool? value) {
+                                                            if (value == true) {
+                                                              selectedOptions
+                                                                  .add(option);
+                                                            } else {
+                                                              selectedOptions
+                                                                  .remove(
+                                                                      option);
+                                                            }
+                                                            // Update the UI
+                                                            (context as Element)
+                                                                .markNeedsBuild();
+                                                          },
+                                                        );
+                                                      }).toList(),
                                                     ),
-                                                    actions: [
-                                                      TextButton(
-                                                        child: Text("Cancel"),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child: Text("Done"),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          selectedskills =
-                                                              selectedOptions;
-                                                          for (var s
-                                                              in selectedskills!
-                                                                  .toList()) {
-                                                            updateScoreToDB(
-                                                                GlobalVariables
-                                                                    .instance
-                                                                    .selected,
-                                                                s,
-                                                                -1);
-                                                          }
-                                                          print(
-                                                              "Selected skills: $selectedskills");
-                                                          setState(() {});
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              ).then((result) {
-                                                if (result != null) {
-                                                  // Handle the selected options
-                                                  print(
-                                                      "Selected options: $result");
-                                                  selectedskills = result;
-                                                }
-                                              });
-                                              // Navigator.push(
-                                              //     context,
-                                              //     MaterialPageRoute(
-                                              //         builder: (context) =>
-                                              //             const JobResume()));
-                                            },
-                                            child: const Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.add,
-                                                  color: Colors.white,
-                                                ),
-                                                Text(
-                                                  'Add',
-                                                  style: TextStyle(
-                                                      color: Colors.white),
-                                                ),
-                                              ],
-                                            ),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      child: Text("Cancel"),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: Text("Done"),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        selectedskills =
+                                                            selectedOptions;
+                                                        for (var s
+                                                            in selectedskills!
+                                                                .toList()) {
+                                                          updateScoreToDB(
+                                                              GlobalVariables
+                                                                  .instance
+                                                                  .selected,
+                                                              s,
+                                                              -1);
+                                                        }
+                                                        print(
+                                                            "Selected skills: $selectedskills");
+                                                        setState(() {});
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ).then((result) {
+                                              if (result != null) {
+                                                // Handle the selected options
+                                                print(
+                                                    "Selected options: $result");
+                                                selectedskills = result;
+                                              }
+                                            });
+                                            // Navigator.push(
+                                            //     context,
+                                            //     MaterialPageRoute(
+                                            //         builder: (context) =>
+                                            //             const JobResume()));
+                                          },
+                                          child: const Row(
+                                            children: [
+                                              Icon(
+                                                Icons.add,
+                                                color: Colors.white,
+                                              ),
+                                              Text(
+                                                'Add',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),

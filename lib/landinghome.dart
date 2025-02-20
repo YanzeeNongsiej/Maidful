@@ -9,6 +9,7 @@ import 'package:ibitf_app/chatpage.dart';
 import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class LandingHomePage extends StatefulWidget {
@@ -709,17 +710,180 @@ class _NestedTabBarState extends State<NestedTabBar>
     );
   }
 
+  Widget _buildScheduleSection(String title, List<dynamic> schedule) {
+    List<String> scheduleTypes = ["Live-in", "Daily", "Hourly"];
+    List<String> activeSchedules = [];
+
+    for (int i = 0; i < schedule.length; i++) {
+      if (schedule[i]) {
+        activeSchedules.add(scheduleTypes[i]);
+      }
+    }
+
+    return _buildTextInfo(title, activeSchedules.join(", "));
+  }
+
+  Widget _buildServiceSection(String title, Map<String, dynamic> services) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300,
+            blurRadius: 5,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(title,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600])),
+          ),
+          SizedBox(height: 5),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: services.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(entry.key,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.black)),
+                    SizedBox(height: 2),
+                    Text("Rate: ${entry.value[0]} ${entry.value[1]}",
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, List<dynamic> timings) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300,
+            blurRadius: 5,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(title,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600])),
+          ),
+          SizedBox(height: 5),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: timings
+                .map((time) => Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        time,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextInfo(String title, String value) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300,
+            blurRadius: 5,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
         builder: (context) {
-          Map<String, dynamic> time = servItem.get('timing');
-          List<String> allShifts = [];
-          time.forEach((key, value) {
-            if (value is List<dynamic>) {
-              allShifts.addAll(value.map((e) => e.toString()));
-            }
-          });
           return AlertDialog(
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
@@ -732,121 +896,17 @@ class _NestedTabBarState extends State<NestedTabBar>
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('nam'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(item.get("name")),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('addr'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(item.get("address")),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('sched'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(GlobalVariables.instance.xmlHandler
-                            .getString(servItem.get("schedule"))),
-                      ],
-                    ),
-                    if (servItem.get("schedule") == 'Hourly')
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('day'),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          for (var i = 0; i < servItem.get("days").length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 30),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("${i + 1}. "),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString(servItem.get("days")[i])),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    if (servItem.get("schedule") == 'Daily' ||
-                        servItem.get("schedule") == 'Hourly')
-                      Column(children: [
-                        Row(children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('timing'),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                        ]),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 30),
-                              child: Text.rich(TextSpan(
-                                children: <InlineSpan>[
-                                  ...List.generate(
-                                    (allShifts.length / 2).ceil(),
-                                    (i) => TextSpan(
-                                      text:
-                                          'Shift ${i + 1} : ${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                      style:
-                                          const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                              )),
-                            ),
-                          ],
-                        )
-                      ]),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('serv'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        for (var i = 0;
-                            i < servItem.get("services").length;
-                            i++)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("${i + 1}. "),
-                                Expanded(
-                                  child: Text(GlobalVariables
-                                      .instance.xmlHandler
-                                      .getString(servItem.get("services")[i])),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
+                    _buildTextInfo("Name", item.get("name")),
+                    _buildTextInfo("Address", item.get("address")),
+                    _buildTextInfo(
+                        "Posted on",
+                        DateFormat('dd MMM yyyy').format(
+                            (servItem.get("timestamp") as Timestamp).toDate())),
+                    _buildScheduleSection("Schedule", servItem.get("schedule")),
+                    _buildServiceSection("Services", servItem.get("services")),
+                    _buildSection("Timing", servItem.get("timing")),
+                    _buildSection("Days Available", servItem.get("days")),
+                    _buildTextInfo("Negotiable", servItem.get("negotiable")),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -877,36 +937,6 @@ class _NestedTabBarState extends State<NestedTabBar>
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('wage'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString(servItem.get("wage")),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('rate'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25)),
-                              Text("\u{20B9}${servItem.get("rate")}",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25)),
-                            ],
-                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1689,9 +1719,13 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                         style: TextStyle(
                                                                             fontWeight:
                                                                                 FontWeight.bold)),
-                                                                    for (var a
-                                                                        in servitem.get(
-                                                                            "services"))
+
+                                                                    for (var a in servitem
+                                                                        .get(
+                                                                            "services")
+                                                                        .keys
+                                                                        .take(
+                                                                            2))
                                                                       Text(GlobalVariables
                                                                           .instance
                                                                           .xmlHandler

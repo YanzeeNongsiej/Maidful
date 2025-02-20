@@ -88,4 +88,8 @@ Do you want to take the assessment now? </string>
 <string name="current"> Current</string>
 <string name="employer"> Employer</string>
 <string name="maiden"> Maid</string>
+<string name="multiple">* You can choose more than one option </string>
+<string name="perday">per day</string>
+<string name="perhour">per hour</string>
+<string name="permonth">per month</string>
 </strings>

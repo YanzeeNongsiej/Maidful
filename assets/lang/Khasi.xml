@@ -13,7 +13,8 @@
 <string name="wrongpass">Ka Password kam dei</string>
 <string name="nam">Kyrteng:  </string>
 <string name="addr">Jaka Sah:  </string>
-<string name="sched">Ka jingtrei:  </string>
+<string name="sched">Ka Rukom Trei:  </string>
+<string name="multiple">* Phi lah ban jied bun tylli ia kine </string>
 <string name="day">Sngi:  </string>
 <string name="timing">Ka por:  </string>
 <string name="serv">Ki kam:  </string>
@@ -88,4 +89,7 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="current"> Ba Mynta</string>
 <string name="employer"> Trai-iing</string>
 <string name="maiden"> Nongtrei</string>
+<string name="perday">shi Sngi</string>
+<string name="perhour">shi Kynta</string>
+<string name="permonth">shi Bnai</string>
 </strings>
