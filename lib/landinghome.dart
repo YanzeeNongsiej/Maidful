@@ -7,7 +7,7 @@ import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
 import 'package:ibitf_app/notifservice.dart';
-
+import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -710,176 +710,6 @@ class _NestedTabBarState extends State<NestedTabBar>
     );
   }
 
-  Widget _buildScheduleSection(String title, List<dynamic> schedule) {
-    List<String> scheduleTypes = ["Live-in", "Daily", "Hourly"];
-    List<String> activeSchedules = [];
-
-    for (int i = 0; i < schedule.length; i++) {
-      if (schedule[i]) {
-        activeSchedules.add(scheduleTypes[i]);
-      }
-    }
-
-    return _buildTextInfo(title, activeSchedules.join(", "));
-  }
-
-  Widget _buildServiceSection(String title, Map<String, dynamic> services) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(12),
-      margin: EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 5,
-            spreadRadius: 1,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600])),
-          ),
-          SizedBox(height: 5),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: services.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(entry.key,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black)),
-                    SizedBox(height: 2),
-                    Text("Rate: ${entry.value[0]} ${entry.value[1]}",
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87)),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection(String title, List<dynamic> timings) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(12),
-      margin: EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 5,
-            spreadRadius: 1,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600])),
-          ),
-          SizedBox(height: 5),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: timings
-                .map((time) => Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        time,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextInfo(String title, String value) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      margin: EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 5,
-            spreadRadius: 1,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
-            ),
-          ),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
@@ -896,17 +726,17 @@ class _NestedTabBarState extends State<NestedTabBar>
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    _buildTextInfo("Name", item.get("name")),
-                    _buildTextInfo("Address", item.get("address")),
-                    _buildTextInfo(
+                    buildTextInfo("Name", item.get("name")),
+                    buildTextInfo("Address", item.get("address")),
+                    buildTextInfo(
                         "Posted on",
                         DateFormat('dd MMM yyyy').format(
                             (servItem.get("timestamp") as Timestamp).toDate())),
-                    _buildScheduleSection("Schedule", servItem.get("schedule")),
-                    _buildServiceSection("Services", servItem.get("services")),
-                    _buildSection("Timing", servItem.get("timing")),
-                    _buildSection("Days Available", servItem.get("days")),
-                    _buildTextInfo("Negotiable", servItem.get("negotiable")),
+                    buildScheduleSection("Schedule", servItem.get("schedule")),
+                    buildServiceSection("Services", servItem.get("services")),
+                    buildSection("Timing", servItem.get("timing")),
+                    buildSection("Days Available", servItem.get("days")),
+                    buildTextInfo("Negotiable", servItem.get("negotiable")),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

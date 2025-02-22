@@ -53,11 +53,13 @@
 <string name="maiddetails">Jingtip Ba Kham Bniah shaphang Nongtrei</string>
 <string name="servdetails">Jingtip Ba Kham Bniah shaphang Kane Ka Kam</string>
 <string name="addedsucc">Lah Dep Add</string>
+<string name="updatesucc">Lah Dep Edit</string>
 <string name="avail">Lah Don Lypa</string>
 <string name="addjob">Add Ka Kam</string>
 <string name="postjob">Post Ka Kam</string>
 <string name="error">Don error</string>
 <string name="addserv">Add Ka Kam</string>
+<string name="editserv">Edit Ka Kam</string>
 <string name="postserv">Post Ka Kam</string>
 <string name="setting">Kane kadei ka settings page</string>
 <string name="click"> ban pynkylla ia kine harum</string>

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ibitf_app/editService.dart';
 import 'package:ibitf_app/starrating.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -17,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:ibitf_app/rating.dart';
 import 'package:ibitf_app/notifservice.dart';
+import 'package:ibitf_app/buildui.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -787,88 +787,34 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildServiceList(item) {
-    Map<String, dynamic> time = item.get('timing');
-    List<String> allShifts = [];
-    time.forEach((key, value) {
-      if (value is List<dynamic>) {
-        allShifts.addAll(value.map((e) => e.toString()));
-      }
-    });
     return SingleChildScrollView(
       child: Expanded(
         child: Card(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: <InlineSpan>[
-                          const TextSpan(
-                            text: 'Schedule: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("schedule")),
-                          const TextSpan(
-                            text: '\nTiming: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          ...List.generate(
-                            (allShifts.length / 2).ceil(),
-                            (i) => TextSpan(
-                              text:
-                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                          ),
-                          const TextSpan(
-                            text: 'Posted on: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(
-                              text: DateFormat('dd-MMM-yyyy')
-                                  .format((item.get('timestamp')).toDate())),
-                          const TextSpan(
-                            text: '\nDays: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("days").join(', ')),
-                          const TextSpan(
-                            text: '\nServices: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("services").join(', ')),
-                          const TextSpan(
-                            text: '\nWage: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("wage")),
-                          const TextSpan(
-                            text: '\nNegotiable: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("negotiable")),
-                          const TextSpan(
-                            text: '\nWork History: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("work_history").join(', ')),
-                        ],
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              buildTextInfo(
+                  "Posted on",
+                  DateFormat('dd MMM yyyy')
+                      .format((item.get("timestamp") as Timestamp).toDate())),
+              buildScheduleSection("Schedule", item.get("schedule")),
+              buildServiceSection("Services", item.get("services")),
+              buildSection("Timing", item.get("timing")),
+              buildSection("Days Available", item.get("days")),
+              buildTextInfo("Negotiable", item.get("negotiable")),
+              buildSection("Work History", item.get("work_history")),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => JobResume(2),
+                          ),
+                        );
+                      },
                       child: Card(
                         color: Colors.blue,
                         child: Padding(
@@ -998,7 +944,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => EditServiceScreen(item: item),
+                            builder: (context) => JobResume(2),
                           ),
                         );
                       },

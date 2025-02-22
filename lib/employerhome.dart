@@ -350,6 +350,7 @@ class FAB extends StatefulWidget {
 }
 
 class _FABState extends State<FAB> {
+  bool _isServicePresent = false;
   bool showOptions = false;
   void toggleOptions() {
     setState(() {
@@ -358,63 +359,85 @@ class _FABState extends State<FAB> {
     });
   }
 
+  Future<void> _checkServiceExistence() async {
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection("services")
+        .where("userid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
+
+    setState(() {
+      _isServicePresent = querySnapshot
+          .docs.isNotEmpty; // Update the state based on query result
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _checkServiceExistence();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Visibility(
-          visible: showOptions, // Show the options only if showOptions is true
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (GlobalVariables.instance.urole == 1)
-                FloatingActionButton.extended(
-                  onPressed: () => {
-                    // Add your action for Option 1
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const JobResume()))
-                  },
-                  heroTag: null,
-                  label: const Text(
-                    "Post a Service (Maids)",
+    return Visibility(
+      visible: !_isServicePresent,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Visibility(
+            visible:
+                showOptions, // Show the options only if showOptions is true
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (GlobalVariables.instance.urole == 1)
+                  FloatingActionButton.extended(
+                    onPressed: () => {
+                      // Add your action for Option 1
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => JobResume(1)))
+                    },
+                    heroTag: null,
+                    label: const Text(
+                      "Post a Service (Maids)",
+                    ),
+                    icon: const Icon(Icons.person_add_rounded),
                   ),
-                  icon: const Icon(Icons.person_add_rounded),
-                ),
-              const SizedBox(height: 16.0),
-              if (GlobalVariables.instance.urole == 2)
-                FloatingActionButton.extended(
-                  onPressed: () => {
-                    // Add your action for Option 1
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const JobProfile()))
-                  },
-                  heroTag: null,
-                  label: const Text(
-                    "Post a Job Profile",
+                const SizedBox(height: 16.0),
+                if (GlobalVariables.instance.urole == 2)
+                  FloatingActionButton.extended(
+                    onPressed: () => {
+                      // Add your action for Option 1
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const JobProfile()))
+                    },
+                    heroTag: null,
+                    label: const Text(
+                      "Post a Job Profile",
+                    ),
+                    icon: const Icon(Icons.add_card_sharp),
                   ),
-                  icon: const Icon(Icons.add_card_sharp),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16.0),
-        FloatingActionButton(
-          onPressed: () {
-            toggleOptions(); // When the main FAB is pressed, toggleOptions is called
-          },
-          heroTag: null,
-          shape: const CircleBorder(),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          child: showOptions ? const Icon(Icons.close) : const Icon(Icons.add),
-        ),
-      ],
+          const SizedBox(height: 16.0),
+          FloatingActionButton(
+            onPressed: () {
+              toggleOptions(); // When the main FAB is pressed, toggleOptions is called
+            },
+            heroTag: null,
+            shape: const CircleBorder(),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            child:
+                showOptions ? const Icon(Icons.close) : const Icon(Icons.add),
+          ),
+        ],
+      ),
     );
   }
 }

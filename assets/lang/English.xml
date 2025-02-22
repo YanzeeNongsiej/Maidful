@@ -52,11 +52,13 @@
 <string name="maiddetails">Maid Details</string>
 <string name="servdetails">Service Details</string>
 <string name="addedsucc">Added Successfully</string>
+<string name="updatesucc">Updated Successfully</string>
 <string name="avail">Already Available</string>
 <string name="addjob">Add Job Profile</string>
 <string name="postjob">Post Job Profile</string>
 <string name="error">An error has occured</string>
 <string name="addserv">Add Service</string>
+<string name="editserv">Edit Service</string>
 <string name="postserv">Post Service</string>
 <string name="setting">This is the settings page</string>
 <string name="click"> to change the service details</string>

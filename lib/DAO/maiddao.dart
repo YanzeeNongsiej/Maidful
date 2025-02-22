@@ -27,13 +27,17 @@ class maidDao {
     List<Service> ser = [];
     for (var qss in qs.docs) {
       Service serv = Service(
+          nego: qss.get('negotiable'),
           days: List<String>.from(qss.get("days")),
-          rate: qss.get("rate"),
-          schedule: qss.get("schedule"),
-          services: List<String>.from(qss.get("services")),
-          timing: qss.get("timing"),
+          schedule: List<bool>.from(qss.get("schedule")),
+          services: Map<String, List<String>>.from({
+            for (var entry
+                in Map<String, dynamic>.from(qss.get("services")).entries)
+              entry.key: List<String>.from(entry.value
+                  as List) // Convert each List<dynamic> to List<String>
+          }),
+          timing: List<String>.from(qss.get("timing")),
           userid: qss.get("userid"),
-          wage: qss.get("wage"),
           work_history: List<String>.from(qss.get("work_history")),
           ack: qss.get("ack"));
       ser.add(serv);
@@ -157,6 +161,36 @@ class maidDao {
         .collection("services")
         .doc()
         .set(serviceInfoMap);
+  }
+
+  Future<void> updateServiceByUserId(
+      String userId, Map<String, dynamic> updatedServiceInfo) async {
+    try {
+      // Query the services collection for a document that matches the userId
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('services')
+          .where('userid',
+              isEqualTo:
+                  userId) // Assuming the 'userid' field stores the current user's ID
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Assuming you only have one document for a given user, get the first document
+        String documentId = querySnapshot.docs[0].id;
+
+        // Update the document with the new information
+        await FirebaseFirestore.instance
+            .collection('services')
+            .doc(documentId)
+            .update(updatedServiceInfo);
+
+        print("Service updated successfully");
+      } else {
+        print("No service found for this user.");
+      }
+    } catch (e) {
+      print("Error updating service: $e");
+    }
   }
 
   Future<DocumentSnapshot> getAck(String ackID) async {

@@ -12,7 +12,8 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
 
 class JobResume extends StatefulWidget {
-  const JobResume({super.key});
+  final int kind;
+  JobResume(this.kind, {Key? key}) : super(key: key);
 
   @override
   _JobResumeState createState() => _JobResumeState();
@@ -37,8 +38,7 @@ class _JobResumeState extends State<JobResume>
       servicesValid = false,
       rateValid = false;
   int whcount = 0, maxlinevalue = 1, timingcount = 0, maxlinevalueshift = 1;
-  int _selectedTimingValue = 1;
-  int _selectedWageValue = 1;
+
   int _selectedNegoValue = 1;
   final _formkey = GlobalKey<FormState>();
   List<String> variantsList = [];
@@ -66,7 +66,8 @@ class _JobResumeState extends State<JobResume>
   Map<String, bool> selectedServices = {};
   Map<String, TextEditingController> rateControllers = {};
   Map<String, List<String>> selectedRates = {};
-
+  late QuerySnapshot qs;
+  bool isLoading = true;
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
   Orientation? orientation;
@@ -80,9 +81,10 @@ class _JobResumeState extends State<JobResume>
 
   @override
   void initState() {
-    super.initState();
     showOptionsDay = true;
     showOptionsHour = true;
+    super.initState();
+
     GlobalVariables.instance.xmlHandler
         .loadStrings(GlobalVariables.instance.selected)
         .then((a) {
@@ -96,6 +98,10 @@ class _JobResumeState extends State<JobResume>
       _futureSkills = getSkills();
       setState(() {});
     });
+    if (widget.kind == 2) {
+      fetchOwnServices();
+      setState(() {});
+    }
   }
 
   // Function to validate if at least one time slot is selected
@@ -204,7 +210,7 @@ class _JobResumeState extends State<JobResume>
     };
     isOK = true;
 
-    if (isOK == true) {
+    if (widget.kind == 1) {
       await maidDao()
           .addService(uploadService)
           .whenComplete(
@@ -214,6 +220,19 @@ class _JobResumeState extends State<JobResume>
                     style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
+    } else if (widget.kind == 2) {
+      await maidDao()
+          .updateServiceByUserId(user!.uid, uploadService)
+          .whenComplete(
+              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                    GlobalVariables.instance.xmlHandler.getString('updatesucc'),
+                    style: const TextStyle(fontSize: 20.0),
+                  ))))
+          .whenComplete(() {
+        Navigator.pop(context);
+        Navigator.pop(context);
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
@@ -278,10 +297,34 @@ class _JobResumeState extends State<JobResume>
     }
   }
 
-  Future<List<Service>> fetchOwnServices() async {
+  void fetchOwnServices() async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
     List<Service> qs = await maidDao().getOwnServices(userID);
-    return qs;
+    for (var serv in qs) {
+      selectedTimings = serv.schedule;
+      selectedDaysValue = serv.days;
+      _selectedNegoValue = serv.nego == 'Yes' ? 1 : 0;
+
+      selectedRates = serv.services;
+      for (var i in selectedRates.keys) {
+        selectedServices[i] = true;
+        rateControllers[i] = TextEditingController();
+        rateControllers[i]!.text = selectedRates[i]![0];
+      }
+      _selectedTimeSlots = List.generate(24, (index) {
+        String slot = timeSlots[index];
+        return serv.timing.contains(slot);
+      });
+      finalrate = true;
+      workHistory = serv.work_history;
+      for (var i in workHistory) {
+        whcount = whcount + 1;
+        maxlinevalue = maxlinevalue + 1;
+        whcontroller.text = "${whcontroller.text}$whcount. $i\n";
+      }
+    }
+    print('im here qithout u${selectedRates}');
+    setState(() {});
   }
 
   bool showOptionsDay = false, showOptionsHour = false;
@@ -461,7 +504,9 @@ class _JobResumeState extends State<JobResume>
         ),
         foregroundColor: Colors.black,
         surfaceTintColor: Colors.red,
-        title: Text(GlobalVariables.instance.xmlHandler.getString('addserv')),
+        title: widget.kind == 1
+            ? Text(GlobalVariables.instance.xmlHandler.getString('addserv'))
+            : Text(GlobalVariables.instance.xmlHandler.getString('editserv')),
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
@@ -1438,8 +1483,11 @@ class _JobResumeState extends State<JobResume>
                               borderRadius: BorderRadius.circular(30)),
                           child: Center(
                               child: Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('postserv'),
+                            widget.kind == 1
+                                ? GlobalVariables.instance.xmlHandler
+                                    .getString('postserv')
+                                : GlobalVariables.instance.xmlHandler
+                                    .getString('editserv'),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 22.0,
