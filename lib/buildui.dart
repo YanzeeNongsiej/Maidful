@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 Widget buildScheduleSection(String title, List<dynamic> schedule) {
+  print('im in textschgedule');
   List<String> scheduleTypes = ["Live-in", "Daily", "Hourly"];
   List<String> activeSchedules = [];
 
@@ -14,6 +15,7 @@ Widget buildScheduleSection(String title, List<dynamic> schedule) {
 }
 
 Widget buildServiceSection(String title, Map<String, dynamic> services) {
+  print('im in service');
   return Container(
     width: double.infinity,
     padding: EdgeInsets.all(12),
@@ -71,6 +73,7 @@ Widget buildServiceSection(String title, Map<String, dynamic> services) {
 }
 
 Widget buildSection(String title, List<dynamic> timings) {
+  print('im in section');
   return Container(
     width: double.infinity,
     padding: EdgeInsets.all(12),
@@ -125,6 +128,7 @@ Widget buildSection(String title, List<dynamic> timings) {
 }
 
 Widget buildTextInfo(String title, String value) {
+  print('im in textinfo');
   return Container(
     padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
     margin: EdgeInsets.symmetric(vertical: 5),

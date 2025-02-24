@@ -17,6 +17,9 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:ibitf_app/rating.dart';
 import 'package:ibitf_app/notifservice.dart';
 import 'package:ibitf_app/buildui.dart';
+import 'package:ibitf_app/profile1.dart';
+import 'package:ibitf_app/profile2.dart';
+import 'package:ibitf_app/profile3.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -788,73 +791,105 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildServiceList(item) {
     return SingleChildScrollView(
-      child: Expanded(
-        child: Card(
-          child: Column(
+      child: Column(
+        children: [
+          Card(
+            child: Column(
+              children: [
+                buildTextInfo(
+                    "Posted on",
+                    DateFormat('dd MMM yyyy')
+                        .format((item.get("timestamp") as Timestamp).toDate())),
+                buildScheduleSection("Schedule", item.get("schedule")),
+                buildServiceSection("Services", item.get("services")),
+                buildSection("Timing", item.get("timing")),
+                buildSection("Days Available", item.get("days")),
+                buildTextInfo("Negotiable", item.get("negotiable")),
+                buildSection("Work History", item.get("work_history")),
+              ],
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              buildTextInfo(
-                  "Posted on",
-                  DateFormat('dd MMM yyyy')
-                      .format((item.get("timestamp") as Timestamp).toDate())),
-              buildScheduleSection("Schedule", item.get("schedule")),
-              buildServiceSection("Services", item.get("services")),
-              buildSection("Timing", item.get("timing")),
-              buildSection("Days Available", item.get("days")),
-              buildTextInfo("Negotiable", item.get("negotiable")),
-              buildSection("Work History", item.get("work_history")),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => JobResume(2),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        color: Colors.blue,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.edit, color: Colors.white),
-                              const Text('Edit',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage1(),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    color: Colors.blue,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit, color: Colors.white),
+                          const Text('P1',
+                              style: TextStyle(color: Colors.white)),
+                        ],
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        _confirmDelete(context, item.id, 'services');
-                      },
-                      child: Card(
-                        color: Colors.red[400],
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.delete, color: Colors.white),
-                              const Text('Remove',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage2(),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    color: Colors.red[400],
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete, color: Colors.white),
+                          const Text('P2',
+                              style: TextStyle(color: Colors.white)),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage3(),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    color: Colors.red[400],
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete, color: Colors.white),
+                          const Text('P3',
+                              style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1039,6 +1074,415 @@ class _ProfilePageState extends State<ProfilePage> {
           return SingleChildScrollView(
             child: Column(
               children: [
+                Container(
+                  width: MediaQuery.of(context).size.width / 1.1,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      colors: [Colors.teal, Colors.blueAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 5))
+                    ],
+                  ),
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _downloadUrl != null
+                            ? NetworkImage(_downloadUrl!)
+                            : loadImage() as ImageProvider<Object>,
+                        child: Align(
+                          alignment: Alignment
+                              .bottomRight, // Align icon to bottom right
+                          child: SizedBox(
+                            height: 40,
+                            width: 40,
+                            child: Card(
+                              margin: EdgeInsets.all(0),
+                              shape: CircleBorder(),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  color: Colors.grey,
+                                  size: 25,
+                                ),
+                                onPressed: () async {
+                                  // Your edit action here
+                                  ImagePicker picker = ImagePicker();
+                                  final XFile? image = await picker.pickImage(
+                                      source: ImageSource.gallery);
+                                  if (image == null) {
+                                    return; // No image selected
+                                  }
+
+                                  // Upload to Firebase Storage
+                                  File file = File(image.path);
+                                  try {
+                                    String fileName = image.name;
+                                    List<String> separate = fileName.split('.');
+                                    String filetype = separate[1];
+                                    final ref = FirebaseStorage.instance
+                                        .ref()
+                                        .child(
+                                            '${GlobalVariables.instance.username}/profile.$filetype');
+                                    await ref.putFile(file);
+                                    String downloadUrl =
+                                        await ref.getDownloadURL();
+
+                                    // Store URL in Firestore
+
+                                    QuerySnapshot querySnapshot =
+                                        await FirebaseFirestore.instance
+                                            .collection("users")
+                                            .where("userid", isEqualTo: userID)
+                                            .get();
+
+                                    // Check if we found any documents
+                                    if (querySnapshot.docs.isNotEmpty) {
+                                      // Assuming we want to update the first matching document
+                                      DocumentSnapshot userDoc =
+                                          querySnapshot.docs.first;
+
+                                      // Update the document with the new URL
+                                      await userDoc.reference.set(
+                                        {'url': downloadUrl},
+                                        SetOptions(merge: true),
+                                      );
+                                    }
+
+                                    setState(() {
+                                      // Update state with the new URL
+                                      _downloadUrl = downloadUrl;
+                                    });
+                                  } catch (e) {
+                                    print('Error $e');
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_3_rounded,
+                            color: Colors.grey,
+                          ),
+                          Text(usrname ?? "Not Available",
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_on_sharp,
+                            color: Colors.grey,
+                          ),
+                          Text(
+                            _myaddr ?? "Address",
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      userDoc?['gender'] == 1
+                          ? Text("Gender: Male",
+                              style: TextStyle(color: Colors.white70))
+                          : Text("Gender: Female",
+                              style: TextStyle(color: Colors.white70)),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Date of Birth: ",
+                              style: const TextStyle(color: Colors.white70)),
+                          Text("${userDoc?['dob']}",
+                              style: TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Languages known: ",
+                              style: const TextStyle(color: Colors.white70)),
+                          Text("${userDoc?['language'].join(', ')}",
+                              style: TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement edit profile functionality here
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              String newaddr =
+                                  _myaddr.toString(); // Use existing username
+                              String newusrname = usrname.toString();
+                              String newdob = _mydob.toString();
+                              return AlertDialog(
+                                title: Text('Edit Info'),
+                                content: StatefulBuilder(
+                                    builder: (context, StateSetter setState) {
+                                  return SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(GlobalVariables
+                                                .instance.xmlHandler
+                                                .getString('nam')),
+                                            Expanded(
+                                              child: TextField(
+                                                onChanged: (value) {
+                                                  newusrname =
+                                                      value; // Update username from input
+                                                },
+                                                controller:
+                                                    TextEditingController(
+                                                        text: usrname),
+                                                decoration: InputDecoration(
+                                                    hintText: "Enter new Name"),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Text(GlobalVariables
+                                                .instance.xmlHandler
+                                                .getString('addr')),
+                                            Expanded(
+                                              child: TextField(
+                                                onChanged: (value) {
+                                                  newaddr =
+                                                      value; // Update username from input
+                                                },
+                                                controller:
+                                                    TextEditingController(
+                                                        text: _myaddr),
+                                                decoration: InputDecoration(
+                                                    hintText:
+                                                        "Enter new Address"),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Text("Date of Birth:"),
+                                            Expanded(
+                                              child: TextFormField(
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return 'Please Select Date of Birth';
+                                                  }
+                                                  return _mydob;
+                                                },
+                                                controller: dobcontroller,
+
+                                                onTap: () {
+                                                  showDialog(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return AlertDialog(
+                                                          title: const Text(
+                                                              'Select Date of Birth'),
+                                                          content: SizedBox(
+                                                            height: 200,
+                                                            width: 300,
+                                                            child:
+                                                                CupertinoDatePicker(
+                                                              mode:
+                                                                  CupertinoDatePickerMode
+                                                                      .date,
+                                                              initialDateTime:
+                                                                  _mydob == ''
+                                                                      ? DateTime
+                                                                          .now()
+                                                                      : DateTime
+                                                                          .parse(
+                                                                              _mydob!),
+                                                              onDateTimeChanged:
+                                                                  (DateTime
+                                                                      newDateTime) {
+                                                                dt =
+                                                                    newDateTime;
+                                                                dte = dateFormat
+                                                                    .format(dt);
+                                                                dobcontroller
+                                                                    .text = dte;
+                                                                newdob =
+                                                                    dobcontroller
+                                                                        .text;
+                                                                _dobColor =
+                                                                    const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        0,
+                                                                        0,
+                                                                        0);
+                                                                // Do something
+                                                              },
+                                                            ),
+                                                          ),
+                                                        );
+                                                      });
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          FocusNode());
+                                                },
+
+                                                // controller: passwordcontroller,
+                                                decoration: InputDecoration(
+                                                    border: InputBorder.none,
+                                                    hintText: _mydob,
+                                                    hintStyle: TextStyle(
+                                                        color: _dobColor,
+                                                        fontSize: 18.0)),
+                                                readOnly: true,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          'Languages:',
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        SizedBox(
+                                          height: 100,
+                                          width: 300,
+                                          child: ListView.builder(
+                                            shrinkWrap: true,
+                                            itemCount: languages?.length,
+                                            itemBuilder: (context, index) {
+                                              String language =
+                                                  languages![index].toString();
+                                              return ListTile(
+                                                title: Text(language),
+                                                trailing: IconButton(
+                                                    icon: Icon(
+                                                        Icons.remove_circle,
+                                                        color: Colors.red),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        languages
+                                                            ?.remove(language);
+                                                      });
+                                                    }),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: TextField(
+                                                controller: _languageController,
+                                                decoration: InputDecoration(
+                                                  labelText:
+                                                      'Add a new language',
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 10),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                String newLanguage =
+                                                    _languageController.text
+                                                        .trim();
+                                                if (newLanguage.isNotEmpty &&
+                                                    !languages!.contains(
+                                                        newLanguage)) {
+                                                  setState(() {
+                                                    languages?.add(newLanguage);
+                                                  });
+                                                  _languageController.clear();
+                                                }
+                                              },
+                                              child: Text('Add'),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: Text('Cancel'),
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // Close dialog
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('Save'),
+                                    onPressed: () {
+                                      setState(() {
+                                        _myaddr = newaddr;
+                                        GlobalVariables.instance.username =
+                                            newusrname;
+                                        usrname = newusrname;
+                                        // Update username in UI
+                                        _mydob = newdob;
+                                      });
+                                      if (userDocId!.isNotEmpty) {
+                                        FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(userDocId)
+                                            .update({
+                                          'address': newaddr,
+                                          'name': newusrname,
+                                          'dob': newdob,
+                                          'language': languages,
+                                        }); // Update Firebase
+                                      }
+                                      Navigator.of(context)
+                                          .pop(); // Close dialog
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.teal,
+                          backgroundColor: Colors.white,
+                          shape: StadiumBorder(),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 10),
+                        ),
+                        child: Text("Edit Profile",
+                            style: TextStyle(fontSize: 16)),
+                      ),
+                    ],
+                  ),
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -1047,563 +1491,181 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundImage: _downloadUrl != null
-                                    ? NetworkImage(_downloadUrl!)
-                                    : loadImage() as ImageProvider<Object>,
-                                child: Align(
-                                  alignment: Alignment
-                                      .bottomRight, // Align icon to bottom right
-                                  child: SizedBox(
-                                    height: 40,
-                                    width: 40,
-                                    child: Card(
-                                      margin: EdgeInsets.all(0),
-                                      shape: CircleBorder(),
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.edit_outlined,
-                                          color: Colors.grey,
-                                          size: 25,
-                                        ),
-                                        onPressed: () async {
-                                          // Your edit action here
-                                          ImagePicker picker = ImagePicker();
-                                          final XFile? image =
-                                              await picker.pickImage(
-                                                  source: ImageSource.gallery);
-                                          if (image == null) {
-                                            return; // No image selected
-                                          }
-
-                                          // Upload to Firebase Storage
-                                          File file = File(image.path);
-                                          try {
-                                            String fileName = image.name;
-                                            List<String> separate =
-                                                fileName.split('.');
-                                            String filetype = separate[1];
-                                            final ref = FirebaseStorage.instance
-                                                .ref()
-                                                .child(
-                                                    '${GlobalVariables.instance.username}/profile.$filetype');
-                                            await ref.putFile(file);
-                                            String downloadUrl =
-                                                await ref.getDownloadURL();
-
-                                            // Store URL in Firestore
-
-                                            QuerySnapshot querySnapshot =
-                                                await FirebaseFirestore.instance
-                                                    .collection("users")
-                                                    .where("userid",
-                                                        isEqualTo: userID)
-                                                    .get();
-
-                                            // Check if we found any documents
-                                            if (querySnapshot.docs.isNotEmpty) {
-                                              // Assuming we want to update the first matching document
-                                              DocumentSnapshot userDoc =
-                                                  querySnapshot.docs.first;
-
-                                              // Update the document with the new URL
-                                              await userDoc.reference.set(
-                                                {'url': downloadUrl},
-                                                SetOptions(merge: true),
-                                              );
-                                            }
-
-                                            setState(() {
-                                              // Update state with the new URL
-                                              _downloadUrl = downloadUrl;
-                                            });
-                                          } catch (e) {
-                                            print('Error $e');
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
                               const SizedBox(height: 10, width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      // mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.person_3_rounded,
-                                          color: Colors.grey,
-                                        ),
-                                        Text(
-                                          usrname ?? "Username",
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.location_on_sharp,
-                                          color: Colors.grey,
-                                        ),
-                                        Text(
-                                          _myaddr ?? "Address",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.info_outline,
-                                            color: Colors.grey,
-                                          ),
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                // Use existing username
-                                                return AlertDialog(
-                                                  scrollable: true,
-                                                  titlePadding:
-                                                      EdgeInsets.all(0),
-                                                  title: Container(
-                                                    padding: EdgeInsets.all(16),
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.blue,
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        20),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        20))),
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.info_outline,
-                                                          size: 30,
-                                                          color: Colors.white,
-                                                        ),
-                                                        SizedBox(width: 10),
-                                                        Text(
-                                                          'User\'s General Info',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  content: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                              GlobalVariables
-                                                                  .instance
-                                                                  .xmlHandler
-                                                                  .getString(
-                                                                      'nam'),
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          Text("$usrname"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text("Username: ",
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          Text(
-                                                              "${userDoc?['username']}"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text("Gender: ",
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          userDoc?['gender'] ==
-                                                                  1
-                                                              ? Text("Male")
-                                                              : Text("Female"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                              "Date of Birth: ",
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          Text(
-                                                              "${userDoc?['dob']}"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                              GlobalVariables
-                                                                  .instance
-                                                                  .xmlHandler
-                                                                  .getString(
-                                                                      'addr'),
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          Text(
-                                                              "${userDoc?['address']}"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text("Primary Role: ",
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          userDoc?['role'] == 1
-                                                              ? Text("Maid")
-                                                              : Text(
-                                                                  "Home-Owner"),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                              "Language known: ",
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          Text(
-                                                              "${userDoc?['language'].toString()}"),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                      child: Text('Cancel'),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop(); // Close dialog
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.edit_outlined,
-                                            color: Colors.grey,
-                                          ),
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                String newaddr = _myaddr
-                                                    .toString(); // Use existing username
-                                                String newusrname =
-                                                    usrname.toString();
-                                                String newdob =
-                                                    _mydob.toString();
-                                                return AlertDialog(
-                                                  title: Text('Edit Info'),
-                                                  content: StatefulBuilder(
-                                                      builder: (context,
-                                                          StateSetter
-                                                              setState) {
-                                                    return SingleChildScrollView(
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              Text(GlobalVariables
-                                                                  .instance
-                                                                  .xmlHandler
-                                                                  .getString(
-                                                                      'nam')),
-                                                              Expanded(
-                                                                child:
-                                                                    TextField(
-                                                                  onChanged:
-                                                                      (value) {
-                                                                    newusrname =
-                                                                        value; // Update username from input
-                                                                  },
-                                                                  controller:
-                                                                      TextEditingController(
-                                                                          text:
-                                                                              usrname),
-                                                                  decoration:
-                                                                      InputDecoration(
-                                                                          hintText:
-                                                                              "Enter new Name"),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Text(GlobalVariables
-                                                                  .instance
-                                                                  .xmlHandler
-                                                                  .getString(
-                                                                      'addr')),
-                                                              Expanded(
-                                                                child:
-                                                                    TextField(
-                                                                  onChanged:
-                                                                      (value) {
-                                                                    newaddr =
-                                                                        value; // Update username from input
-                                                                  },
-                                                                  controller:
-                                                                      TextEditingController(
-                                                                          text:
-                                                                              _myaddr),
-                                                                  decoration:
-                                                                      InputDecoration(
-                                                                          hintText:
-                                                                              "Enter new Address"),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                  "Date of Birth:"),
-                                                              Expanded(
-                                                                child:
-                                                                    TextFormField(
-                                                                  validator:
-                                                                      (value) {
-                                                                    if (value ==
-                                                                            null ||
-                                                                        value
-                                                                            .isEmpty) {
-                                                                      return 'Please Select Date of Birth';
-                                                                    }
-                                                                    return _mydob;
-                                                                  },
-                                                                  controller:
-                                                                      dobcontroller,
+                                    // Row(
+                                    //   mainAxisAlignment: MainAxisAlignment.end,
+                                    //   children: [
+                                    //     IconButton(
+                                    //       icon: Icon(
+                                    //         Icons.info_outline,
+                                    //         color: Colors.grey,
+                                    //       ),
+                                    //       onPressed: () {
+                                    //         showDialog(
+                                    //           context: context,
+                                    //           builder: (BuildContext context) {
+                                    //             // Use existing username
+                                    //             return AlertDialog(
+                                    //               scrollable: true,
+                                    //               titlePadding:
+                                    //                   EdgeInsets.all(0),
+                                    //               title: Container(
+                                    //                 padding: EdgeInsets.all(16),
+                                    //                 decoration: BoxDecoration(
+                                    //                     color: Colors.blue,
+                                    //                     borderRadius:
+                                    //                         BorderRadius.only(
+                                    //                             topLeft: Radius
+                                    //                                 .circular(
+                                    //                                     20),
+                                    //                             topRight: Radius
+                                    //                                 .circular(
+                                    //                                     20))),
+                                    //                 child: Row(
+                                    //                   children: [
+                                    //                     Icon(
+                                    //                       Icons.info_outline,
+                                    //                       size: 30,
+                                    //                       color: Colors.white,
+                                    //                     ),
+                                    //                     SizedBox(width: 10),
+                                    //                     Text(
+                                    //                       'User\'s General Info',
+                                    //                       style: TextStyle(
+                                    //                           color:
+                                    //                               Colors.white),
+                                    //                     ),
+                                    //                   ],
+                                    //                 ),
+                                    //               ),
+                                    //               content: Column(
+                                    //                 crossAxisAlignment:
+                                    //                     CrossAxisAlignment
+                                    //                         .start,
+                                    //                 children: [
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text(
+                                    //                           GlobalVariables
+                                    //                               .instance
+                                    //                               .xmlHandler
+                                    //                               .getString(
+                                    //                                   'nam'),
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       Text("$usrname"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text("Username: ",
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       Text(
+                                    //                           "${userDoc?['username']}"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text("Gender: ",
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       userDoc?['gender'] ==
+                                    //                               1
+                                    //                           ? Text("Male")
+                                    //                           : Text("Female"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text(
+                                    //                           "Date of Birth: ",
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       Text(
+                                    //                           "${userDoc?['dob']}"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text(
+                                    //                           GlobalVariables
+                                    //                               .instance
+                                    //                               .xmlHandler
+                                    //                               .getString(
+                                    //                                   'addr'),
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       Text(
+                                    //                           "${userDoc?['address']}"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text("Primary Role: ",
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       userDoc?['role'] == 1
+                                    //                           ? Text("Maid")
+                                    //                           : Text(
+                                    //                               "Home-Owner"),
+                                    //                     ],
+                                    //                   ),
+                                    //                   Row(
+                                    //                     children: [
+                                    //                       Text(
+                                    //                           "Language known: ",
+                                    //                           style: const TextStyle(
+                                    //                               fontWeight:
+                                    //                                   FontWeight
+                                    //                                       .bold)),
+                                    //                       Text(
+                                    //                           "${userDoc?['language'].toString()}"),
+                                    //                     ],
+                                    //                   ),
+                                    //                 ],
+                                    //               ),
+                                    //               actions: <Widget>[
+                                    //                 TextButton(
+                                    //                   child: Text('Cancel'),
+                                    //                   onPressed: () {
+                                    //                     Navigator.of(context)
+                                    //                         .pop(); // Close dialog
+                                    //                   },
+                                    //                 ),
+                                    //               ],
+                                    //             );
+                                    //           },
+                                    //         );
+                                    //       },
+                                    //     ),
+                                    //     IconButton(
+                                    //       icon: Icon(
+                                    //         Icons.edit_outlined,
+                                    //         color: Colors.grey,
+                                    //       ),
+                                    //       onPressed: () {
 
-                                                                  onTap: () {
-                                                                    showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (context) {
-                                                                          return AlertDialog(
-                                                                            title:
-                                                                                const Text('Select Date of Birth'),
-                                                                            content:
-                                                                                SizedBox(
-                                                                              height: 200,
-                                                                              width: 300,
-                                                                              child: CupertinoDatePicker(
-                                                                                mode: CupertinoDatePickerMode.date,
-                                                                                initialDateTime: _mydob == '' ? DateTime.now() : DateTime.parse(_mydob!),
-                                                                                onDateTimeChanged: (DateTime newDateTime) {
-                                                                                  dt = newDateTime;
-                                                                                  dte = dateFormat.format(dt);
-                                                                                  dobcontroller.text = dte;
-                                                                                  newdob = dobcontroller.text;
-                                                                                  _dobColor = const Color.fromARGB(255, 0, 0, 0);
-                                                                                  // Do something
-                                                                                },
-                                                                              ),
-                                                                            ),
-                                                                          );
-                                                                        });
-                                                                    FocusScope.of(
-                                                                            context)
-                                                                        .requestFocus(
-                                                                            FocusNode());
-                                                                  },
-
-                                                                  // controller: passwordcontroller,
-                                                                  decoration: InputDecoration(
-                                                                      border: InputBorder
-                                                                          .none,
-                                                                      hintText:
-                                                                          _mydob,
-                                                                      hintStyle: TextStyle(
-                                                                          color:
-                                                                              _dobColor,
-                                                                          fontSize:
-                                                                              18.0)),
-                                                                  readOnly:
-                                                                      true,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Text(
-                                                            'Languages:',
-                                                            style: TextStyle(
-                                                                fontSize: 18,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 100,
-                                                            width: 300,
-                                                            child: ListView
-                                                                .builder(
-                                                              shrinkWrap: true,
-                                                              itemCount:
-                                                                  languages
-                                                                      ?.length,
-                                                              itemBuilder:
-                                                                  (context,
-                                                                      index) {
-                                                                String
-                                                                    language =
-                                                                    languages![
-                                                                            index]
-                                                                        .toString();
-                                                                return ListTile(
-                                                                  title: Text(
-                                                                      language),
-                                                                  trailing:
-                                                                      IconButton(
-                                                                          icon: Icon(
-                                                                              Icons.remove_circle,
-                                                                              color: Colors.red),
-                                                                          onPressed: () {
-                                                                            setState(() {
-                                                                              languages?.remove(language);
-                                                                            });
-                                                                          }),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Expanded(
-                                                                child:
-                                                                    TextField(
-                                                                  controller:
-                                                                      _languageController,
-                                                                  decoration:
-                                                                      InputDecoration(
-                                                                    labelText:
-                                                                        'Add a new language',
-                                                                    border:
-                                                                        OutlineInputBorder(),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                  width: 10),
-                                                              ElevatedButton(
-                                                                onPressed: () {
-                                                                  String
-                                                                      newLanguage =
-                                                                      _languageController
-                                                                          .text
-                                                                          .trim();
-                                                                  if (newLanguage
-                                                                          .isNotEmpty &&
-                                                                      !languages!
-                                                                          .contains(
-                                                                              newLanguage)) {
-                                                                    setState(
-                                                                        () {
-                                                                      languages
-                                                                          ?.add(
-                                                                              newLanguage);
-                                                                    });
-                                                                    _languageController
-                                                                        .clear();
-                                                                  }
-                                                                },
-                                                                child:
-                                                                    Text('Add'),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                      child: Text('Cancel'),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop(); // Close dialog
-                                                      },
-                                                    ),
-                                                    TextButton(
-                                                      child: Text('Save'),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          _myaddr = newaddr;
-                                                          GlobalVariables
-                                                                  .instance
-                                                                  .username =
-                                                              newusrname;
-                                                          usrname = newusrname;
-                                                          // Update username in UI
-                                                          _mydob = newdob;
-                                                        });
-                                                        if (userDocId!
-                                                            .isNotEmpty) {
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'users')
-                                                              .doc(userDocId)
-                                                              .update({
-                                                            'address': newaddr,
-                                                            'name': newusrname,
-                                                            'dob': newdob,
-                                                            'language':
-                                                                languages,
-                                                          }); // Update Firebase
-                                                        }
-                                                        Navigator.of(context)
-                                                            .pop(); // Close dialog
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
+                                    //       },
+                                    //     ),
+                                    //   ],
+                                    // ),
                                   ],
                                 ),
                               ),
@@ -2089,6 +2151,23 @@ class _ProfilePageState extends State<ProfilePage> {
                                                                           content:
                                                                               _buildServiceList(item),
                                                                           actions: [
+                                                                            TextButton(
+                                                                                onPressed: () {
+                                                                                  Navigator.push(
+                                                                                    context,
+                                                                                    MaterialPageRoute(
+                                                                                      builder: (context) => JobResume(2),
+                                                                                    ),
+                                                                                  ).whenComplete(() {
+                                                                                    setState(() {});
+                                                                                  });
+                                                                                },
+                                                                                child: Text('Edit')),
+                                                                            TextButton(
+                                                                                onPressed: () {
+                                                                                  _confirmDelete(context, item.id, 'services');
+                                                                                },
+                                                                                child: Text('Remove')),
                                                                             TextButton(
                                                                               onPressed: () {
                                                                                 Navigator.of(context).pop(false); // Return false

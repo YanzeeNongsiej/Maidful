@@ -219,7 +219,9 @@ class _JobResumeState extends State<JobResume>
                     GlobalVariables.instance.xmlHandler.getString('addedsucc'),
                     style: const TextStyle(fontSize: 20.0),
                   ))))
-          .whenComplete(() => Navigator.pop(context));
+          .whenComplete(() {
+        Navigator.pop(context);
+      });
     } else if (widget.kind == 2) {
       await maidDao()
           .updateServiceByUserId(user!.uid, uploadService)
