@@ -50,7 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
   List<String> allnames = [];
   List<String>? selectedskills;
   List<String> myskills = [];
-
+  bool isExpanded = false;
   List<int>? myscores;
   List<Map<String, dynamic>> skillsWithScores = [];
   List<List<dynamic>> skillsWithNames = [];
@@ -842,21 +842,19 @@ class _ProfilePageState extends State<ProfilePage> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Card(
-            child: Column(
-              children: [
-                buildTextInfo(
-                    "Posted on",
-                    DateFormat('dd MMM yyyy')
-                        .format((item.get("timestamp") as Timestamp).toDate())),
-                buildScheduleSection("Schedule", item.get("schedule")),
-                buildServiceSection("Services", item.get("services")),
-                buildSection("Timing", item.get("timing")),
-                buildSection("Days Available", item.get("days")),
-                buildTextInfo("Negotiable", item.get("negotiable")),
-                buildSection("Work History", item.get("work_history")),
-              ],
-            ),
+          Column(
+            children: [
+              buildTextInfo(
+                  "Posted on",
+                  DateFormat('dd MMM yyyy')
+                      .format((item.get("timestamp") as Timestamp).toDate())),
+              buildScheduleSection("Schedule", item.get("schedule")),
+              buildServiceSection("Services", item.get("services")),
+              buildSection("Timing", item.get("timing")),
+              buildSection("Days Available", item.get("days")),
+              buildTextInfo("Negotiable", item.get("negotiable")),
+              buildSection("Work History", item.get("work_history")),
+            ],
           ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -1257,103 +1255,105 @@ class _ProfilePageState extends State<ProfilePage> {
             return Text(
                 GlobalVariables.instance.xmlHandler.getString('noserv'));
           } else {
-            return GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1,
-                mainAxisSpacing: 1,
-              ),
-              shrinkWrap: true,
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final item = snapshot.data!.docs[index];
-                print(item.data());
-                return SingleChildScrollView(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Card(
-                          elevation:
-                              4, // Adds a slight shadow for a polished look
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                12), // Smooth edges for the card
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text('Service Details'),
-                                        content: _buildServiceList(item),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        JobResume(2),
-                                                  ),
-                                                ).whenComplete(() {
-                                                  setState(() {});
-                                                });
-                                              },
-                                              child: Text('Edit')),
-                                          TextButton(
-                                              onPressed: () {
-                                                _confirmDelete(context, item.id,
-                                                    'services');
-                                              },
-                                              child: Text('Remove')),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.of(context)
-                                                  .pop(false); // Return false
-                                            },
-                                            child: const Text('Cancel'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                }, // Action when tapped
-                                child: Padding(
-                                  padding: const EdgeInsets.all(
-                                      16.0), // Adjust padding for better spacing
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Center(
-                                        child: Column(
-                                          children: [
-                                            const Text('Posted on'),
-                                            Text(
-                                              DateFormat('dd-MMM-yyyy').format(
-                                                  (item.get('timestamp'))
-                                                      .toDate()),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
+            final item = snapshot.data!.docs.first;
+            return _buildServiceList(item);
+            // return GridView.builder(
+            //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            //     crossAxisCount: 1,
+            //     mainAxisSpacing: 1,
+            //   ),
+            //   shrinkWrap: true,
+            //   itemCount: snapshot.data!.docs.length,
+            //   itemBuilder: (context, index) {
+            //     final item = snapshot.data!.docs[index];
+            //     print(item.data());
+            //     return SingleChildScrollView(
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.start,
+            //         children: [
+            //           Expanded(
+            //             child: Card(
+            //               elevation:
+            //                   4, // Adds a slight shadow for a polished look
+            //               shape: RoundedRectangleBorder(
+            //                 borderRadius: BorderRadius.circular(
+            //                     12), // Smooth edges for the card
+            //               ),
+            //               child: Column(
+            //                 crossAxisAlignment: CrossAxisAlignment.start,
+            //                 children: [
+            //                   GestureDetector(
+            //                     onTap: () {
+            //                       showDialog(
+            //                         context: context,
+            //                         builder: (BuildContext context) {
+            //                           return AlertDialog(
+            //                             title: Text('Service Details'),
+            //                             content: _buildServiceList(item),
+            //                             actions: [
+            //                               TextButton(
+            //                                   onPressed: () {
+            //                                     Navigator.push(
+            //                                       context,
+            //                                       MaterialPageRoute(
+            //                                         builder: (context) =>
+            //                                             JobResume(2),
+            //                                       ),
+            //                                     ).whenComplete(() {
+            //                                       setState(() {});
+            //                                     });
+            //                                   },
+            //                                   child: Text('Edit')),
+            //                               TextButton(
+            //                                   onPressed: () {
+            //                                     _confirmDelete(context, item.id,
+            //                                         'services');
+            //                                   },
+            //                                   child: Text('Remove')),
+            //                               TextButton(
+            //                                 onPressed: () {
+            //                                   Navigator.of(context)
+            //                                       .pop(false); // Return false
+            //                                 },
+            //                                 child: const Text('Cancel'),
+            //                               ),
+            //                             ],
+            //                           );
+            //                         },
+            //                       );
+            //                     }, // Action when tapped
+            //                     child: Padding(
+            //                       padding: const EdgeInsets.all(
+            //                           16.0), // Adjust padding for better spacing
+            //                       child: Column(
+            //                         crossAxisAlignment:
+            //                             CrossAxisAlignment.start,
+            //                         children: [
+            //                           Center(
+            //                             child: Column(
+            //                               children: [
+            //                                 const Text('Posted on'),
+            //                                 Text(
+            //                                   DateFormat('dd-MMM-yyyy').format(
+            //                                       (item.get('timestamp'))
+            //                                           .toDate()),
+            //                                 ),
+            //                               ],
+            //                             ),
+            //                           ),
+            //                         ],
+            //                       ),
+            //                     ),
+            //                   ),
+            //                 ],
+            //               ),
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     );
+            //   },
+            // );
           }
         }
         return const SizedBox(); // Fallback in case of no data
@@ -2265,19 +2265,53 @@ class _ProfilePageState extends State<ProfilePage> {
                               ],
                             ),
                           ),
-                          Container(
-                            height: 150,
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            height: isExpanded
+                                ? MediaQuery.of(context).size.height
+                                : 150, // Expand/Collapse effect
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.vertical(
                                   bottom: Radius.circular(16)),
                             ),
-                            child: TabBarView(
+                            child: Column(
                               children: [
-                                showMyServices(),
-                                _tabContent("This is the content for Tab 2"),
-                                _tabContent("This is the content for Tab 3"),
+                                Expanded(
+                                  child: TabBarView(
+                                    children: [
+                                      showMyServices(),
+                                      _tabContent(
+                                          "This is the content for Tab 2"),
+                                      _tabContent(
+                                          "This is the content for Tab 3"),
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      isExpanded = !isExpanded;
+                                    });
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        isExpanded ? "Less" : "More",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.teal),
+                                      ),
+                                      Icon(
+                                          isExpanded
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: Colors.teal),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),

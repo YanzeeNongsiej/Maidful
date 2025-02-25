@@ -15,7 +15,6 @@ Widget buildScheduleSection(String title, List<dynamic> schedule) {
 }
 
 Widget buildServiceSection(String title, Map<String, dynamic> services) {
-  print('im in service');
   return Container(
     width: double.infinity,
     padding: EdgeInsets.all(12),
