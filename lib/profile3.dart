@@ -327,30 +327,6 @@ class _ProfilePageState extends State<ProfilePage3> {
 
   // Skill Item with Percentage Animation
   // Skill Section with Horizontal Scrolling
-  Widget _buildSkillsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Skills",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
-        // Horizontal List of Skills
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Horizontal scroll
-          child: Row(
-            children: skills.map((skill) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: _buildSkillItem(
-                    skill['name'] as String, skill['percentage'] as int),
-              );
-            }).toList(),
-          ),
-        ),
-        SizedBox(height: 16),
-      ],
-    );
-  }
 
 // Skill Item (Compact Card with Animation)
   Widget _buildSkillItem(String skillName, int percentage) {

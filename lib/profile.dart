@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -204,9 +206,11 @@ class _ProfilePageState extends State<ProfilePage> {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-          title: Text(GlobalVariables.instance.xmlHandler
-              .getString('skills')
-              .toString()),
+          collapsedIconColor: Colors.white,
+          title: Text(
+            GlobalVariables.instance.xmlHandler.getString('skills').toString(),
+            style: TextStyle(color: Colors.white),
+          ),
           children: [
             if (selectedskills == null && myskills.isEmpty)
               Text(GlobalVariables.instance.xmlHandler.getString('noskills')),
@@ -309,6 +313,19 @@ class _ProfilePageState extends State<ProfilePage> {
     return res;
   }
 
+  double getLevel(currentSkill) {
+    double level = 0;
+    int res = 0;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == currentSkill) {
+        res = s['score'];
+        // Return the score if found
+      }
+      level = res.toDouble().abs();
+    }
+    return level;
+  }
+
   Widget showLevels(currentSkill) {
     double level = 0;
     int res = 0;
@@ -369,84 +386,116 @@ class _ProfilePageState extends State<ProfilePage> {
           dividerColor: Colors.transparent, // Removes the divider line
         ),
         child: Column(
-          children: res.map((skill) {
-            // print("My skills is:$myskills");
-            // print("Current skill is$skill");
-            // print("$skillsWithScores is skills with scores");
-            // print(
-            //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
-            // print(
-            //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
-
-            return ListTile(
-              dense: true,
-              minVerticalPadding: 0,
-              contentPadding: EdgeInsets.all(0),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    skill == getSkillName(skill)
-                        ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
-                        : skill,
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  myskills.contains(getSkillName(skill)) && checkVerified(skill)
-                      ? showLevels(getSkillName(skill))
-                      : ElevatedButton(
-                          onPressed: () {
-                            // Add assessment
-
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text(
-                                      '${GlobalVariables.instance.xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
-                                  content: Text(GlobalVariables
-                                      .instance.xmlHandler
-                                      .getString('confirmassess')),
-                                  actions: [
-                                    TextButton.icon(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        icon: Icon(Icons.close),
-                                        label: Text(GlobalVariables
-                                            .instance.xmlHandler
-                                            .getString('no'))),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        // Add your confirm logic here
-                                        selectedskills = [];
-
-                                        Navigator.of(context).pop();
-                                        Navigator.of(context).push(MaterialPageRoute(
-                                            builder: (context) => Assessment(
-                                                skillsWithNames.firstWhere(
-                                                    (s) => s[0] == skill)[1],
-                                                onComplete:
-                                                    updateParentState))); // Close the dialog
-                                      },
-                                      icon: Icon(
-                                          Icons.check), // Icon for confirmation
-                                      label: Text(GlobalVariables
-                                          .instance.xmlHandler
-                                          .getString('yes')),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          child: Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('assessment'),
-                          )),
-                ],
+          children: [
+            GridView.builder(
+              shrinkWrap: true, // Important to make it fit inside the ListView
+              physics:
+                  NeverScrollableScrollPhysics(), // Disable grid scroll as ListView handles it
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 4 columns for a compact layout
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 2.5, // Aspect ratio to make skills smaller
               ),
-            );
-          }).toList(),
+              itemCount: myskills.length,
+              itemBuilder: (context, index) {
+                return _buildSkillItem(
+                  res[index] == getSkillName(res[index])
+                      ? skillsWithNames.firstWhere((s) => s[0] == res[index])[1]
+                      : res[index],
+                  (myskills.contains(getSkillName(res[index])) &&
+                          checkVerified(res[index]))
+                      ? getLevel(getSkillName(res[index])).toInt()
+                      : 0, // Provide a default value
+                );
+              },
+            ),
+            // Column(
+            //   children: res.map((skill) {
+            //     // print("My skills is:$myskills");
+            //     // print("Current skill is$skill");
+            //     // print("$skillsWithScores is skills with scores");
+            //     // print(
+            //     //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
+            //     // print(
+            //     //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
+
+            //     return ListTile(
+            //       dense: true,
+            //       minVerticalPadding: 0,
+            //       contentPadding: EdgeInsets.all(0),
+            //       title: Row(
+            //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //         children: [
+            //           Text(
+            //             skill == getSkillName(skill)
+            //                 ? skillsWithNames
+            //                     .firstWhere((s) => s[0] == skill)[1]
+            //                 : skill,
+            //             style: TextStyle(fontSize: 13),
+            //           ),
+            //           myskills.contains(getSkillName(skill)) &&
+            //                   checkVerified(skill)
+            //               ? showLevels(getSkillName(skill))
+            //               : ElevatedButton(
+            //                   onPressed: () {
+            //                     // Add assessment
+
+            //                     showDialog(
+            //                       context: context,
+            //                       builder: (BuildContext context) {
+            //                         return AlertDialog(
+            //                           title: Text(
+            //                               '${GlobalVariables.instance.xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
+            //                           content: Text(GlobalVariables
+            //                               .instance.xmlHandler
+            //                               .getString('confirmassess')),
+            //                           actions: [
+            //                             TextButton.icon(
+            //                                 onPressed: () {
+            //                                   Navigator.of(context).pop();
+            //                                 },
+            //                                 icon: Icon(Icons.close),
+            //                                 label: Text(GlobalVariables
+            //                                     .instance.xmlHandler
+            //                                     .getString('no'))),
+            //                             TextButton.icon(
+            //                               onPressed: () {
+            //                                 // Add your confirm logic here
+            //                                 selectedskills = [];
+
+            //                                 Navigator.of(context).pop();
+            //                                 Navigator.of(context).push(
+            //                                     MaterialPageRoute(
+            //                                         builder: (context) => Assessment(
+            //                                             skillsWithNames
+            //                                                 .firstWhere((s) =>
+            //                                                     s[0] ==
+            //                                                     skill)[1],
+            //                                             onComplete:
+            //                                                 updateParentState))); // Close the dialog
+            //                               },
+            //                               icon: Icon(Icons
+            //                                   .check), // Icon for confirmation
+            //                               label: Text(GlobalVariables
+            //                                   .instance.xmlHandler
+            //                                   .getString('yes')),
+            //                             ),
+            //                           ],
+            //                         );
+            //                       },
+            //                     );
+            //                   },
+            //                   child: Text(
+            //                     GlobalVariables.instance.xmlHandler
+            //                         .getString('assessment'),
+            //                   )),
+            //         ],
+            //       ),
+            //     );
+            //   }).toList(),
+            // ),
+          ],
         ),
       ),
     );
@@ -1066,6 +1115,266 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Widget showAssess() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
+        border: Border.all(color: Colors.cyan, width: 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
+        ],
+      ),
+      padding: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
+      child: GestureDetector(
+          onTap: () {
+            // Add assessment
+
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(
+                      '${GlobalVariables.instance.xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
+                  content: Text(GlobalVariables.instance.xmlHandler
+                      .getString('confirmassess')),
+                  actions: [
+                    TextButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        icon: Icon(Icons.close),
+                        label: Text(GlobalVariables.instance.xmlHandler
+                            .getString('no'))),
+                    TextButton.icon(
+                      onPressed: () {
+                        // Add your confirm logic here
+                        selectedskills = [];
+
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => Assessment(
+                                skillsWithNames
+                                    .firstWhere((s) => s[0] == skill)[1],
+                                onComplete:
+                                    updateParentState))); // Close the dialog
+                      },
+                      icon: Icon(Icons.check), // Icon for confirmation
+                      label: Text(
+                        GlobalVariables.instance.xmlHandler.getString('yes'),
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          child: Text(
+            GlobalVariables.instance.xmlHandler.getString('assessment'),
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600, color: Colors.cyan),
+          )),
+    );
+  }
+
+  Widget _buildSkillItem(String skillName, int percentage) {
+    return Container(
+      padding: EdgeInsets.all(8), // Reduced padding to make skill card smaller
+      decoration: BoxDecoration(
+        color: Colors.teal[100],
+        borderRadius: BorderRadius.circular(10),
+        // Slightly smaller radius
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Use Expanded to allow the text to take as much space as needed
+          Expanded(
+            child: Align(
+              alignment: Alignment.center, // Optional: for centering the text
+              child: Text(
+                skillName,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center, // Ensures text is centered
+              ),
+            ),
+          ),
+          SizedBox(height: 4),
+          percentage == 0
+              ? showAssess()
+              : Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: Duration(seconds: 5),
+                      width: double.infinity,
+                      height: 5, // Reduced height of the progress bar
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.teal,
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: percentage / 100,
+                        child: Container(
+                          color: Colors.tealAccent,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text("$percentage%",
+                        style:
+                            TextStyle(fontSize: 10, color: Colors.grey[800])),
+                  ],
+                ),
+          // Smaller font size
+        ],
+      ),
+    );
+  }
+
+  Widget _tabContent(String text) {
+    return Center(
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget showMyServices() {
+    return FutureBuilder(
+      future: fetchOwnServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text("loading...");
+        }
+        if (snapshot.hasData) {
+          if (snapshot.data!.docs.isEmpty) {
+            return Text(
+                GlobalVariables.instance.xmlHandler.getString('noserv'));
+          } else {
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                mainAxisSpacing: 1,
+              ),
+              shrinkWrap: true,
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                final item = snapshot.data!.docs[index];
+                print(item.data());
+                return SingleChildScrollView(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Card(
+                          elevation:
+                              4, // Adds a slight shadow for a polished look
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                12), // Smooth edges for the card
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text('Service Details'),
+                                        content: _buildServiceList(item),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        JobResume(2),
+                                                  ),
+                                                ).whenComplete(() {
+                                                  setState(() {});
+                                                });
+                                              },
+                                              child: Text('Edit')),
+                                          TextButton(
+                                              onPressed: () {
+                                                _confirmDelete(context, item.id,
+                                                    'services');
+                                              },
+                                              child: Text('Remove')),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context)
+                                                  .pop(false); // Return false
+                                            },
+                                            child: const Text('Cancel'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }, // Action when tapped
+                                child: Padding(
+                                  padding: const EdgeInsets.all(
+                                      16.0), // Adjust padding for better spacing
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Center(
+                                        child: Column(
+                                          children: [
+                                            const Text('Posted on'),
+                                            Text(
+                                              DateFormat('dd-MMM-yyyy').format(
+                                                  (item.get('timestamp'))
+                                                      .toDate()),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+        }
+        return const SizedBox(); // Fallback in case of no data
+      },
+    );
+  }
+
+  Widget _tabItem(String title) {
+    return Tab(
+      child: Container(
+        alignment: Alignment.center,
+        height: 40, // Make tab height consistent
+        child: Text(
+          title,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -1483,345 +1792,405 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              const SizedBox(height: 10, width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Row(
-                                    //   mainAxisAlignment: MainAxisAlignment.end,
-                                    //   children: [
-                                    //     IconButton(
-                                    //       icon: Icon(
-                                    //         Icons.info_outline,
-                                    //         color: Colors.grey,
-                                    //       ),
-                                    //       onPressed: () {
-                                    //         showDialog(
-                                    //           context: context,
-                                    //           builder: (BuildContext context) {
-                                    //             // Use existing username
-                                    //             return AlertDialog(
-                                    //               scrollable: true,
-                                    //               titlePadding:
-                                    //                   EdgeInsets.all(0),
-                                    //               title: Container(
-                                    //                 padding: EdgeInsets.all(16),
-                                    //                 decoration: BoxDecoration(
-                                    //                     color: Colors.blue,
-                                    //                     borderRadius:
-                                    //                         BorderRadius.only(
-                                    //                             topLeft: Radius
-                                    //                                 .circular(
-                                    //                                     20),
-                                    //                             topRight: Radius
-                                    //                                 .circular(
-                                    //                                     20))),
-                                    //                 child: Row(
-                                    //                   children: [
-                                    //                     Icon(
-                                    //                       Icons.info_outline,
-                                    //                       size: 30,
-                                    //                       color: Colors.white,
-                                    //                     ),
-                                    //                     SizedBox(width: 10),
-                                    //                     Text(
-                                    //                       'User\'s General Info',
-                                    //                       style: TextStyle(
-                                    //                           color:
-                                    //                               Colors.white),
-                                    //                     ),
-                                    //                   ],
-                                    //                 ),
-                                    //               ),
-                                    //               content: Column(
-                                    //                 crossAxisAlignment:
-                                    //                     CrossAxisAlignment
-                                    //                         .start,
-                                    //                 children: [
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text(
-                                    //                           GlobalVariables
-                                    //                               .instance
-                                    //                               .xmlHandler
-                                    //                               .getString(
-                                    //                                   'nam'),
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       Text("$usrname"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text("Username: ",
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       Text(
-                                    //                           "${userDoc?['username']}"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text("Gender: ",
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       userDoc?['gender'] ==
-                                    //                               1
-                                    //                           ? Text("Male")
-                                    //                           : Text("Female"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text(
-                                    //                           "Date of Birth: ",
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       Text(
-                                    //                           "${userDoc?['dob']}"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text(
-                                    //                           GlobalVariables
-                                    //                               .instance
-                                    //                               .xmlHandler
-                                    //                               .getString(
-                                    //                                   'addr'),
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       Text(
-                                    //                           "${userDoc?['address']}"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text("Primary Role: ",
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       userDoc?['role'] == 1
-                                    //                           ? Text("Maid")
-                                    //                           : Text(
-                                    //                               "Home-Owner"),
-                                    //                     ],
-                                    //                   ),
-                                    //                   Row(
-                                    //                     children: [
-                                    //                       Text(
-                                    //                           "Language known: ",
-                                    //                           style: const TextStyle(
-                                    //                               fontWeight:
-                                    //                                   FontWeight
-                                    //                                       .bold)),
-                                    //                       Text(
-                                    //                           "${userDoc?['language'].toString()}"),
-                                    //                     ],
-                                    //                   ),
-                                    //                 ],
-                                    //               ),
-                                    //               actions: <Widget>[
-                                    //                 TextButton(
-                                    //                   child: Text('Cancel'),
-                                    //                   onPressed: () {
-                                    //                     Navigator.of(context)
-                                    //                         .pop(); // Close dialog
-                                    //                   },
-                                    //                 ),
-                                    //               ],
-                                    //             );
-                                    //           },
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //     IconButton(
-                                    //       icon: Icon(
-                                    //         Icons.edit_outlined,
-                                    //         color: Colors.grey,
-                                    //       ),
-                                    //       onPressed: () {
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: Card(
+                //         child: Padding(
+                //           padding: const EdgeInsets.all(8.0),
+                //           child: Row(
+                //             children: [
+                //               const SizedBox(height: 10, width: 10),
+                //               Expanded(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: [
+                //                     // Row(
+                //                     //   mainAxisAlignment: MainAxisAlignment.end,
+                //                     //   children: [
+                //                     //     IconButton(
+                //                     //       icon: Icon(
+                //                     //         Icons.info_outline,
+                //                     //         color: Colors.grey,
+                //                     //       ),
+                //                     //       onPressed: () {
+                //                     //         showDialog(
+                //                     //           context: context,
+                //                     //           builder: (BuildContext context) {
+                //                     //             // Use existing username
+                //                     //             return AlertDialog(
+                //                     //               scrollable: true,
+                //                     //               titlePadding:
+                //                     //                   EdgeInsets.all(0),
+                //                     //               title: Container(
+                //                     //                 padding: EdgeInsets.all(16),
+                //                     //                 decoration: BoxDecoration(
+                //                     //                     color: Colors.blue,
+                //                     //                     borderRadius:
+                //                     //                         BorderRadius.only(
+                //                     //                             topLeft: Radius
+                //                     //                                 .circular(
+                //                     //                                     20),
+                //                     //                             topRight: Radius
+                //                     //                                 .circular(
+                //                     //                                     20))),
+                //                     //                 child: Row(
+                //                     //                   children: [
+                //                     //                     Icon(
+                //                     //                       Icons.info_outline,
+                //                     //                       size: 30,
+                //                     //                       color: Colors.white,
+                //                     //                     ),
+                //                     //                     SizedBox(width: 10),
+                //                     //                     Text(
+                //                     //                       'User\'s General Info',
+                //                     //                       style: TextStyle(
+                //                     //                           color:
+                //                     //                               Colors.white),
+                //                     //                     ),
+                //                     //                   ],
+                //                     //                 ),
+                //                     //               ),
+                //                     //               content: Column(
+                //                     //                 crossAxisAlignment:
+                //                     //                     CrossAxisAlignment
+                //                     //                         .start,
+                //                     //                 children: [
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text(
+                //                     //                           GlobalVariables
+                //                     //                               .instance
+                //                     //                               .xmlHandler
+                //                     //                               .getString(
+                //                     //                                   'nam'),
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       Text("$usrname"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text("Username: ",
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       Text(
+                //                     //                           "${userDoc?['username']}"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text("Gender: ",
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       userDoc?['gender'] ==
+                //                     //                               1
+                //                     //                           ? Text("Male")
+                //                     //                           : Text("Female"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text(
+                //                     //                           "Date of Birth: ",
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       Text(
+                //                     //                           "${userDoc?['dob']}"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text(
+                //                     //                           GlobalVariables
+                //                     //                               .instance
+                //                     //                               .xmlHandler
+                //                     //                               .getString(
+                //                     //                                   'addr'),
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       Text(
+                //                     //                           "${userDoc?['address']}"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text("Primary Role: ",
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       userDoc?['role'] == 1
+                //                     //                           ? Text("Maid")
+                //                     //                           : Text(
+                //                     //                               "Home-Owner"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                   Row(
+                //                     //                     children: [
+                //                     //                       Text(
+                //                     //                           "Language known: ",
+                //                     //                           style: const TextStyle(
+                //                     //                               fontWeight:
+                //                     //                                   FontWeight
+                //                     //                                       .bold)),
+                //                     //                       Text(
+                //                     //                           "${userDoc?['language'].toString()}"),
+                //                     //                     ],
+                //                     //                   ),
+                //                     //                 ],
+                //                     //               ),
+                //                     //               actions: <Widget>[
+                //                     //                 TextButton(
+                //                     //                   child: Text('Cancel'),
+                //                     //                   onPressed: () {
+                //                     //                     Navigator.of(context)
+                //                     //                         .pop(); // Close dialog
+                //                     //                   },
+                //                     //                 ),
+                //                     //               ],
+                //                     //             );
+                //                     //           },
+                //                     //         );
+                //                     //       },
+                //                     //     ),
+                //                     //     IconButton(
+                //                     //       icon: Icon(
+                //                     //         Icons.edit_outlined,
+                //                     //         color: Colors.grey,
+                //                     //       ),
+                //                     //       onPressed: () {
 
-                                    //       },
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                //                     //       },
+                //                     //     ),
+                //                     //   ],
+                //                     // ),
+                //                   ],
+                //                 ),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
                 //Row(children: [Expanded(child: showDocuments())]),
                 if (GlobalVariables.instance.urole == 1)
                   Row(
                     children: [
                       Expanded(
-                        child: Card(
-                          elevation: 10,
+                        child: Container(
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
                               children: [
                                 // _buildServiceList(),
 
-                                showSkills(),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Card(
-                                      // elevation: 10,
-                                      color: Colors.blue,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(5.0),
-                                        child: GestureDetector(
-                                          onTap: () async {
-                                            List<String> options = [];
-
-                                            // Fetch skills from Firestore
-                                            QuerySnapshot snapshot =
-                                                await FirebaseFirestore.instance
-                                                    .collection('skills')
-                                                    .get();
-
-                                            //fetch only skills from the user
-
-                                            print(snapshot.docs.first.id);
-                                            // print(myskills);
-                                            for (var doc in snapshot.docs) {
-                                              // Get the skill for the selected language
-
-                                              if (doc[GlobalVariables
-                                                          .instance.selected] !=
-                                                      null &&
-                                                  !myskills.contains(doc.id)) {
-                                                options.add(doc[GlobalVariables
-                                                    .instance.selected]);
-                                              }
-                                            }
-                                            List<String> selectedOptions = [];
-
-                                            await showDialog<List<String>>(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return AlertDialog(
-                                                  title: Text("Select Options"),
-                                                  content:
-                                                      SingleChildScrollView(
-                                                    child: ListBody(
-                                                      children:
-                                                          options.map((option) {
-                                                        return CheckboxListTile(
-                                                          title: Text(option),
-                                                          value: selectedOptions
-                                                              .contains(option),
-                                                          onChanged:
-                                                              (bool? value) {
-                                                            if (value == true) {
-                                                              selectedOptions
-                                                                  .add(option);
-                                                            } else {
-                                                              selectedOptions
-                                                                  .remove(
-                                                                      option);
-                                                            }
-                                                            // Update the UI
-                                                            (context as Element)
-                                                                .markNeedsBuild();
-                                                          },
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      child: Text("Cancel"),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                    ),
-                                                    TextButton(
-                                                      child: Text("Done"),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        selectedskills =
-                                                            selectedOptions;
-                                                        for (var s
-                                                            in selectedskills!
-                                                                .toList()) {
-                                                          updateScoreToDB(
-                                                              GlobalVariables
-                                                                  .instance
-                                                                  .selected,
-                                                              s,
-                                                              -1);
-                                                        }
-                                                        print(
-                                                            "Selected skills: $selectedskills");
-                                                        setState(() {});
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            ).then((result) {
-                                              if (result != null) {
-                                                // Handle the selected options
-                                                print(
-                                                    "Selected options: $result");
-                                                selectedskills = result;
-                                              }
-                                            });
-                                            // Navigator.push(
-                                            //     context,
-                                            //     MaterialPageRoute(
-                                            //         builder: (context) =>
-                                            //             const JobResume()));
-                                          },
-                                          child: const Row(
-                                            children: [
-                                              Icon(
-                                                Icons.add,
-                                                color: Colors.white,
-                                              ),
-                                              Text(
-                                                'Add',
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                Container(
+                                    padding: EdgeInsets.only(
+                                        left: 10, right: 10, bottom: 10),
+                                    width:
+                                        MediaQuery.of(context).size.width / 1.1,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(24),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.blueAccent,
+                                          Colors.teal,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 10,
+                                            offset: Offset(0, 5))
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                    child: Column(
+                                      children: [
+                                        showSkills(),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Card(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          30)),
+                                              // elevation: 10,
+                                              color: Colors.white,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 15.0,
+                                                    right: 20,
+                                                    top: 5,
+                                                    bottom: 5),
+                                                child: GestureDetector(
+                                                  onTap: () async {
+                                                    List<String> options = [];
+
+                                                    // Fetch skills from Firestore
+                                                    QuerySnapshot snapshot =
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'skills')
+                                                            .get();
+
+                                                    //fetch only skills from the user
+
+                                                    print(
+                                                        snapshot.docs.first.id);
+                                                    // print(myskills);
+                                                    for (var doc
+                                                        in snapshot.docs) {
+                                                      // Get the skill for the selected language
+
+                                                      if (doc[GlobalVariables
+                                                                  .instance
+                                                                  .selected] !=
+                                                              null &&
+                                                          !myskills.contains(
+                                                              doc.id)) {
+                                                        options.add(doc[
+                                                            GlobalVariables
+                                                                .instance
+                                                                .selected]);
+                                                      }
+                                                    }
+                                                    List<String>
+                                                        selectedOptions = [];
+
+                                                    await showDialog<
+                                                        List<String>>(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return AlertDialog(
+                                                          title: Text(
+                                                              "Select Options"),
+                                                          content:
+                                                              SingleChildScrollView(
+                                                            child: ListBody(
+                                                              children: options
+                                                                  .map(
+                                                                      (option) {
+                                                                return CheckboxListTile(
+                                                                  title: Text(
+                                                                      option),
+                                                                  value: selectedOptions
+                                                                      .contains(
+                                                                          option),
+                                                                  onChanged:
+                                                                      (bool?
+                                                                          value) {
+                                                                    if (value ==
+                                                                        true) {
+                                                                      selectedOptions
+                                                                          .add(
+                                                                              option);
+                                                                    } else {
+                                                                      selectedOptions
+                                                                          .remove(
+                                                                              option);
+                                                                    }
+                                                                    // Update the UI
+                                                                    (context
+                                                                            as Element)
+                                                                        .markNeedsBuild();
+                                                                  },
+                                                                );
+                                                              }).toList(),
+                                                            ),
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              child: Text(
+                                                                  "Cancel"),
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                            ),
+                                                            TextButton(
+                                                              child:
+                                                                  Text("Done"),
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                                selectedskills =
+                                                                    selectedOptions;
+                                                                for (var s
+                                                                    in selectedskills!
+                                                                        .toList()) {
+                                                                  updateScoreToDB(
+                                                                      GlobalVariables
+                                                                          .instance
+                                                                          .selected,
+                                                                      s,
+                                                                      -1);
+                                                                }
+                                                                print(
+                                                                    "Selected skills: $selectedskills");
+                                                                setState(() {});
+                                                              },
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    ).then((result) {
+                                                      if (result != null) {
+                                                        // Handle the selected options
+                                                        print(
+                                                            "Selected options: $result");
+                                                        selectedskills = result;
+                                                      }
+                                                    });
+                                                    // Navigator.push(
+                                                    //     context,
+                                                    //     MaterialPageRoute(
+                                                    //         builder: (context) =>
+                                                    //             const JobResume()));
+                                                  },
+                                                  child: const Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.add,
+                                                        color: Colors.cyan,
+                                                      ),
+                                                      Text(
+                                                        'Add Skill',
+                                                        style: TextStyle(
+                                                            color: Colors.cyan,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    )),
                               ],
                             ),
                           ),
@@ -1829,6 +2198,94 @@ class _ProfilePageState extends State<ProfilePage> {
                       )
                     ],
                   ),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      width: 2, // Border thickness
+                      color:
+                          Colors.transparent, // Needed for the gradient border
+                    ),
+                  ),
+                  elevation: 4,
+                  margin: EdgeInsets.only(left: 16, right: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        width: 2, // Border thickness
+                        color: Colors
+                            .transparent, // Needed for gradient border effect
+                      ),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.teal,
+                          Colors.blueAccent
+                        ], // Gradient border colors
+                      ),
+                    ),
+                    child: DefaultTabController(
+                      length: 3,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.teal,
+                                  Colors.blueAccent
+                                ], // Tab bar gradient
+                              ),
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16)),
+                            ),
+                            child: TabBar(
+                              indicator: BoxDecoration(
+                                color:
+                                    Colors.white, // Selected tab is fully white
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                              ),
+                              labelColor:
+                                  Colors.teal, // Teal text for selected tab
+                              unselectedLabelColor: Colors
+                                  .white, // White text for unselected tabs
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              overlayColor:
+                                  MaterialStateProperty.all(Colors.transparent),
+                              tabs: [
+                                _tabItem(GlobalVariables.instance.xmlHandler
+                                    .getString('myserv')),
+                                _tabItem(GlobalVariables.instance.xmlHandler
+                                    .getString('active')),
+                                _tabItem(GlobalVariables.instance.xmlHandler
+                                    .getString('comserv')),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            height: 150,
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(16)),
+                            ),
+                            child: TabBarView(
+                              children: [
+                                showMyServices(),
+                                _tabContent("This is the content for Tab 2"),
+                                _tabContent("This is the content for Tab 3"),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 Container(
                   child: Column(
                     children: [

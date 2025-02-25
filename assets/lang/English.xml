@@ -7,11 +7,12 @@
 <string name="active">Active Service(s)</string>
 <string name="maid"> Maids(For Homeowners)</string>
 <string name="job"> Job Profiles(For Maids)</string>
-<string name="myserv"> My Services</string>
+<string name="myserv"> Posted Service</string>
 <string name="posted"> Posted Job Services</string>
 <string name="nouser">No User Found for that Email</string>
 <string name="wrongpass">Wrong Password Provided by User</string>
 <string name="nam">Name: </string>
+<string name="comserv">Completed Service(s)</string>
 <string name="addr">Address: </string>
 <string name="sched">Schedule: </string>
 <string name="day">Days: </string>

@@ -7,11 +7,12 @@
 <string name="active"> Ki jingtrei mynta</string>
 <string name="maid"> Wad Nongtrei(Na bynta ki trai-iing)</string>
 <string name="job"> Wad Kam(Na bynta ki nongtrei)</string>
-<string name="myserv"> Ki jingtrei jong nga</string>
+<string name="myserv"> Ki Kam ba la Post </string>
 <string name="posted"> Ki Kam ba nga post</string>
 <string name="nouser">Ym don user ba don kato ka Email</string>
 <string name="wrongpass">Ka Password kam dei</string>
 <string name="nam">Kyrteng:  </string>
+<string name="comserv">Ki Kam Ba La Dep</string>
 <string name="addr">Jaka Sah:  </string>
 <string name="sched">Ka Rukom Trei:  </string>
 <string name="multiple">* Phi lah ban jied bun tylli ia kine </string>
