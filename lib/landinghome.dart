@@ -96,103 +96,117 @@ class _LandingHomePageState extends State<LandingHomePage> {
 
 //search button
               Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(2.0),
                   child: SearchAnchor(
-                      builder: (BuildContext context, SearchController sCont) {
-                    return SizedBox(
-                      height: MediaQuery.of(context).size.height / 20,
-                      child: SearchBar(
-                        controller: sCont,
-                        hintText: searchText,
-                        padding: const WidgetStatePropertyAll<EdgeInsets>(
-                            EdgeInsets.only(left: 8.0)),
-                        onTap: () {
-                          // controller.openView();
-                        },
-                        onChanged: (_) {
-                          updateServiceList(sCont.text);
-                          // controller.openView();
-                        },
-                        leading: const Icon(Icons.search),
-                        trailing: <Widget>[
-                          PopupMenuButton(
-                            icon: const Icon(
-                              Icons.list,
+                    builder: (BuildContext context, SearchController sCont) {
+                      return AnimatedContainer(
+                        duration: Duration(milliseconds: 300),
+                        height: MediaQuery.of(context).size.height / 18,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: -5,
+                              offset: Offset(0, 10),
                             ),
-                            // onSelected: handleClick,
-                            itemBuilder: (BuildContext context) {
-                              return [
-                                PopupMenuItem(
-                                  value: "Logout",
-                                  child: const Text("Search by Address"),
-                                  onTap: () {
-                                    setState(() {
-                                      searchText = "Search by Address...";
-                                      searchCriteria = 1;
-                                    });
-                                  },
-                                ),
-                                PopupMenuItem(
-                                  value: "Settings",
-                                  child: Text("Search by Name"),
-                                  onTap: () {
-                                    setState(() {
-                                      searchText = "Search by Name...";
-                                      searchCriteria = 2;
-                                    });
-                                  },
-                                ),
-                                PopupMenuItem(
-                                  value: "Contact",
-                                  child: Text("Search by Service"),
-                                  onTap: () {
-                                    setState(() {
-                                      searchText = "Search by Service...";
-                                      searchCriteria = 3;
-                                    });
-                                  },
-                                ),
-                              ];
-                            },
+                          ],
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.teal.shade300,
+                              Colors.blue.shade300
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
-                        //old
-                        // <Widget>[
-                        //   Tooltip(
-                        //     message: 'Search options',
-                        //     child: IconButton(
-                        //       isSelected: isDark,
-                        //       onPressed: () {
-                        //         print("Search options");
-
-                        //         // setState(() {
-                        //         //   isDark = !isDark;
-                        //         // });
-                        //       },
-                        //       icon: const Icon(
-                        //         Icons.list,
-                        //       ),
-                        //       // selectedIcon:
-                        //       //     const Icon(Icons.brightness_2_outlined),
-                        //     ),
-                        //   )
-                        // ],
-                      ),
-                    );
-                  }, suggestionsBuilder:
-                          (BuildContext context, SearchController controller) {
-                    return List<ListTile>.generate(5, (int index) {
-                      final String item = 'item $index';
-                      return ListTile(
-                        title: Text(item),
-                        onTap: () {
-                          setState(() {
-                            controller.closeView(item);
-                          });
-                        },
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: SearchBar(
+                          textStyle: WidgetStateProperty.all(
+                              TextStyle(color: Colors.white)),
+                          backgroundColor:
+                              WidgetStateProperty.all(Colors.transparent),
+                          controller: sCont,
+                          hintText: searchText,
+                          hintStyle: WidgetStateProperty.all(
+                              TextStyle(color: Colors.white38)),
+                          padding: WidgetStateProperty.all(
+                            EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                          onTap: () {
+                            // Add a smooth expansion effect
+                          },
+                          onChanged: (_) {
+                            updateServiceList(sCont.text);
+                          },
+                          leading: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 300),
+                            child: Icon(
+                              Icons.search,
+                              key: ValueKey<bool>(true),
+                              color: Colors.white,
+                            ),
+                          ),
+                          trailing: <Widget>[
+                            PopupMenuButton(
+                              icon: Icon(
+                                Icons.filter_list,
+                                color: Colors.white,
+                              ),
+                              itemBuilder: (BuildContext context) {
+                                return [
+                                  PopupMenuItem(
+                                    value: "Address",
+                                    child: Text("Search by Address"),
+                                    onTap: () {
+                                      setState(() {
+                                        searchText = "Search by Address...";
+                                        searchCriteria = 1;
+                                      });
+                                    },
+                                  ),
+                                  PopupMenuItem(
+                                    value: "Name",
+                                    child: Text("Search by Name"),
+                                    onTap: () {
+                                      setState(() {
+                                        searchText = "Search by Name...";
+                                        searchCriteria = 2;
+                                      });
+                                    },
+                                  ),
+                                  PopupMenuItem(
+                                    value: "Service",
+                                    child: Text("Search by Service"),
+                                    onTap: () {
+                                      setState(() {
+                                        searchText = "Search by Service...";
+                                        searchCriteria = 3;
+                                      });
+                                    },
+                                  ),
+                                ];
+                              },
+                            ),
+                          ],
+                        ),
                       );
-                    });
-                  })),
+                    },
+                    suggestionsBuilder:
+                        (BuildContext context, SearchController controller) {
+                      return List<ListTile>.generate(5, (int index) {
+                        final String item = 'Item $index';
+                        return ListTile(
+                          title: Text(item),
+                          onTap: () {
+                            setState(() {
+                              controller.closeView(item);
+                            });
+                          },
+                        );
+                      });
+                    },
+                  )),
 
               NestedTabBar(refreshCallback: () {
                 setState(() {}); // Call setState of NestedTabBar
@@ -1425,380 +1439,531 @@ class _NestedTabBarState extends State<NestedTabBar>
           return Column(
             children: [
               if (GlobalVariables.instance.userrole == 2)
-                Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      width: MediaQuery.of(context).size.width,
-                      decoration: BoxDecoration(
-                        border: Border(
-                            left: BorderSide(color: Colors.grey),
-                            top: BorderSide(color: Colors.grey),
-                            right: BorderSide(color: Colors.grey)),
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20)),
-                        color: Colors.blue,
-                        // gradient: LinearGradient(
-                        //     begin: Alignment.topCenter,
-                        //     end: Alignment.bottomCenter,
-                        //     colors: [Colors.lightBlueAccent, Colors.white]
-                        //     ),
+                Container(
+                  height: screenHeight * 0.80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.teal.shade400,
+                        Colors.blueAccent.shade700
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 12,
+                        offset: Offset(0, 5),
                       ),
-                      child: Center(
-                        child: Text(
-                          'Available Services(Maids)',
-                          style: TextStyle(fontSize: 15, color: Colors.white
-                              // fontWeight: FontWeight.w400,
-                              ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0, end: 1),
+                          duration: Duration(milliseconds: 600),
+                          builder: (context, value, child) => Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, (1 - value) * 20),
+                              child: child,
+                            ),
+                          ),
+                          child: Text(
+                            'Available Jobs',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                        height: screenHeight * 0.70,
-                        margin: const EdgeInsets.only(
-                            left: 5.0, right: 5.0, top: 10.0),
+                      Expanded(
                         child: TabBarView(
-                            controller: _nestedTabController,
-                            children: <Widget>[
-                              FutureBuilder(
-                                  // StreamBuilder(
-                                  // future: fetchServices(),
-                                  // stream: fetchChats(),
-                                  future: searchqs,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      return GridView.builder(
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 2,
-                                                  childAspectRatio: 0.85),
-                                          shrinkWrap: true,
-                                          itemCount: snapshot.data!.docs.length,
-                                          itemBuilder: (context, index) {
-                                            final servitem =
-                                                snapshot.data!.docs[index];
-                                            return FutureBuilder(
-                                                future: fetchUserData(
-                                                    servitem.get("userid")),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    final item = snapshot
-                                                        .data!.docs.first;
-                                                    return Column(
-                                                      children: [
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            getServiceDetail(
-                                                                item, servitem);
-                                                          },
-                                                          child: Card(
-                                                            semanticContainer:
-                                                                true,
-                                                            clipBehavior: Clip
-                                                                .antiAliasWithSaveLayer,
-                                                            color: Colors.white,
-                                                            shape:
-                                                                RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10.0),
-                                                            ),
-                                                            // elevation: 10,
-                                                            child: GridTile(
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        top:
-                                                                            8.0),
-                                                                child: Column(
-                                                                  children: [
-                                                                    CircleAvatar(
-                                                                      foregroundImage: item.get('url') ==
-                                                                              null
-                                                                          ? const AssetImage("assets/profile.png") as ImageProvider<
-                                                                              Object>
-                                                                          : NetworkImage(
-                                                                              item.get('url')),
-                                                                    ),
-                                                                    Text(item.get(
-                                                                        "name")),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
-                                                                      children: [
-                                                                        const Icon(
-                                                                          Icons
-                                                                              .location_pin,
-                                                                          size:
-                                                                              15,
-                                                                        ),
-                                                                        Text(item
-                                                                            .get("address")),
-                                                                      ],
-                                                                    ),
-                                                                    Text(
-                                                                        GlobalVariables
-                                                                            .instance
-                                                                            .xmlHandler
-                                                                            .getString(
-                                                                                'servoff'),
-                                                                        style: TextStyle(
-                                                                            fontWeight:
-                                                                                FontWeight.bold)),
-
-                                                                    for (var a in servitem
+                          controller: _nestedTabController,
+                          children: <Widget>[
+                            FutureBuilder(
+                              future: searchqs,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return GridView.builder(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 0.85,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                    ),
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) {
+                                      final servitem =
+                                          snapshot.data!.docs[index];
+                                      return FutureBuilder(
+                                        future: fetchUserData(
+                                            servitem.get("userid")),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            final item =
+                                                snapshot.data!.docs.first;
+                                            return GestureDetector(
+                                              onTap: () => getServiceDetail(
+                                                  item, servitem),
+                                              child: Card(
+                                                clipBehavior:
+                                                    Clip.antiAliasWithSaveLayer,
+                                                color: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                elevation: 8,
+                                                shadowColor: Colors.blueAccent
+                                                    .withOpacity(0.2),
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 8),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          CircleAvatar(
+                                                            radius: 20,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .grey[200],
+                                                            foregroundImage: item
                                                                         .get(
-                                                                            "services")
-                                                                        .keys
-                                                                        .take(
-                                                                            2))
-                                                                      Text(GlobalVariables
-                                                                          .instance
-                                                                          .xmlHandler
-                                                                          .getString(
-                                                                              a)),
-                                                                    // Text(
-                                                                    //     servitem.get("services")
-                                                                    //         as String),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .end,
-                                                                      children: [
-                                                                        IconButton(
-                                                                          onPressed:
-                                                                              () async {
-                                                                            Navigator.push(context,
-                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id, readMsg: true)));
-                                                                          },
-                                                                          icon:
-                                                                              const Icon(Icons.chat_rounded),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ],
-                                                                ),
+                                                                            'url') ==
+                                                                    null
+                                                                ? AssetImage(
+                                                                        "assets/profile.png")
+                                                                    as ImageProvider<
+                                                                        Object>
+                                                                : NetworkImage(
+                                                                    item.get(
+                                                                        'url')),
+                                                          ),
+                                                          SizedBox(
+                                                              height:
+                                                                  8), // Spacing
+                                                          FittedBox(
+                                                            fit: BoxFit
+                                                                .scaleDown,
+                                                            alignment: Alignment
+                                                                .centerLeft,
+                                                            child: Text(
+                                                              item.get("name"),
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize:
+                                                                    16, // Initial max font size
                                                               ),
                                                             ),
                                                           ),
+                                                          SizedBox(
+                                                              height:
+                                                                  4), // Spacing
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              Icon(
+                                                                  Icons
+                                                                      .location_pin,
+                                                                  size: 14,
+                                                                  color: Colors
+                                                                      .blueAccent),
+                                                              SizedBox(
+                                                                  width: 3),
+                                                              Flexible(
+                                                                child: Text(
+                                                                  item.get(
+                                                                      "address"),
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                  softWrap:
+                                                                      true,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Divider(
+                                                          color:
+                                                              Colors.grey[300]),
+                                                      SizedBox(height: 5),
+                                                      Text(
+                                                        GlobalVariables
+                                                            .instance.xmlHandler
+                                                            .getString(
+                                                                'servoff'),
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 14,
+                                                          color:
+                                                              Colors.blueAccent,
                                                         ),
-                                                      ],
-                                                    );
-                                                  } else if (snapshot
-                                                      .hasError) {
-                                                    return Center(
-                                                        child: Text(snapshot
-                                                            .error
-                                                            .toString()));
-                                                  } else {
-                                                    return const Center(
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    );
-                                                  }
-                                                });
-                                          });
-                                    } else if (snapshot.hasError) {
-                                      return Center(
-                                          child:
-                                              Text(snapshot.error.toString()));
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
+                                                      ),
+                                                      SizedBox(height: 3),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: servitem
+                                                            .get("services")
+                                                            .keys
+                                                            .take(2)
+                                                            .map<Widget>(
+                                                                (service) =>
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .symmetric(
+                                                                          vertical:
+                                                                              2),
+                                                                      child:
+                                                                          Text(
+                                                                        "• " +
+                                                                            GlobalVariables.instance.xmlHandler.getString(service),
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                12),
+                                                                      ),
+                                                                    ))
+                                                            .toList(),
+                                                      ),
+                                                      Spacer(),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          } else if (snapshot.hasError) {
+                                            return Center(
+                                              child: Text(
+                                                "Error: ${snapshot.error}",
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ),
+                                            );
+                                          } else {
+                                            return Center(
+                                                child:
+                                                    CircularProgressIndicator());
+                                          }
+                                        },
                                       );
-                                    }
-                                  })
-                            ]))
-                  ],
+                                    },
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text("Error: ${snapshot.error}",
+                                        style: TextStyle(color: Colors.red)),
+                                  );
+                                } else {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               if (GlobalVariables.instance.userrole == 1)
-                Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      width: MediaQuery.of(context).size.width,
-                      decoration: BoxDecoration(
-                        border: Border(
-                            left: BorderSide(color: Colors.grey),
-                            top: BorderSide(color: Colors.grey),
-                            right: BorderSide(color: Colors.grey)),
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20)),
-                        color: Colors.blue,
-                        // gradient: LinearGradient(
-                        //     begin: Alignment.topCenter,
-                        //     end: Alignment.bottomCenter,
-                        //     colors: [Colors.lightBlueAccent, Colors.white]),
+                Container(
+                  height: screenHeight * 0.80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.teal.shade400,
+                        Colors.blueAccent.shade700
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 12,
+                        offset: Offset(0, 5),
                       ),
-                      child: Center(
-                        child: Text(
-                          'Available Jobs',
-                          style: TextStyle(fontSize: 15, color: Colors.white
-                              // fontWeight: FontWeight.w400,
-                              ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0, end: 1),
+                          duration: Duration(milliseconds: 600),
+                          builder: (context, value, child) => Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, (1 - value) * 20),
+                              child: child,
+                            ),
+                          ),
+                          child: Text(
+                            'Available Jobs',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                        height: screenHeight * 0.70,
-                        margin: const EdgeInsets.only(
-                            left: 5.0, right: 5.0, top: 10.0),
+                      Expanded(
                         child: TabBarView(
-                            controller: _nestedTabController,
-                            children: <Widget>[
-                              FutureBuilder(
-                                  // StreamBuilder(
-                                  future: searchqs,
-                                  // stream: fetchChats(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      return GridView.builder(
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 2,
-                                                  childAspectRatio: 0.85),
-                                          shrinkWrap: true,
-                                          itemCount: snapshot.data!.docs.length,
-                                          itemBuilder: (context, index) {
-                                            final servitem =
-                                                snapshot.data!.docs[index];
-                                            return FutureBuilder(
-                                                future: fetchUserData(
-                                                    servitem.get("userid")),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    final item = snapshot
-                                                        .data!.docs.first;
-                                                    return Column(
-                                                      children: [
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            getJobProfileDetail(
-                                                                item, servitem);
-                                                          },
-                                                          child: Card(
-                                                            semanticContainer:
-                                                                true,
-                                                            clipBehavior: Clip
-                                                                .antiAliasWithSaveLayer,
-                                                            color: Colors.white,
-                                                            shape:
-                                                                RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10.0),
-                                                            ),
-                                                            // elevation: 10,
-                                                            child: GridTile(
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        top:
-                                                                            8.0),
-                                                                child: Column(
-                                                                  children: [
-                                                                    CircleAvatar(
-                                                                      foregroundImage: item.get('url') ==
-                                                                              null
-                                                                          ? const AssetImage("assets/profile.png") as ImageProvider<
-                                                                              Object>
-                                                                          : NetworkImage(
-                                                                              item.get('url')),
-                                                                    ),
-                                                                    Text(item.get(
-                                                                        "name")),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
-                                                                      children: [
-                                                                        const Icon(
-                                                                          Icons
-                                                                              .location_pin,
-                                                                          size:
-                                                                              15,
-                                                                        ),
-                                                                        Text(item
-                                                                            .get("address")),
-                                                                      ],
-                                                                    ),
-                                                                    Text(
-                                                                        GlobalVariables
-                                                                            .instance
-                                                                            .xmlHandler
-                                                                            .getString(
-                                                                                'servoff'),
-                                                                        style: TextStyle(
-                                                                            fontWeight:
-                                                                                FontWeight.bold)),
-                                                                    for (var a
-                                                                        in servitem.get(
-                                                                            "services"))
-                                                                      Text(GlobalVariables
-                                                                          .instance
-                                                                          .xmlHandler
-                                                                          .getString(
-                                                                              a)),
-                                                                    // Text(
-                                                                    //     servitem.get("services")
-                                                                    //         as String),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .end,
-                                                                      children: [
-                                                                        IconButton(
-                                                                          onPressed:
-                                                                              () async {
-                                                                            Navigator.push(context,
-                                                                                MaterialPageRoute(builder: (context) => ChatPage(name: item.get("name"), receiverID: item.get("userid"), postType: "services", postTypeID: servitem.id, readMsg: true)));
-                                                                          },
-                                                                          icon:
-                                                                              const Icon(Icons.chat_rounded),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ],
-                                                                ),
+                          controller: _nestedTabController,
+                          children: <Widget>[
+                            FutureBuilder(
+                              future: searchqs,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return GridView.builder(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 0.85,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                    ),
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) {
+                                      final servitem =
+                                          snapshot.data!.docs[index];
+                                      return FutureBuilder(
+                                        future: fetchUserData(
+                                            servitem.get("userid")),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            final item =
+                                                snapshot.data!.docs.first;
+                                            return GestureDetector(
+                                              onTap: () => getJobProfileDetail(
+                                                  item, servitem),
+                                              child: Card(
+                                                clipBehavior:
+                                                    Clip.antiAliasWithSaveLayer,
+                                                color: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                elevation: 8,
+                                                shadowColor: Colors.blueAccent
+                                                    .withOpacity(0.2),
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 8),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          CircleAvatar(
+                                                            radius: 20,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .grey[200],
+                                                            foregroundImage: item
+                                                                        .get(
+                                                                            'url') ==
+                                                                    null
+                                                                ? AssetImage(
+                                                                        "assets/profile.png")
+                                                                    as ImageProvider<
+                                                                        Object>
+                                                                : NetworkImage(
+                                                                    item.get(
+                                                                        'url')),
+                                                          ),
+                                                          SizedBox(
+                                                              height:
+                                                                  8), // Spacing
+                                                          FittedBox(
+                                                            fit: BoxFit
+                                                                .scaleDown,
+                                                            alignment: Alignment
+                                                                .centerLeft,
+                                                            child: Text(
+                                                              item.get("name"),
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize:
+                                                                    16, // Initial max font size
                                                               ),
                                                             ),
                                                           ),
+                                                          SizedBox(
+                                                              height:
+                                                                  4), // Spacing
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              Icon(
+                                                                  Icons
+                                                                      .location_pin,
+                                                                  size: 14,
+                                                                  color: Colors
+                                                                      .blueAccent),
+                                                              SizedBox(
+                                                                  width: 3),
+                                                              Flexible(
+                                                                child: Text(
+                                                                  item.get(
+                                                                      "address"),
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                  softWrap:
+                                                                      true,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Divider(
+                                                          color:
+                                                              Colors.grey[300]),
+                                                      SizedBox(height: 5),
+                                                      Text(
+                                                        GlobalVariables
+                                                            .instance.xmlHandler
+                                                            .getString(
+                                                                'servoff'),
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 14,
+                                                          color:
+                                                              Colors.blueAccent,
                                                         ),
-                                                      ],
-                                                    );
-                                                  } else if (snapshot
-                                                      .hasError) {
-                                                    return Center(
-                                                        child: Text(snapshot
-                                                            .error
-                                                            .toString()));
-                                                  } else {
-                                                    return const Center(
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    );
-                                                  }
-                                                });
-                                          });
-                                    } else if (snapshot.hasError) {
-                                      return Center(
-                                          child:
-                                              Text(snapshot.error.toString()));
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
+                                                      ),
+                                                      SizedBox(height: 3),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: servitem
+                                                            .get("services")
+                                                            .take(2)
+                                                            .map<Widget>(
+                                                                (service) =>
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .symmetric(
+                                                                          vertical:
+                                                                              2),
+                                                                      child:
+                                                                          Text(
+                                                                        "• " +
+                                                                            GlobalVariables.instance.xmlHandler.getString(service),
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                12),
+                                                                      ),
+                                                                    ))
+                                                            .toList(),
+                                                      ),
+                                                      Spacer(),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          } else if (snapshot.hasError) {
+                                            return Center(
+                                              child: Text(
+                                                "Error: ${snapshot.error}",
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ),
+                                            );
+                                          } else {
+                                            return Center(
+                                                child:
+                                                    CircularProgressIndicator());
+                                          }
+                                        },
                                       );
-                                    }
-                                  })
-                            ]))
-                  ],
+                                    },
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text("Error: ${snapshot.error}",
+                                        style: TextStyle(color: Colors.red)),
+                                  );
+                                } else {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           );
