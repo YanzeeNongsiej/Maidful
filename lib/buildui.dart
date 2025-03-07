@@ -71,6 +71,55 @@ Widget buildServiceSection(String title, Map<String, dynamic> services) {
   );
 }
 
+Widget buildLongText(String title, String content) {
+  return Column(
+    children: [
+      SizedBox(
+        height: 3,
+      ),
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(12),
+        margin: EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade300,
+              blurRadius: 5,
+              spreadRadius: 1,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              content,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
 Widget buildSection(String title, List<dynamic> timings) {
   print('im in section');
   return Container(
@@ -164,8 +213,8 @@ Widget buildTextInfo(String title, String value) {
               color: Colors.black87,
             ),
             overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            textAlign: TextAlign.end,
+            maxLines: 100,
+            textAlign: TextAlign.justify,
           ),
         ),
       ],

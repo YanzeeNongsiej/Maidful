@@ -19,7 +19,7 @@ class _ChatListPageState extends State<ChatListPage> {
   String userID = FirebaseAuth.instance.currentUser!.uid;
   ontheload() async {
     ChatroomStream = await chatcontroller.getChats(userID);
-    print("CHatroom Data: ${ChatroomStream?.first}");
+    print("Chatroom Data: ${ChatroomStream?.first}");
     setState(() {});
   }
 
@@ -39,10 +39,8 @@ class _ChatListPageState extends State<ChatListPage> {
   }
 
   Future<QuerySnapshot> getUserinfo(DocumentSnapshot chatroomItem) async {
-    userid = chatroomItem.id
-        .replaceAll("_", "")
-        .replaceAll(userID, "")
-        .replaceAll(chatroomItem.get("postTypeID"), "");
+    userid = chatroomItem.id.replaceAll("_", "").replaceAll(userID, "");
+    //.replaceAll(chatroomItem.get("postTypeID"), "");
     Future<QuerySnapshot<Object?>> qs = Usersdao().getUserDetails(userid);
     return qs;
   }
@@ -75,10 +73,20 @@ class _ChatListPageState extends State<ChatListPage> {
                   // print("Chatroom id:${snapshot.data!.docs[index].id}");
                   DocumentSnapshot chatRoomItem = snapshot.data!.docs[index];
                   String lastMsg = "", lastTime = "";
+                  String msg = chatRoomItem.get("lastMessage");
+
                   if (userID == chatRoomItem.get("lastSender")) {
-                    lastMsg = "You:${chatRoomItem.get("lastMessage")}";
+                    if (msg == "@ck") {
+                      lastMsg = "You:Acknowledgement Sent";
+                    } else {
+                      lastMsg = "You:${msg}";
+                    }
                   } else {
-                    lastMsg = "${chatRoomItem.get("lastMessage")}";
+                    if (msg == "@ck") {
+                      lastMsg = "Acknowledgement Received";
+                    } else {
+                      lastMsg = msg;
+                    }
                   }
 
                   Timestamp? timestamp =
@@ -152,22 +160,39 @@ class _ChatListPageState extends State<ChatListPage> {
                                           MaterialPageRoute(
                                               builder: (context) => ChatPage(
                                                     name: item.get("name"),
+                                                    photo: item.get('url'),
                                                     receiverID:
                                                         item.get("userid"),
-                                                    postType: chatRoomItem
-                                                        .get("postType"),
-                                                    postTypeID: chatRoomItem
-                                                        .get("postTypeID"),
+                                                    // postType: chatRoomItem
+                                                    //     .get("postType"),
+                                                    // postTypeID: chatRoomItem
+                                                    //     .get("postTypeID"),
                                                     readMsg: chatRoomItem
                                                         .get('read_Msg'),
                                                   )));
                                     },
                                     child: ListTile(
-                                      leading: CircleAvatar(
-                                        foregroundImage: item.get('url') == null
-                                            ? loadImage()
-                                                as ImageProvider<Object>
-                                            : NetworkImage(item.get('url')!),
+                                      leading: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.grey.withOpacity(
+                                                  0.9), // Inner glow
+                                              blurRadius: 15,
+                                              spreadRadius: 0.1,
+                                            ),
+                                          ],
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.grey[200],
+                                          foregroundImage: item.get('url') ==
+                                                  null
+                                              ? AssetImage("assets/profile.png")
+                                                  as ImageProvider<Object>
+                                              : NetworkImage(item.get('url')),
+                                        ),
                                       ),
                                       title: Text(item.get("name")),
                                       subtitle: Text(

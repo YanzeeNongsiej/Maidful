@@ -11,13 +11,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:ibitf_app/singleton.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-updateStatus(int val, itemid, context) {
-  FirebaseFirestore.instance.collection("acknowledgements").doc(itemid).update({
-    "status": val,
-  }).whenComplete(() {
-    Navigator.of(context).pop();
-  });
-}
 
 Future<auth.AuthClient> getAuthClient() async {
   final serviceAccountJson =
@@ -34,12 +27,22 @@ Future<auth.AuthClient> getAuthClient() async {
 }
 
 /// Send Push Notification
-Future<void> sendPushNotification(
-    String token, String title, String body, itemid) async {
+Future<void> sendPushNotification(String token, String title, String body,
+    {String? ratedUserId}) async {
   final client = await getAuthClient();
 
   final url = Uri.parse(
       'https://fcm.googleapis.com/v1/projects/authenticationapp-2f932/messages:send');
+
+  // Create the "data" payload
+  final Map<String, String> dataPayload = {
+    "click_action": "FLUTTER_NOTIFICATION_CLICK",
+  };
+
+  // Only add ratedUserId if it's not null
+  if (ratedUserId != null) {
+    dataPayload["ratedUserId"] = ratedUserId;
+  }
 
   final payload = {
     "message": {
@@ -48,10 +51,7 @@ Future<void> sendPushNotification(
         "title": title,
         "body": body,
       },
-      "data": {
-        "click_action": "FLUTTER_NOTIFICATION_CLICK",
-        "itemid": itemid,
-      }
+      "data": dataPayload, // Ensuring ratedUserId is inside "data"
     }
   };
 
@@ -62,7 +62,7 @@ Future<void> sendPushNotification(
   );
 
   if (response.statusCode == 200) {
-    print("Notification sent successfully!");
+    print("Notification sent successfully to $title");
   } else {
     print("Failed to send notification: ${response.body}");
   }
@@ -76,13 +76,33 @@ Future<String?> getUserFcmToken(String userId) async {
   return userDoc.docs.first['fcmtoken'];
 }
 
-void notifyUser(String recipientUserId, title, body, dynamic itemid) async {
+void notifyUser(String recipientUserId, String title, String body,
+    {String? ratedUserId}) async {
   String? token = await getUserFcmToken(recipientUserId);
 
   if (token != null) {
-    sendPushNotification(token, title, body, itemid);
+    sendPushNotification(token, title, body, ratedUserId: ratedUserId);
   } else {
     print("User's FCM token not found.");
+  }
+}
+
+Future<String> getNameFromId(String userId) async {
+  try {
+    QuerySnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .where('userid', isEqualTo: userId)
+        .limit(1)
+        .get();
+
+    if (userDoc.docs.isNotEmpty) {
+      return userDoc.docs.first['name'] ?? 'Unknown';
+    } else {
+      return 'Unknown';
+    }
+  } catch (e) {
+    print("Error fetching name: $e");
+    return 'Unknown';
   }
 }
 
@@ -140,6 +160,9 @@ class NotificationService {
       print("Foreground Notification received: ${message.notification?.title}");
       // Show red dot on Chat icon
       GlobalVariables.instance.hasnewmsg = true;
+      if (message.notification?.title == "Rate Your Experience") {
+        showRatingPopup(message);
+      }
       // if (message.notification?.title == 'Completion Request') {
       //   showCompletion(message);
       // }
@@ -149,46 +172,85 @@ class NotificationService {
   void handleNotificationClicks() {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print("User tapped on notification: ${message.notification?.title}");
-
+      if (message.notification?.title == "Rate Your Experience") {
+        showRatingPopup(message);
+      }
       // if (message.notification?.title == 'Completion Request') {
       //   showCompletion(message);
       // }
     });
   }
 
-  void showCompletion(message) {
-    String? ti = message.notification?.title;
-    String? bod = message.notification?.body;
+  void showRatingPopup(RemoteMessage message) {
+    String ratedUserId =
+        message.data['ratedUserId']; // Get user ID from notification data
+    String raterUserId =
+        FirebaseAuth.instance.currentUser!.uid; // Get current user ID
 
-    if (navigatorKey.currentContext == null) {
-      showCompletion(message);
+    showDialog(
+      context: navigatorKey.currentContext!,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Rate Your Experience"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Please rate your interaction with this user."),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(Icons.star, color: Colors.grey),
+                    onPressed: () {
+                      submitRating(index + 1, ratedUserId, raterUserId);
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> submitRating(
+      int rating, String ratedUserId, String raterUserId) async {
+    CollectionReference usersCollection =
+        FirebaseFirestore.instance.collection('users');
+
+    // Find the document where 'userid' matches 'ratedUserId'
+    QuerySnapshot querySnapshot = await usersCollection
+        .where('userid', isEqualTo: ratedUserId)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      DocumentReference userRef = querySnapshot.docs.first.reference;
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot userSnapshot = await transaction.get(userRef);
+
+        if (userSnapshot.exists) {
+          // 🔹 Explicitly cast `data()` to `Map<String, dynamic>` before accessing fields
+          Map<String, dynamic> userData =
+              userSnapshot.data() as Map<String, dynamic>;
+          Map<String, dynamic> ratings =
+              userData['rating'] as Map<String, dynamic>? ?? {};
+
+          ratings[raterUserId] = rating; // Update or add rating
+
+          transaction.update(userRef, {'rating': ratings});
+        }
+      }).then((_) {
+        print("Rating submitted: $rating by $raterUserId for $ratedUserId");
+      }).catchError((error) {
+        print("Error submitting rating: $error");
+      });
     } else {
-      showDialog(
-          context: navigatorKey.currentContext!,
-          builder: (BuildContext context) {
-            return AlertDialog(
-                title: Text(ti!),
-                content: Row(
-                  children: [
-                    Text(bod!),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text('Agree'),
-                    onPressed: () {
-                      updateStatus(5, message.data["itemid"], context);
-                    },
-                  ),
-                  TextButton(
-                    child: const Text('Disagree'),
-                    onPressed: () {
-                      // Add your "No" logic here
-                      updateStatus(2, message.data["itemid"], context);
-                    },
-                  ),
-                ]);
-          });
+      print("User not found with userid: $ratedUserId");
     }
   }
 }

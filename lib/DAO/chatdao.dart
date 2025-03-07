@@ -14,8 +14,8 @@ class Chatdao {
       Map<String, dynamic> chatDetails = {
         "lastSender": newMessage.senderID,
         "lastMessage": newMessage.message,
-        "postType": newMessage.post_Type,
-        "postTypeID": newMessage.post_TypeID,
+        // "postType": newMessage.post_Type,
+        // "postTypeID": newMessage.post_TypeID,
         "users": users,
         "timestamp": FieldValue.serverTimestamp(),
         "read_Msg": newMessage.read_Msg,
@@ -70,31 +70,46 @@ class Chatdao {
         .snapshots();
   }
 
-  Future setAckStatus(Map<String, dynamic> serv, String ackID, int stat,
-      String messageID) async {
-    bool ackn = false;
+  Future setMessage(
+      Map<String, dynamic> serv, String messageID, String custommsg) async {
     List<String> ids = [
       serv['senderID'],
       serv['receiverID'],
-      serv['post_TypeID']
+    ];
+    ids.sort();
+    String chatRoomID = ids.join('_'), msg = "";
+    return await FirebaseFirestore.instance
+        .collection("chat_rooms")
+        .doc(chatRoomID)
+        .collection("messages")
+        .doc(messageID)
+        .update({
+      "message": custommsg,
+    });
+  }
+
+  Future setAckStatus(Map<String, dynamic> serv, String ackID, int stat,
+      String messageID) async {
+    List<String> ids = [
+      serv['senderID'],
+      serv['receiverID'],
     ];
     ids.sort();
     String chatRoomID = ids.join('_'), msg = "";
 
     if (stat == 2 || stat == 3) {
       if (stat == 2) {
-        ackn = true;
         msg = "Agreed";
       }
       if (stat == 3) {
         msg = "Rejected";
       }
-      await FirebaseFirestore.instance
-          .collection("services")
-          .doc(serv['post_TypeID'])
-          .update({
-        "ack": ackn,
-      });
+      // await FirebaseFirestore.instance
+      //     .collection("services")
+      //     .doc(ackID)
+      //     .update({
+      //   "ack": ackn,
+      // });
 
       await FirebaseFirestore.instance
           .collection("chat_rooms")

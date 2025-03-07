@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
-import 'package:ibitf_app/login.dart';
+import 'package:ibitf_app/controller/chat_controller.dart';
+
+import 'package:ibitf_app/model/jobProfile.dart';
 import 'package:ibitf_app/model/service.dart';
-import 'package:ibitf_app/service/auth.dart';
+
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
 
@@ -13,7 +15,8 @@ import 'package:ibitf_app/changelang.dart';
 
 class JobResume extends StatefulWidget {
   final int kind;
-  JobResume(this.kind, {Key? key}) : super(key: key);
+  final String? receiverID;
+  JobResume(this.kind, {this.receiverID, Key? key}) : super(key: key);
 
   @override
   _JobResumeState createState() => _JobResumeState();
@@ -24,9 +27,11 @@ class _JobResumeState extends State<JobResume>
   Future<List<String>>? _futureSkills;
   final fromTimeController = TextEditingController();
   final toTimeController = TextEditingController();
-  final whcontroller = TextEditingController();
-  final whController1 = TextEditingController();
+  // final whcontroller = TextEditingController();
+  final remrkcontroller = TextEditingController();
+  // final whController1 = TextEditingController();
   final TextEditingController shiftcont = TextEditingController();
+  String selectedText = '';
   List<String> timeEntries = [];
 
   final ratecontroller = TextEditingController();
@@ -37,7 +42,11 @@ class _JobResumeState extends State<JobResume>
       timeToValid = false,
       servicesValid = false,
       rateValid = false;
-  int whcount = 0, maxlinevalue = 1, timingcount = 0, maxlinevalueshift = 1;
+  int
+      // whcount = 0,
+      // maxlinevalue = 1,
+      timingcount = 0,
+      maxlinevalueshift = 1;
 
   int _selectedNegoValue = 1;
   final _formkey = GlobalKey<FormState>();
@@ -53,7 +62,7 @@ class _JobResumeState extends State<JobResume>
     "Sunday"
   ];
 
-  List<String> workHistory = [];
+  // List<String> workHistory = [];
   List<String> shifts = [];
   List<bool> selectedTimings = [false, false, false];
 
@@ -78,7 +87,7 @@ class _JobResumeState extends State<JobResume>
   bool finalrate = false;
   List<String> selectedCheckBoxValue = [];
   List<String> selectedDaysValue = [];
-
+  final ChatController chatcontroller = ChatController();
   @override
   void initState() {
     showOptionsDay = true;
@@ -202,39 +211,94 @@ class _JobResumeState extends State<JobResume>
       "schedule": selectedTimings,
       "days": selectedDaysValue,
       "timing": finaltime,
-      "services": selectedRates,
+      "services": GlobalVariables.instance.userrole == 1
+          ? selectedRates
+          : selectedServices.keys,
       "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
-      "work_history": workHistory,
+      // "work_history": workHistory,
+      "remarks": remrkcontroller.text,
       "ack": false,
       "timestamp": FieldValue.serverTimestamp(),
     };
     isOK = true;
 
     if (widget.kind == 1) {
-      await maidDao()
-          .addService(uploadService)
+      if (GlobalVariables.instance.userrole == 1) {
+        await maidDao()
+            .addService(uploadService)
+            .whenComplete(() =>
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                  GlobalVariables.instance.xmlHandler.getString('addedsucc'),
+                  style: const TextStyle(fontSize: 20.0),
+                ))))
+            .whenComplete(() {
+          Navigator.pop(context);
+          setState(() {});
+        });
+      } else {
+        await maidDao()
+            .addJobProfile(uploadService)
+            .whenComplete(() =>
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                  GlobalVariables.instance.xmlHandler.getString('addedsucc'),
+                  style: const TextStyle(fontSize: 20.0),
+                ))))
+            .whenComplete(() {
+          Navigator.pop(context);
+          setState(() {});
+        });
+      }
+    } else if (widget.kind == 2) {
+      if (GlobalVariables.instance.userrole == 1) {
+        await maidDao()
+            .updateServiceByUserId(user!.uid, uploadService)
+            .whenComplete(() =>
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                  GlobalVariables.instance.xmlHandler.getString('updatesucc'),
+                  style: const TextStyle(fontSize: 20.0),
+                ))))
+            .whenComplete(() {
+          Navigator.pop(context);
+          setState(() {});
+        });
+      } else {
+        await maidDao()
+            .updateJobByUserId(user!.uid, uploadService)
+            .whenComplete(() =>
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                  GlobalVariables.instance.xmlHandler.getString('updatesucc'),
+                  style: const TextStyle(fontSize: 20.0),
+                ))))
+            .whenComplete(() {
+          Navigator.pop(context);
+          setState(() {});
+        });
+      }
+    } else if (widget.kind == 3) {
+      uploadService['userid'] = user!.uid;
+      uploadService['receiverid'] = widget.receiverID;
+      uploadService['status'] = 1;
+      String ackid;
+      ackid = await maidDao()
+          .addAck(uploadService)
           .whenComplete(
               () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
                     GlobalVariables.instance.xmlHandler.getString('addedsucc'),
                     style: const TextStyle(fontSize: 20.0),
                   ))))
-          .whenComplete(() {
-        Navigator.pop(context);
-      });
-    } else if (widget.kind == 2) {
-      await maidDao()
-          .updateServiceByUserId(user!.uid, uploadService)
-          .whenComplete(
-              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                    GlobalVariables.instance.xmlHandler.getString('updatesucc'),
-                    style: const TextStyle(fontSize: 20.0),
-                  ))))
-          .whenComplete(() {
-        Navigator.pop(context);
-        Navigator.pop(context);
-      });
+          .whenComplete(() => Navigator.pop(context));
+      print(ackid);
+      await chatcontroller.sendMessage(
+          widget.receiverID!,
+          "@ck",
+          ackid,
+          // "services", itemGlobal?.id,
+          false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
@@ -244,88 +308,120 @@ class _JobResumeState extends State<JobResume>
     }
   }
 
-  void addWH() async {
-    //open a dialog box to enter work History..
-    whcount = whcount + 1;
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(
-                'Add ${GlobalVariables.instance.xmlHandler.getString('workhist')}'),
-            content: TextFormField(
-              controller: whController1,
-              decoration: InputDecoration(
-                labelText:
-                    GlobalVariables.instance.xmlHandler.getString('workhist'),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  workHistory.add(whController1.text);
-                  setState(() {
-                    maxlinevalue = maxlinevalue + 1;
-                    whcontroller.text =
-                        "${whcontroller.text}$whcount. ${whController1.text}\n";
-                    whController1.clear();
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          );
-        });
-  }
+  // void addWH() async {
+  //   //open a dialog box to enter work History..
+  //   whcount = whcount + 1;
+  //   showDialog(
+  //       context: context,
+  //       builder: (context) {
+  //         return AlertDialog(
+  //           title: Text(
+  //               'Add ${GlobalVariables.instance.xmlHandler.getString('workhist')}'),
+  //           content: TextFormField(
+  //             controller: whController1,
+  //             decoration: InputDecoration(
+  //               labelText:
+  //                   GlobalVariables.instance.xmlHandler.getString('workhist'),
+  //             ),
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.pop(context);
+  //               },
+  //               child: const Text('Cancel'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () {
+  //                 workHistory.add(whController1.text);
+  //                 setState(() {
+  //                   maxlinevalue = maxlinevalue + 1;
+  //                   whcontroller.text =
+  //                       "${whcontroller.text}$whcount. ${whController1.text}\n";
+  //                   whController1.clear();
+  //                 });
+  //                 Navigator.pop(context);
+  //               },
+  //               child: const Text('Add'),
+  //             ),
+  //           ],
+  //         );
+  //       });
+  // }
 
-  void handleClick(String value) async {
-    switch (value) {
-      case 'Logout':
-        await AuthMethods.signOut();
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const LogIn()));
-        }
-        break;
-      case 'Settings':
-        break;
-    }
-  }
+  // void handleClick(String value) async {
+  //   switch (value) {
+  //     case 'Logout':
+  //       await AuthMethods.signOut();
+  //       if (mounted) {
+  //         Navigator.of(context).pushReplacement(
+  //             MaterialPageRoute(builder: (context) => const LogIn()));
+  //       }
+  //       break;
+  //     case 'Settings':
+  //       break;
+  //   }
+  // }
 
   void fetchOwnServices() async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
-    List<Service> qs = await maidDao().getOwnServices(userID);
-    for (var serv in qs) {
-      selectedTimings = serv.schedule;
-      selectedDaysValue = serv.days;
-      _selectedNegoValue = serv.nego == 'Yes' ? 1 : 0;
-
-      selectedRates = serv.services;
-      for (var i in selectedRates.keys) {
-        selectedServices[i] = true;
-        rateControllers[i] = TextEditingController();
-        rateControllers[i]!.text = selectedRates[i]![0];
+    if (GlobalVariables.instance.userrole == 1) {
+      List<Service> qs = await maidDao().getOwnServices('services', userID);
+      for (var serv in qs) {
+        remrkcontroller.text = serv.remarks;
+        selectedTimings = serv.schedule;
+        selectedDaysValue = serv.days;
+        _selectedNegoValue = (serv.nego == 'Yes' ? 1 : 2);
+        selectedRates = serv.services;
+        for (var i in selectedRates.keys) {
+          selectedServices[i] = true;
+          selectedText == ''
+              ? selectedText = i
+              : selectedText = '$selectedText, $i';
+          rateControllers[i] = TextEditingController();
+          rateControllers[i]!.text = selectedRates[i]![0];
+        }
+        _selectedTimeSlots = List.generate(24, (index) {
+          String slot = timeSlots[index];
+          return serv.timing.contains(slot);
+        });
+        finalrate = true;
+        // workHistory = serv.work_history;
+        // for (var i in workHistory) {
+        //   whcount = whcount + 1;
+        //   maxlinevalue = maxlinevalue + 1;
+        //   whcontroller.text = "${whcontroller.text}$whcount. $i\n";
+        // }
       }
-      _selectedTimeSlots = List.generate(24, (index) {
-        String slot = timeSlots[index];
-        return serv.timing.contains(slot);
-      });
-      finalrate = true;
-      workHistory = serv.work_history;
-      for (var i in workHistory) {
-        whcount = whcount + 1;
-        maxlinevalue = maxlinevalue + 1;
-        whcontroller.text = "${whcontroller.text}$whcount. $i\n";
+    } else {
+      List<JobProfile> qs =
+          await maidDao().getLatestJobProfile('jobprofile', userID);
+      for (var serv in qs) {
+        remrkcontroller.text = serv.remarks;
+        selectedTimings = serv.schedule;
+        selectedDaysValue = serv.days;
+        _selectedNegoValue = (serv.nego == 'Yes' ? 1 : 2);
+        List<String> res = serv.services;
+        for (var i in res) {
+          selectedServices[i] = true;
+          selectedText == ''
+              ? selectedText = i
+              : selectedText = '$selectedText, $i';
+        }
+        _selectedTimeSlots = List.generate(24, (index) {
+          String slot = timeSlots[index];
+          return serv.timing.contains(slot);
+        });
+        finalrate = true;
+        // workHistory = serv.work_history;
+        // for (var i in workHistory) {
+        //   whcount = whcount + 1;
+        //   maxlinevalue = maxlinevalue + 1;
+        //   whcontroller.text = "${whcontroller.text}$whcount. $i\n";
+        // }
       }
     }
-    print('im here qithout u${selectedRates}');
+
     setState(() {});
   }
 
@@ -508,23 +604,11 @@ class _JobResumeState extends State<JobResume>
         surfaceTintColor: Colors.red,
         title: widget.kind == 1
             ? Text(GlobalVariables.instance.xmlHandler.getString('addserv'))
-            : Text(GlobalVariables.instance.xmlHandler.getString('editserv')),
-        actions: <Widget>[
-          PopupMenuButton<String>(
-            icon: CircleAvatar(
-              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
-            ),
-            onSelected: handleClick,
-            itemBuilder: (BuildContext context) {
-              return {'Logout', 'Settings'}.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
-        ],
+            : widget.kind == 2
+                ? Text(
+                    GlobalVariables.instance.xmlHandler.getString('editserv'))
+                : Text(
+                    GlobalVariables.instance.xmlHandler.getString('hiringdet')),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -760,7 +844,7 @@ class _JobResumeState extends State<JobResume>
                                       });
                                     },
                                     child: Container(
-                                      padding: EdgeInsets.all(8.0),
+                                      padding: EdgeInsets.all(6.0),
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                             color: _selectedTimeSlots[index]
@@ -773,9 +857,12 @@ class _JobResumeState extends State<JobResume>
                                             : Colors.transparent,
                                       ),
                                       child: Center(
-                                        child: Text(
-                                          timeSlots[index],
-                                          style: TextStyle(fontSize: 14.0),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            timeSlots[index],
+                                            style: TextStyle(fontSize: 14.0),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1020,6 +1107,7 @@ class _JobResumeState extends State<JobResume>
                           children: [
                             // Multi-select Dropdown
                             DropdownButtonFormField<String>(
+                              hint: Text(selectedText),
                               validator: (value) {
                                 if (!selectedServices.containsValue(true)) {
                                   return 'Please select at least one service';
@@ -1040,6 +1128,17 @@ class _JobResumeState extends State<JobResume>
                                               setState(() {
                                                 selectedServices[service] =
                                                     value ?? false;
+                                                selectedText = '';
+                                                for (var i
+                                                    in selectedServices.keys) {
+                                                  if (selectedServices[i] ==
+                                                      true) {
+                                                    selectedText == ''
+                                                        ? selectedText = i
+                                                        : selectedText =
+                                                            '$selectedText, $i';
+                                                  }
+                                                }
                                               });
                                               this.setState(
                                                   () {}); // Reflect changes in UI
@@ -1061,125 +1160,145 @@ class _JobResumeState extends State<JobResume>
                             ),
 
                             // Display selected services with rate input and service name
-                            ...selectedServices.entries
-                                .where((entry) => entry.value)
-                                .map((entry) {
-                              String service = entry.key;
+                            // if (GlobalVariables.instance.userrole == 2)
+                            //   Padding(
+                            //       padding:
+                            //           const EdgeInsets.symmetric(vertical: 5.0),
+                            //       child: Column(
+                            //           crossAxisAlignment:
+                            //               CrossAxisAlignment.start,
+                            //           children: [
+                            //             Text(selectedText,
+                            //                 style: TextStyle(
+                            //                     fontWeight: FontWeight.bold)),
+                            //           ])),
 
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(service,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    Row(
-                                      children: [
-                                        // Display selected service
-                                        SizedBox(width: 10),
-                                        Text("Rate:"),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: TextFormField(
-                                            textAlignVertical:
-                                                TextAlignVertical.top,
-                                            controller:
-                                                rateControllers[service],
-                                            keyboardType: TextInputType.number,
-                                            decoration: InputDecoration(
-                                              icon: Icon(rupeeSymbol),
-                                              border: OutlineInputBorder(),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 16),
-                                            ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.trim().isEmpty) {
-                                                finalrate = false;
-                                                return 'Please enter a rate';
-                                              }
-                                              if (double.tryParse(value) ==
-                                                  null) {
-                                                finalrate = false;
-                                                return 'Please enter a valid number';
-                                              }
-                                              finalrate = true;
-                                              return null;
-                                            },
-                                            onChanged: (value) {
-                                              setState(() {
-                                                finalrate = true;
-                                                if (selectedRates[service] ==
-                                                        null ||
-                                                    selectedRates[service]!
-                                                        .isEmpty) {
-                                                  selectedRates[service] = [
-                                                    value,
-                                                    GlobalVariables
-                                                        .instance.xmlHandler
-                                                        .getString('perhour')
-                                                  ]; // Initialize with a second item if missing
-                                                } else {
-                                                  selectedRates[service]![0] =
-                                                      value; // Update index 0
+                            if (GlobalVariables.instance.userrole == 1)
+                              ...selectedServices.entries
+                                  .where((entry) => entry.value)
+                                  .map((entry) {
+                                String service = entry.key;
+
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 5.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(service,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      Row(
+                                        children: [
+                                          // Display selected service
+                                          SizedBox(width: 10),
+                                          Text("Rate:"),
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: TextFormField(
+                                              textAlignVertical:
+                                                  TextAlignVertical.top,
+                                              controller:
+                                                  rateControllers[service],
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: InputDecoration(
+                                                icon: Icon(rupeeSymbol),
+                                                border: OutlineInputBorder(),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 16),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.trim().isEmpty) {
+                                                  finalrate = false;
+                                                  return 'Please enter a rate';
                                                 }
-                                              });
+                                                if (double.tryParse(value) ==
+                                                    null) {
+                                                  finalrate = false;
+                                                  return 'Please enter a valid number';
+                                                }
+                                                finalrate = true;
+                                                return null;
+                                              },
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  finalrate = true;
+                                                  if (selectedRates[service] ==
+                                                          null ||
+                                                      selectedRates[service]!
+                                                          .isEmpty) {
+                                                    selectedRates[service] = [
+                                                      value,
+                                                      GlobalVariables
+                                                          .instance.xmlHandler
+                                                          .getString('perhour')
+                                                    ]; // Initialize with a second item if missing
+                                                  } else {
+                                                    selectedRates[service]![0] =
+                                                        value; // Update index 0
+                                                  }
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          DropdownButton<String>(
+                                            value: selectedRates[service] !=
+                                                        null &&
+                                                    selectedRates[service]!
+                                                            .length >
+                                                        1
+                                                ? selectedRates[service]![
+                                                    1] // Use the stored value
+                                                : GlobalVariables
+                                                    .instance.xmlHandler
+                                                    .getString('perhour'),
+                                            items: [
+                                              GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('perhour'),
+                                              GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('perday'),
+                                              GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('permonth')
+                                            ].map((String value) {
+                                              return DropdownMenuItem<String>(
+                                                value: value,
+                                                child: Text(value),
+                                              );
+                                            }).toList(),
+                                            onChanged: (String? newValue) {
+                                              if (selectedRates[service] ==
+                                                      null ||
+                                                  selectedRates[service]!
+                                                          .length <
+                                                      2) {
+                                                selectedRates[service] = [
+                                                  "0",
+                                                  newValue!
+                                                ]; // Initialize with a first item if missing
+                                              } else {
+                                                selectedRates[service]![1] =
+                                                    newValue!; // Update index 1
+                                              }
+
+                                              setState(() {});
                                             },
                                           ),
-                                        ),
-                                        SizedBox(width: 10),
-                                        DropdownButton<String>(
-                                          value:
-                                              selectedRates[service] != null &&
-                                                      selectedRates[service]!
-                                                              .length >
-                                                          1
-                                                  ? selectedRates[service]![
-                                                      1] // Use the stored value
-                                                  : GlobalVariables
-                                                      .instance.xmlHandler
-                                                      .getString('perhour'),
-                                          items: [
-                                            GlobalVariables.instance.xmlHandler
-                                                .getString('perhour'),
-                                            GlobalVariables.instance.xmlHandler
-                                                .getString('perday'),
-                                            GlobalVariables.instance.xmlHandler
-                                                .getString('permonth')
-                                          ].map((String value) {
-                                            return DropdownMenuItem<String>(
-                                              value: value,
-                                              child: Text(value),
-                                            );
-                                          }).toList(),
-                                          onChanged: (String? newValue) {
-                                            if (selectedRates[service] ==
-                                                    null ||
-                                                selectedRates[service]!.length <
-                                                    2) {
-                                              selectedRates[service] = [
-                                                "0",
-                                                newValue!
-                                              ]; // Initialize with a first item if missing
-                                            } else {
-                                              selectedRates[service]![1] =
-                                                  newValue!; // Update index 1
-                                            }
-
-                                            setState(() {});
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    Divider(),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+                                        ],
+                                      ),
+                                      Divider(),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
                           ],
                         );
                       },
@@ -1356,119 +1475,153 @@ class _JobResumeState extends State<JobResume>
                     const SizedBox(
                       height: 10.0,
                     ),
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: [
-                                  Radio(
-                                      value: 1,
-                                      groupValue: _selectedNegoValue,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _selectedNegoValue = value!;
-                                          //toggleWage(1);
-                                        });
-                                      }),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString('nego')),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: [
-                                  Radio(
-                                      value: 2,
-                                      groupValue: _selectedNegoValue,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _selectedNegoValue = value!;
-                                          // toggleWage(2);
-                                        });
-                                      }),
-                                  Expanded(
+                    if (GlobalVariables.instance.userrole == 1)
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: Row(
+                                  children: [
+                                    Radio(
+                                        value: 1,
+                                        groupValue: _selectedNegoValue,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedNegoValue = value!;
+                                            //toggleWage(1);
+                                          });
+                                        }),
+                                    Expanded(
                                       child: Text(GlobalVariables
                                           .instance.xmlHandler
-                                          .getString('nonnego')))
-                                ],
+                                          .getString('nego')),
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15.0,
-                    ),
+                              Expanded(
+                                flex: 1,
+                                child: Row(
+                                  children: [
+                                    Radio(
+                                        value: 2,
+                                        groupValue: _selectedNegoValue,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedNegoValue = value!;
+                                            // toggleWage(2);
+                                          });
+                                        }),
+                                    Expanded(
+                                        child: Text(GlobalVariables
+                                            .instance.xmlHandler
+                                            .getString('nonnego')))
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    // const SizedBox(
+                    //   height: 10.0,
+                    // ),
                     Divider(
                       thickness: 3,
                     ),
                     const SizedBox(
-                      height: 15.0,
+                      height: 5.0,
                     ),
-                    Column(
-                      children: [
-                        Text(
-                          GlobalVariables.instance.xmlHandler
-                              .getString('workhist'),
-                          textAlign: TextAlign.start,
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 2.0, horizontal: 30.0),
-                                decoration: BoxDecoration(
-                                    color: const Color(0xFFedf0f8),
-                                    borderRadius: BorderRadius.circular(30)),
-                                child: TextFormField(
-                                  maxLines: maxlinevalue,
-                                  controller: whcontroller,
-                                  decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: GlobalVariables
-                                          .instance.xmlHandler
-                                          .getString('nowork'),
-                                      hintStyle: TextStyle(
-                                          color: Color(0xFFb2b7bf),
-                                          fontSize: 18.0)),
-                                  readOnly: true,
-                                ),
-                              ),
+                    // Column(
+                    //   children: [
+                    //     Text(
+                    //       GlobalVariables.instance.xmlHandler
+                    //           .getString('workhist'),
+                    //       textAlign: TextAlign.start,
+                    //     ),
+                    //     Row(
+                    //       children: [
+                    //         Expanded(
+                    //           child: Container(
+                    //             padding: const EdgeInsets.symmetric(
+                    //                 vertical: 2.0, horizontal: 30.0),
+                    //             decoration: BoxDecoration(
+                    //                 color: const Color(0xFFedf0f8),
+                    //                 borderRadius: BorderRadius.circular(30)),
+                    //             child: TextFormField(
+                    //               maxLines: maxlinevalue,
+                    //               controller: whcontroller,
+                    //               decoration: InputDecoration(
+                    //                   border: InputBorder.none,
+                    //                   hintText: GlobalVariables
+                    //                       .instance.xmlHandler
+                    //                       .getString('nowork'),
+                    //                   hintStyle: TextStyle(
+                    //                       color: Color(0xFFb2b7bf),
+                    //                       fontSize: 18.0)),
+                    //               readOnly: true,
+                    //             ),
+                    //           ),
+                    //         ),
+                    //         Container(
+                    //             decoration: const BoxDecoration(
+                    //                 color: Color.fromARGB(255, 37, 67, 133),
+                    //                 shape: BoxShape.circle),
+                    //             child: IconButton(
+                    //                 onPressed: addWH,
+                    //                 icon: const Icon(
+                    //                   Icons.add,
+                    //                   color: Colors.white,
+                    //                 ))),
+                    //       ],
+                    //     ),
+                    //   ],
+                    // ),
+                    // const SizedBox(
+                    //   height: 30.0,
+                    // ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 2.0, horizontal: 30.0),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFedf0f8),
+                          borderRadius: BorderRadius.circular(30)),
+                      // decoration: InputDecoration(
+                      //       labelText: "Select Services",
+                      //       border: OutlineInputBorder(),
+                      //     ),
+                      child: TextFormField(
+                        maxLines: 5,
+                        controller: remrkcontroller,
+                        decoration: InputDecoration(
+                            border: InputBorder.none,
+                            labelText: "Enter Remarks",
+                            labelStyle: TextStyle(
+                              color: Color(0xFFb2b7bf),
+                              fontSize: 18.0,
                             ),
-                            Container(
-                                decoration: const BoxDecoration(
-                                    color: Color.fromARGB(255, 37, 67, 133),
-                                    shape: BoxShape.circle),
-                                child: IconButton(
-                                    onPressed: addWH,
-                                    icon: const Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ))),
-                          ],
-                        ),
-                      ],
+                            alignLabelWithHint: true),
+                        // readOnly: true,
+                      ),
                     ),
                     const SizedBox(
-                      height: 30.0,
+                      height: 10.0,
                     ),
                     GestureDetector(
                       onTap: () {
-                        if (selectedDaysValue.isNotEmpty &&
+                        if (GlobalVariables.instance.userrole == 1 &&
+                            selectedDaysValue.isNotEmpty &&
                             validateTimeSlots() == null &&
                             validateSelectedTimings() == null &&
                             finalrate) {
+                          addService();
+                        } else if (GlobalVariables.instance.userrole == 2 &&
+                            selectedDaysValue.isNotEmpty &&
+                            validateTimeSlots() == null &&
+                            validateSelectedTimings() == null) {
                           addService();
                         } else {
                           print(
@@ -1488,13 +1641,19 @@ class _JobResumeState extends State<JobResume>
                             widget.kind == 1
                                 ? GlobalVariables.instance.xmlHandler
                                     .getString('postserv')
-                                : GlobalVariables.instance.xmlHandler
-                                    .getString('editserv'),
+                                : widget.kind == 2
+                                    ? GlobalVariables.instance.xmlHandler
+                                        .getString('editserv')
+                                    : GlobalVariables.instance.xmlHandler
+                                        .getString('sendack'),
                             style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 22.0,
+                                fontSize: 16.0,
                                 fontWeight: FontWeight.w500),
                           ))),
+                    ),
+                    const SizedBox(
+                      height: 30.0,
                     ),
                   ],
                 ),

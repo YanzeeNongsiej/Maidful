@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ibitf_app/chatpage.dart';
+import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/starrating.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -31,6 +33,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final _outerScrollController = ScrollController();
+  final _innerScrollController = ScrollController();
   String? _downloadUrl;
   String? _myaddr, _mydob, thelangs;
   List<dynamic>? languages;
@@ -69,7 +73,26 @@ class _ProfilePageState extends State<ProfilePage> {
     fetchSkills();
     profilepic();
     super.initState();
+    //for the scrolls
+    _innerScrollController.addListener(() {
+      if (_innerScrollController.offset >=
+              _innerScrollController.position.maxScrollExtent &&
+          !_innerScrollController.position.outOfRange) {
+        _outerScrollController.animateTo(
+          _outerScrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
     //GlobalVariables.instance.addListener(fetchSkills);
+  }
+
+  @override
+  void dispose() {
+    _outerScrollController.dispose();
+    _innerScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> profilepic() async {
@@ -258,18 +281,20 @@ class _ProfilePageState extends State<ProfilePage> {
             doc[GlobalVariables.instance.selected]
           ]; // Get skill ID and English name
         }).toList();
-        setState(() {
-          myskills = querySnapshot.docs.map((doc) => doc.id).toList();
-          skillsWithScores = querySnapshot.docs.map((doc) {
-            return {
-              'skill': doc.id, // Document ID (e.g., Skill1)
-              'score': doc['score'], // Get the score field
-            };
-          }).toList();
+        if (mounted) {
+          setState(() {
+            myskills = querySnapshot.docs.map((doc) => doc.id).toList();
+            skillsWithScores = querySnapshot.docs.map((doc) {
+              return {
+                'skill': doc.id, // Document ID (e.g., Skill1)
+                'score': doc['score'], // Get the score field
+              };
+            }).toList();
 
-          // Get skill document IDs
-          //isLoading = false; // Update loading state
-        });
+            // Get skill document IDs
+            //isLoading = false; // Update loading state
+          });
+        }
       } else {
         print('No user is currently logged in.');
         setState(() {
@@ -525,6 +550,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return qs;
   }
 
+  Future<QuerySnapshot> getCompletedServices() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot qs = await maidDao().getCompletedServices(userID);
+    return qs;
+  }
+
   Future<List<String>> getActiveName(String receive) async {
     return await maidDao().getActiveName(receive);
   }
@@ -587,8 +618,8 @@ class _ProfilePageState extends State<ProfilePage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
-                    notifyUser(item.get('receiver'), "Completion Request",
-                        "A completion request was sent by $usrname", item.id);
+                    ChatController().sendMessage(item.get('receiverid'),
+                        "New Completion Request", item.id, false);
                     updateStatus(4, item);
 
                     Navigator.of(context).pop();
@@ -731,348 +762,359 @@ class _ProfilePageState extends State<ProfilePage> {
   //   );
   // }
 
-  Widget _buildActiveServiceList(item) {
-    Map<String, dynamic> time = item.get('timing');
-    List<String> allShifts = [];
-    time.forEach((key, value) {
-      if (value is List<dynamic>) {
-        allShifts.addAll(value.map((e) => e.toString()));
-      }
-    });
-    return SingleChildScrollView(
-      child: Expanded(
-        child: Card(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () => {},
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text.rich(TextSpan(
-                          children: <InlineSpan>[
-                            const TextSpan(
-                              text: 'Schedule: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: item.get("schedule"),
-                            ),
-                            const TextSpan(
-                              text: '\nTiming: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            ...List.generate(
-                              (allShifts.length / 2).ceil(),
-                              (i) => TextSpan(
-                                text:
-                                    '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                style: const TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const TextSpan(
-                              text: '\nDays: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: item.get("days").join(', '),
-                            ),
-                          ],
-                          style: const TextStyle(
-                            fontSize: 15,
-                          ))),
-                    ],
-                  ),
-                ),
-              ),
-              if (GlobalVariables.instance.userrole == 2 &&
-                  item.get('status') == 2)
-                Row(
-                  // mainAxisAlignment: MainAxisAlignment.end,
-
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Card(
-                        // elevation: 10,
-                        color: Colors.blue,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              completeService(context, item);
-                            },
-                            child: const Row(
-                              children: [
-                                Icon(
-                                  Icons.done_outline_rounded,
-                                  color: Colors.white,
-                                ),
-                                Text(
-                                  'Complete Service',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 15),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    // return GestureDetector(
-    //   onTap: () => {},
-    //   child: Text(
-    //     item.get("rate"),
-    //     textAlign: TextAlign.center,
-    //   ),
-    // );
-  }
-
-  Widget _buildServiceList(item) {
+  Widget _buildActiveServiceList(item, what) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Column(
-            children: [
-              buildTextInfo(
-                  "Posted on",
-                  DateFormat('dd MMM yyyy')
-                      .format((item.get("timestamp") as Timestamp).toDate())),
-              buildScheduleSection("Schedule", item.get("schedule")),
-              buildServiceSection("Services", item.get("services")),
-              buildSection("Timing", item.get("timing")),
-              buildSection("Days Available", item.get("days")),
-              buildTextInfo("Negotiable", item.get("negotiable")),
-              buildSection("Work History", item.get("work_history")),
-            ],
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage1(),
-                      ),
-                    );
-                  },
+          if (what == "Completed")
+            Column(
+              children: [
+                buildTextInfo(
+                  "Started on",
+                  item.data().containsKey("period") &&
+                          item["period"].containsKey("start")
+                      ? DateFormat('dd MMM yyyy').format(
+                          (item.get("period.start") as Timestamp).toDate(),
+                        )
+                      : "Not available",
+                ),
+                buildTextInfo(
+                  "Completed on",
+                  item.data().containsKey("period") &&
+                          item["period"].containsKey("end")
+                      ? DateFormat('dd MMM yyyy').format(
+                          (item.get("period.end") as Timestamp).toDate(),
+                        )
+                      : "Not available",
+                ),
+              ],
+            ),
+          buildScheduleSection("Schedule", item.get("schedule")),
+          buildSection("Services", item.get("services")),
+          buildSection("Timing", item.get("timing")),
+          buildSection("Days Available", item.get("days")),
+          buildLongText("Remarks", item.get("remarks")),
+          if (GlobalVariables.instance.userrole == 2 &&
+              [2, 6].contains(item.get('status')))
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.end,
+
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
                   child: Card(
+                    // elevation: 10,
                     color: Colors.blue,
                     child: Padding(
                       padding: const EdgeInsets.all(5.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit, color: Colors.white),
-                          const Text('P1',
-                              style: TextStyle(color: Colors.white)),
-                        ],
+                      child: GestureDetector(
+                        onTap: () {
+                          completeService(context, item);
+                        },
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.done_outline_rounded,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Complete Service',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage2(),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    color: Colors.red[400],
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, color: Colors.white),
-                          const Text('P2',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage3(),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    color: Colors.red[400],
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, color: Colors.white),
-                          const Text('P3',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildJobProfileList(item) {
-    Map<String, dynamic> time = item.get('timing');
-    List<String> allShifts = [];
-    time.forEach((key, value) {
-      if (value is List<dynamic>) {
-        allShifts.addAll(value.map((e) => e.toString()));
-      }
-    });
-
-    return SingleChildScrollView(
-      child: Expanded(
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: <InlineSpan>[
-                          const TextSpan(
-                            text: 'Schedule: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("schedule")),
-                          const TextSpan(
-                            text: '\nTiming: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          ...List.generate(
-                            (allShifts.length / 2).ceil(),
-                            (i) => TextSpan(
-                              text:
-                                  '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                          ),
-                          const TextSpan(
-                            text: 'Posted on: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(
-                              text: DateFormat('dd-MMM-yyyy')
-                                  .format((item.get('timestamp')).toDate())),
-                          const TextSpan(
-                            text: '\nDays: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("days").join(', ')),
-                          const TextSpan(
-                            text: '\nServices: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("services").join(', ')),
-                          const TextSpan(
-                            text: '\nWage: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("wage")),
-                          const TextSpan(
-                            text: '\nNegotiable: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: item.get("negotiable")),
-                        ],
-                        style: const TextStyle(fontSize: 12),
+  Widget _buildServiceList(item) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollEndNotification) {
+          if (_innerScrollController.offset >=
+              _innerScrollController.position.maxScrollExtent) {
+            _outerScrollController.animateTo(
+              _outerScrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          } else if (_innerScrollController.offset <=
+              _innerScrollController.position.minScrollExtent) {
+            _outerScrollController.animateTo(
+              _outerScrollController.position.minScrollExtent,
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+        return true;
+      },
+      child: SingleChildScrollView(
+        controller: _innerScrollController,
+        child: Column(
+          children: [
+            Column(
+              children: [
+                buildTextInfo(
+                    "Posted on",
+                    DateFormat('dd MMM yyyy')
+                        .format((item.get("timestamp") as Timestamp).toDate())),
+                buildScheduleSection("Schedule", item.get("schedule")),
+                GlobalVariables.instance.userrole == 1
+                    ? buildServiceSection("Services", item.get("services"))
+                    : buildSection("Services", item.get("services")),
+                buildSection("Timing", item.get("timing")),
+                buildSection("Days Available", item.get("days")),
+                buildTextInfo("Negotiable", item.get("negotiable")),
+                buildLongText("Remarks", item.get("remarks")),
+                SizedBox(
+                  height: 10,
+                )
+                // buildSection("Work History", item.get("work_history")),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => ProfilePage1(),
+                      //   ),
+                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => JobResume(2),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      color: Colors.blue,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.edit, color: Colors.white),
+                            const Text('Edit',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => JobResume(2),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        color: Colors.blue,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.edit, color: Colors.white),
-                              const Text('Edit',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => ProfilePage2(),
+                      //   ),
+                      // );
+                      _confirmDelete(context, item.id, 'jobprofile');
+                    },
+                    child: Card(
+                      color: Colors.red[400],
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.delete, color: Colors.white),
+                            const Text('Delete',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        _confirmDelete(context, item.id, 'jobprofile');
-                      },
-                      child: Card(
-                        color: Colors.red[400],
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.delete, color: Colors.white),
-                              const Text('Remove',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                // Expanded(
+                //   child: GestureDetector(
+                //     onTap: () {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => ProfilePage3(),
+                //         ),
+                //       );
+                //     },
+                //     child: Card(
+                //       color: Colors.red[400],
+                //       child: Padding(
+                //         padding: const EdgeInsets.all(5.0),
+                //         child: Row(
+                //           children: [
+                //             const Icon(Icons.delete, color: Colors.white),
+                //             const Text('P3',
+                //                 style: TextStyle(color: Colors.white)),
+                //           ],
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
+
+  // Widget _buildJobProfileList(item) {
+  //   Map<String, dynamic> time = item.get('timing');
+  //   List<String> allShifts = [];
+  //   time.forEach((key, value) {
+  //     if (value is List<dynamic>) {
+  //       allShifts.addAll(value.map((e) => e.toString()));
+  //     }
+  //   });
+
+  //   return SingleChildScrollView(
+  //     child: Expanded(
+  //       child: Card(
+  //         elevation: 4,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //         ),
+  //         child: Column(
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.all(8.0),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text.rich(
+  //                     TextSpan(
+  //                       children: <InlineSpan>[
+  //                         const TextSpan(
+  //                           text: 'Schedule: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(text: item.get("schedule")),
+  //                         const TextSpan(
+  //                           text: '\nTiming: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         ...List.generate(
+  //                           (allShifts.length / 2).ceil(),
+  //                           (i) => TextSpan(
+  //                             text:
+  //                                 '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+  //                             style: const TextStyle(color: Colors.black),
+  //                           ),
+  //                         ),
+  //                         const TextSpan(
+  //                           text: 'Posted on: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(
+  //                             text: DateFormat('dd-MMM-yyyy')
+  //                                 .format((item.get('timestamp')).toDate())),
+  //                         const TextSpan(
+  //                           text: '\nDays: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(text: item.get("days").join(', ')),
+  //                         const TextSpan(
+  //                           text: '\nServices: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(text: item.get("services").join(', ')),
+  //                         const TextSpan(
+  //                           text: '\nWage: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(text: item.get("wage")),
+  //                         const TextSpan(
+  //                           text: '\nNegotiable: ',
+  //                           style: TextStyle(fontWeight: FontWeight.bold),
+  //                         ),
+  //                         TextSpan(text: item.get("negotiable")),
+  //                       ],
+  //                       style: const TextStyle(fontSize: 12),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: GestureDetector(
+  //                     onTap: () {
+  //                       Navigator.push(
+  //                         context,
+  //                         MaterialPageRoute(
+  //                           builder: (context) => JobResume(2),
+  //                         ),
+  //                       );
+  //                     },
+  //                     child: Card(
+  //                       color: Colors.blue,
+  //                       child: Padding(
+  //                         padding: const EdgeInsets.all(5.0),
+  //                         child: Row(
+  //                           children: [
+  //                             const Icon(Icons.edit, color: Colors.white),
+  //                             const Text('Edit',
+  //                                 style: TextStyle(color: Colors.white)),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 Expanded(
+  //                   child: GestureDetector(
+  //                     onTap: () {
+  //                       _confirmDelete(context, item.id, 'jobprofile');
+  //                     },
+  //                     child: Card(
+  //                       color: Colors.red[400],
+  //                       child: Padding(
+  //                         padding: const EdgeInsets.all(5.0),
+  //                         child: Row(
+  //                           children: [
+  //                             const Icon(Icons.delete, color: Colors.white),
+  //                             const Text('Remove',
+  //                                 style: TextStyle(color: Colors.white)),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _confirmDelete(BuildContext context, String docId, String kind) {
     showDialog(
@@ -1245,7 +1287,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget showMyServices() {
     return FutureBuilder(
-      future: fetchOwnServices(),
+      future: GlobalVariables.instance.userrole == 1
+          ? fetchOwnServices()
+          : fetchOwnJobProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text("loading...");
@@ -1361,6 +1405,214 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget showActiveAndCompleteServices(String what) {
+    return FutureBuilder(
+      future: what == "Active" ? getActiveServices() : getCompletedServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text("loading...");
+        }
+        if (snapshot.hasData) {
+          if (snapshot.data!.docs.isEmpty) {
+            return Text(
+                GlobalVariables.instance.xmlHandler.getString('noserv'));
+          } else {
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 8,
+                childAspectRatio: 1.2, // Adjust for better spacing
+              ),
+              // padding: const EdgeInsets.all(8), // Add padding to grid
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                final item = snapshot.data!.docs[index];
+
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.teal, Colors.blueAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (item.get('status') == 4) {
+                        List<String> res = await getActiveName(
+                            GlobalVariables.instance.userrole == 1
+                                ? item.get('userid')
+                                : item.get('receiverid'));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ChatPage(
+                                      name: res[0],
+                                      photo: res[1],
+                                      receiverID: item.get("receiverid"),
+                                      // postType: chatRoomItem
+                                      //     .get("postType"),
+                                      // postTypeID: chatRoomItem
+                                      //     .get("postTypeID"),
+                                      readMsg: true,
+                                    )));
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: FutureBuilder<List<String>>(
+                                future: getActiveName(
+                                    GlobalVariables.instance.userrole == 1
+                                        ? item.get('userid')
+                                        : item.get('receiverid')),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Row(
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(width: 10),
+                                        Text("Loading Title..."),
+                                      ],
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.hasData) {
+                                    return Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 12,
+                                          backgroundImage:
+                                              NetworkImage(snapshot.data![1]),
+                                        ),
+                                        SizedBox(width: 7),
+                                        Expanded(
+                                          child: Text(
+                                            snapshot.data!.first,
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  } else {
+                                    return Text('No Title Available');
+                                  }
+                                },
+                              ),
+                              content: _buildActiveServiceList(item, what),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  child: Text('Cancel'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Text(
+                          //   '${GlobalVariables.instance.xmlHandler.getString('current')}${GlobalVariables.instance.userrole == 1 ? GlobalVariables.instance.xmlHandler.getString('employer') : GlobalVariables.instance.xmlHandler.getString('maiden')}',
+                          //   style: const TextStyle(
+                          //     fontSize: 18,
+                          //     fontWeight: FontWeight.bold,
+                          //     color: Colors.white,
+                          //   ),
+                          // ),
+                          // const SizedBox(height: 8),
+                          FutureBuilder<List<String>>(
+                            future: getActiveName(
+                                GlobalVariables.instance.userrole == 1
+                                    ? item.get('userid')
+                                    : item.get('receiverid')),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator();
+                              } else if (snapshot.hasError) {
+                                return Text(
+                                  'Error: ${snapshot.error}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.red,
+                                  ),
+                                );
+                              } else if (snapshot.hasData) {
+                                return Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 12,
+                                      backgroundImage:
+                                          NetworkImage(snapshot.data![1]),
+                                    ),
+                                    const SizedBox(width: 7),
+                                    Expanded(
+                                      child: Text(
+                                        snapshot.data![0],
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              } else {
+                                return Text(
+                                  'No data available',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          SizedBox(
+                            height: 4,
+                          ),
+                          if (item.get('status') == 4)
+                            Card(
+                              color: Colors.amber[300],
+                              child: const Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'Completion Request Pending',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.blueGrey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        } else {
+          return Text(GlobalVariables.instance.xmlHandler.getString('noserv'));
+        }
+      },
+    );
+  }
+
   Widget _tabItem(String title) {
     return Tab(
       child: Container(
@@ -1381,1523 +1633,1546 @@ class _ProfilePageState extends State<ProfilePage> {
         animation: GlobalVariables.instance,
         builder: (context, child) {
           return SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width / 1.1,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      colors: [Colors.teal, Colors.blueAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            controller: _outerScrollController,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 70.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 1.1,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        colors: [Colors.teal, Colors.blueAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 5))
+                      ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 5))
-                    ],
-                  ),
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: _downloadUrl != null
-                            ? NetworkImage(_downloadUrl!)
-                            : loadImage() as ImageProvider<Object>,
-                        child: Align(
-                          alignment: Alignment
-                              .bottomRight, // Align icon to bottom right
-                          child: SizedBox(
-                            height: 40,
-                            width: 40,
-                            child: Card(
-                              margin: EdgeInsets.all(0),
-                              shape: CircleBorder(),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  color: Colors.grey,
-                                  size: 25,
-                                ),
-                                onPressed: () async {
-                                  // Your edit action here
-                                  ImagePicker picker = ImagePicker();
-                                  final XFile? image = await picker.pickImage(
-                                      source: ImageSource.gallery);
-                                  if (image == null) {
-                                    return; // No image selected
-                                  }
-
-                                  // Upload to Firebase Storage
-                                  File file = File(image.path);
-                                  try {
-                                    String fileName = image.name;
-                                    List<String> separate = fileName.split('.');
-                                    String filetype = separate[1];
-                                    final ref = FirebaseStorage.instance
-                                        .ref()
-                                        .child(
-                                            '${GlobalVariables.instance.username}/profile.$filetype');
-                                    await ref.putFile(file);
-                                    String downloadUrl =
-                                        await ref.getDownloadURL();
-
-                                    // Store URL in Firestore
-
-                                    QuerySnapshot querySnapshot =
-                                        await FirebaseFirestore.instance
-                                            .collection("users")
-                                            .where("userid", isEqualTo: userID)
-                                            .get();
-
-                                    // Check if we found any documents
-                                    if (querySnapshot.docs.isNotEmpty) {
-                                      // Assuming we want to update the first matching document
-                                      DocumentSnapshot userDoc =
-                                          querySnapshot.docs.first;
-
-                                      // Update the document with the new URL
-                                      await userDoc.reference.set(
-                                        {'url': downloadUrl},
-                                        SetOptions(merge: true),
-                                      );
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _downloadUrl != null
+                              ? NetworkImage(_downloadUrl!)
+                              : loadImage() as ImageProvider<Object>,
+                          child: Align(
+                            alignment: Alignment
+                                .bottomRight, // Align icon to bottom right
+                            child: SizedBox(
+                              height: 40,
+                              width: 40,
+                              child: Card(
+                                margin: EdgeInsets.all(0),
+                                shape: CircleBorder(),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    color: Colors.grey,
+                                    size: 25,
+                                  ),
+                                  onPressed: () async {
+                                    // Your edit action here
+                                    ImagePicker picker = ImagePicker();
+                                    final XFile? image = await picker.pickImage(
+                                        source: ImageSource.gallery);
+                                    if (image == null) {
+                                      return; // No image selected
                                     }
 
-                                    setState(() {
-                                      // Update state with the new URL
-                                      _downloadUrl = downloadUrl;
-                                    });
-                                  } catch (e) {
-                                    print('Error $e');
-                                  }
-                                },
+                                    // Upload to Firebase Storage
+                                    File file = File(image.path);
+                                    try {
+                                      String fileName = image.name;
+                                      List<String> separate =
+                                          fileName.split('.');
+                                      String filetype = separate[1];
+                                      final ref = FirebaseStorage.instance
+                                          .ref()
+                                          .child(
+                                              '${GlobalVariables.instance.username}/profile.$filetype');
+                                      await ref.putFile(file);
+                                      String downloadUrl =
+                                          await ref.getDownloadURL();
+
+                                      // Store URL in Firestore
+
+                                      QuerySnapshot querySnapshot =
+                                          await FirebaseFirestore.instance
+                                              .collection("users")
+                                              .where("userid",
+                                                  isEqualTo: userID)
+                                              .get();
+
+                                      // Check if we found any documents
+                                      if (querySnapshot.docs.isNotEmpty) {
+                                        // Assuming we want to update the first matching document
+                                        DocumentSnapshot userDoc =
+                                            querySnapshot.docs.first;
+
+                                        // Update the document with the new URL
+                                        await userDoc.reference.set(
+                                          {'url': downloadUrl},
+                                          SetOptions(merge: true),
+                                        );
+                                      }
+
+                                      setState(() {
+                                        // Update state with the new URL
+                                        _downloadUrl = downloadUrl;
+                                      });
+                                    } catch (e) {
+                                      print('Error $e');
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.person_3_rounded,
-                            color: Colors.grey,
-                          ),
-                          Text(usrname ?? "Not Available",
+                        SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_3_rounded,
+                              color: Colors.grey,
+                            ),
+                            Text(usrname ?? "Not Available",
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.location_on_sharp,
+                              color: Colors.grey,
+                            ),
+                            Text(
+                              _myaddr ?? "Address",
                               style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.location_on_sharp,
-                            color: Colors.grey,
-                          ),
-                          Text(
-                            _myaddr ?? "Address",
-                            style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      userDoc?['gender'] == 1
-                          ? Text("Gender: Male",
-                              style: TextStyle(color: Colors.white70))
-                          : Text("Gender: Female",
-                              style: TextStyle(color: Colors.white70)),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Date of Birth: ",
-                              style: const TextStyle(color: Colors.white70)),
-                          Text("${userDoc?['dob']}",
-                              style: TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Languages known: ",
-                              style: const TextStyle(color: Colors.white70)),
-                          Text("${userDoc?['language'].join(', ')}",
-                              style: TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Implement edit profile functionality here
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              String newaddr =
-                                  _myaddr.toString(); // Use existing username
-                              String newusrname = usrname.toString();
-                              String newdob = _mydob.toString();
-                              return AlertDialog(
-                                title: Text('Edit Info'),
-                                content: StatefulBuilder(
-                                    builder: (context, StateSetter setState) {
-                                  return SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(GlobalVariables
-                                                .instance.xmlHandler
-                                                .getString('nam')),
-                                            Expanded(
-                                              child: TextField(
-                                                onChanged: (value) {
-                                                  newusrname =
-                                                      value; // Update username from input
-                                                },
-                                                controller:
-                                                    TextEditingController(
-                                                        text: usrname),
-                                                decoration: InputDecoration(
-                                                    hintText: "Enter new Name"),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text(GlobalVariables
-                                                .instance.xmlHandler
-                                                .getString('addr')),
-                                            Expanded(
-                                              child: TextField(
-                                                onChanged: (value) {
-                                                  newaddr =
-                                                      value; // Update username from input
-                                                },
-                                                controller:
-                                                    TextEditingController(
-                                                        text: _myaddr),
-                                                decoration: InputDecoration(
-                                                    hintText:
-                                                        "Enter new Address"),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text("Date of Birth:"),
-                                            Expanded(
-                                              child: TextFormField(
-                                                validator: (value) {
-                                                  if (value == null ||
-                                                      value.isEmpty) {
-                                                    return 'Please Select Date of Birth';
-                                                  }
-                                                  return _mydob;
-                                                },
-                                                controller: dobcontroller,
-
-                                                onTap: () {
-                                                  showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        return AlertDialog(
-                                                          title: const Text(
-                                                              'Select Date of Birth'),
-                                                          content: SizedBox(
-                                                            height: 200,
-                                                            width: 300,
-                                                            child:
-                                                                CupertinoDatePicker(
-                                                              mode:
-                                                                  CupertinoDatePickerMode
-                                                                      .date,
-                                                              initialDateTime:
-                                                                  _mydob == ''
-                                                                      ? DateTime
-                                                                          .now()
-                                                                      : DateTime
-                                                                          .parse(
-                                                                              _mydob!),
-                                                              onDateTimeChanged:
-                                                                  (DateTime
-                                                                      newDateTime) {
-                                                                dt =
-                                                                    newDateTime;
-                                                                dte = dateFormat
-                                                                    .format(dt);
-                                                                dobcontroller
-                                                                    .text = dte;
-                                                                newdob =
-                                                                    dobcontroller
-                                                                        .text;
-                                                                _dobColor =
-                                                                    const Color
-                                                                        .fromARGB(
-                                                                        255,
-                                                                        0,
-                                                                        0,
-                                                                        0);
-                                                                // Do something
-                                                              },
-                                                            ),
-                                                          ),
-                                                        );
-                                                      });
-                                                  FocusScope.of(context)
-                                                      .requestFocus(
-                                                          FocusNode());
-                                                },
-
-                                                // controller: passwordcontroller,
-                                                decoration: InputDecoration(
-                                                    border: InputBorder.none,
-                                                    hintText: _mydob,
-                                                    hintStyle: TextStyle(
-                                                        color: _dobColor,
-                                                        fontSize: 18.0)),
-                                                readOnly: true,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Text(
-                                          'Languages:',
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 100,
-                                          width: 300,
-                                          child: ListView.builder(
-                                            shrinkWrap: true,
-                                            itemCount: languages?.length,
-                                            itemBuilder: (context, index) {
-                                              String language =
-                                                  languages![index].toString();
-                                              return ListTile(
-                                                title: Text(language),
-                                                trailing: IconButton(
-                                                    icon: Icon(
-                                                        Icons.remove_circle,
-                                                        color: Colors.red),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        languages
-                                                            ?.remove(language);
-                                                      });
-                                                    }),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextField(
-                                                controller: _languageController,
-                                                decoration: InputDecoration(
-                                                  labelText:
-                                                      'Add a new language',
-                                                  border: OutlineInputBorder(),
+                                  fontSize: 16,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        userDoc?['gender'] == 1
+                            ? Text("Gender: Male",
+                                style: TextStyle(color: Colors.white70))
+                            : Text("Gender: Female",
+                                style: TextStyle(color: Colors.white70)),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("Date of Birth: ",
+                                style: const TextStyle(color: Colors.white70)),
+                            Text("${userDoc?['dob']}",
+                                style: TextStyle(color: Colors.white70)),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("Languages known: ",
+                                style: const TextStyle(color: Colors.white70)),
+                            Text("${userDoc?['language'].join(', ')}",
+                                style: TextStyle(color: Colors.white70)),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Implement edit profile functionality here
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                String newaddr =
+                                    _myaddr.toString(); // Use existing username
+                                String newusrname = usrname.toString();
+                                String newdob = _mydob.toString();
+                                return AlertDialog(
+                                  title: Text('Edit Info'),
+                                  content: StatefulBuilder(
+                                      builder: (context, StateSetter setState) {
+                                    return SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('nam')),
+                                              Expanded(
+                                                child: TextField(
+                                                  onChanged: (value) {
+                                                    newusrname =
+                                                        value; // Update username from input
+                                                  },
+                                                  controller:
+                                                      TextEditingController(
+                                                          text: usrname),
+                                                  decoration: InputDecoration(
+                                                      hintText:
+                                                          "Enter new Name"),
                                                 ),
                                               ),
-                                            ),
-                                            SizedBox(width: 10),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                String newLanguage =
-                                                    _languageController.text
-                                                        .trim();
-                                                if (newLanguage.isNotEmpty &&
-                                                    !languages!.contains(
-                                                        newLanguage)) {
-                                                  setState(() {
-                                                    languages?.add(newLanguage);
-                                                  });
-                                                  _languageController.clear();
-                                                }
-                                              },
-                                              child: Text('Add'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: Text('Cancel'),
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(); // Close dialog
-                                    },
-                                  ),
-                                  TextButton(
-                                    child: Text('Save'),
-                                    onPressed: () {
-                                      setState(() {
-                                        _myaddr = newaddr;
-                                        GlobalVariables.instance.username =
-                                            newusrname;
-                                        usrname = newusrname;
-                                        // Update username in UI
-                                        _mydob = newdob;
-                                      });
-                                      if (userDocId!.isNotEmpty) {
-                                        FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(userDocId)
-                                            .update({
-                                          'address': newaddr,
-                                          'name': newusrname,
-                                          'dob': newdob,
-                                          'language': languages,
-                                        }); // Update Firebase
-                                      }
-                                      Navigator.of(context)
-                                          .pop(); // Close dialog
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.teal,
-                          backgroundColor: Colors.white,
-                          shape: StadiumBorder(),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 50, vertical: 10),
-                        ),
-                        child: Text("Edit Profile",
-                            style: TextStyle(fontSize: 16)),
-                      ),
-                    ],
-                  ),
-                ),
-                // Row(
-                //   children: [
-                //     Expanded(
-                //       child: Card(
-                //         child: Padding(
-                //           padding: const EdgeInsets.all(8.0),
-                //           child: Row(
-                //             children: [
-                //               const SizedBox(height: 10, width: 10),
-                //               Expanded(
-                //                 child: Column(
-                //                   crossAxisAlignment: CrossAxisAlignment.start,
-                //                   children: [
-                //                     // Row(
-                //                     //   mainAxisAlignment: MainAxisAlignment.end,
-                //                     //   children: [
-                //                     //     IconButton(
-                //                     //       icon: Icon(
-                //                     //         Icons.info_outline,
-                //                     //         color: Colors.grey,
-                //                     //       ),
-                //                     //       onPressed: () {
-                //                     //         showDialog(
-                //                     //           context: context,
-                //                     //           builder: (BuildContext context) {
-                //                     //             // Use existing username
-                //                     //             return AlertDialog(
-                //                     //               scrollable: true,
-                //                     //               titlePadding:
-                //                     //                   EdgeInsets.all(0),
-                //                     //               title: Container(
-                //                     //                 padding: EdgeInsets.all(16),
-                //                     //                 decoration: BoxDecoration(
-                //                     //                     color: Colors.blue,
-                //                     //                     borderRadius:
-                //                     //                         BorderRadius.only(
-                //                     //                             topLeft: Radius
-                //                     //                                 .circular(
-                //                     //                                     20),
-                //                     //                             topRight: Radius
-                //                     //                                 .circular(
-                //                     //                                     20))),
-                //                     //                 child: Row(
-                //                     //                   children: [
-                //                     //                     Icon(
-                //                     //                       Icons.info_outline,
-                //                     //                       size: 30,
-                //                     //                       color: Colors.white,
-                //                     //                     ),
-                //                     //                     SizedBox(width: 10),
-                //                     //                     Text(
-                //                     //                       'User\'s General Info',
-                //                     //                       style: TextStyle(
-                //                     //                           color:
-                //                     //                               Colors.white),
-                //                     //                     ),
-                //                     //                   ],
-                //                     //                 ),
-                //                     //               ),
-                //                     //               content: Column(
-                //                     //                 crossAxisAlignment:
-                //                     //                     CrossAxisAlignment
-                //                     //                         .start,
-                //                     //                 children: [
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text(
-                //                     //                           GlobalVariables
-                //                     //                               .instance
-                //                     //                               .xmlHandler
-                //                     //                               .getString(
-                //                     //                                   'nam'),
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       Text("$usrname"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text("Username: ",
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       Text(
-                //                     //                           "${userDoc?['username']}"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text("Gender: ",
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       userDoc?['gender'] ==
-                //                     //                               1
-                //                     //                           ? Text("Male")
-                //                     //                           : Text("Female"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text(
-                //                     //                           "Date of Birth: ",
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       Text(
-                //                     //                           "${userDoc?['dob']}"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text(
-                //                     //                           GlobalVariables
-                //                     //                               .instance
-                //                     //                               .xmlHandler
-                //                     //                               .getString(
-                //                     //                                   'addr'),
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       Text(
-                //                     //                           "${userDoc?['address']}"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text("Primary Role: ",
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       userDoc?['role'] == 1
-                //                     //                           ? Text("Maid")
-                //                     //                           : Text(
-                //                     //                               "Home-Owner"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                   Row(
-                //                     //                     children: [
-                //                     //                       Text(
-                //                     //                           "Language known: ",
-                //                     //                           style: const TextStyle(
-                //                     //                               fontWeight:
-                //                     //                                   FontWeight
-                //                     //                                       .bold)),
-                //                     //                       Text(
-                //                     //                           "${userDoc?['language'].toString()}"),
-                //                     //                     ],
-                //                     //                   ),
-                //                     //                 ],
-                //                     //               ),
-                //                     //               actions: <Widget>[
-                //                     //                 TextButton(
-                //                     //                   child: Text('Cancel'),
-                //                     //                   onPressed: () {
-                //                     //                     Navigator.of(context)
-                //                     //                         .pop(); // Close dialog
-                //                     //                   },
-                //                     //                 ),
-                //                     //               ],
-                //                     //             );
-                //                     //           },
-                //                     //         );
-                //                     //       },
-                //                     //     ),
-                //                     //     IconButton(
-                //                     //       icon: Icon(
-                //                     //         Icons.edit_outlined,
-                //                     //         color: Colors.grey,
-                //                     //       ),
-                //                     //       onPressed: () {
-
-                //                     //       },
-                //                     //     ),
-                //                     //   ],
-                //                     // ),
-                //                   ],
-                //                 ),
-                //               ),
-                //             ],
-                //           ),
-                //         ),
-                //       ),
-                //     ),
-                //   ],
-                // ),
-                //Row(children: [Expanded(child: showDocuments())]),
-                if (GlobalVariables.instance.urole == 1)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: [
-                                // _buildServiceList(),
-
-                                Container(
-                                    padding: EdgeInsets.only(
-                                        left: 10, right: 10, bottom: 10),
-                                    width:
-                                        MediaQuery.of(context).size.width / 1.1,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(24),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.blueAccent,
-                                          Colors.teal,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 10,
-                                            offset: Offset(0, 5))
-                                      ],
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        showSkills(),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Card(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          30)),
-                                              // elevation: 10,
-                                              color: Colors.white,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 15.0,
-                                                    right: 20,
-                                                    top: 5,
-                                                    bottom: 5),
-                                                child: GestureDetector(
-                                                  onTap: () async {
-                                                    List<String> options = [];
-
-                                                    // Fetch skills from Firestore
-                                                    QuerySnapshot snapshot =
-                                                        await FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                'skills')
-                                                            .get();
-
-                                                    //fetch only skills from the user
-
-                                                    print(
-                                                        snapshot.docs.first.id);
-                                                    // print(myskills);
-                                                    for (var doc
-                                                        in snapshot.docs) {
-                                                      // Get the skill for the selected language
-
-                                                      if (doc[GlobalVariables
-                                                                  .instance
-                                                                  .selected] !=
-                                                              null &&
-                                                          !myskills.contains(
-                                                              doc.id)) {
-                                                        options.add(doc[
-                                                            GlobalVariables
-                                                                .instance
-                                                                .selected]);
-                                                      }
-                                                    }
-                                                    List<String>
-                                                        selectedOptions = [];
-
-                                                    await showDialog<
-                                                        List<String>>(
-                                                      context: context,
-                                                      builder: (BuildContext
-                                                          context) {
-                                                        return AlertDialog(
-                                                          title: Text(
-                                                              "Select Options"),
-                                                          content:
-                                                              SingleChildScrollView(
-                                                            child: ListBody(
-                                                              children: options
-                                                                  .map(
-                                                                      (option) {
-                                                                return CheckboxListTile(
-                                                                  title: Text(
-                                                                      option),
-                                                                  value: selectedOptions
-                                                                      .contains(
-                                                                          option),
-                                                                  onChanged:
-                                                                      (bool?
-                                                                          value) {
-                                                                    if (value ==
-                                                                        true) {
-                                                                      selectedOptions
-                                                                          .add(
-                                                                              option);
-                                                                    } else {
-                                                                      selectedOptions
-                                                                          .remove(
-                                                                              option);
-                                                                    }
-                                                                    // Update the UI
-                                                                    (context
-                                                                            as Element)
-                                                                        .markNeedsBuild();
-                                                                  },
-                                                                );
-                                                              }).toList(),
-                                                            ),
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              child: Text(
-                                                                  "Cancel"),
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                            ),
-                                                            TextButton(
-                                                              child:
-                                                                  Text("Done"),
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                                selectedskills =
-                                                                    selectedOptions;
-                                                                for (var s
-                                                                    in selectedskills!
-                                                                        .toList()) {
-                                                                  updateScoreToDB(
-                                                                      GlobalVariables
-                                                                          .instance
-                                                                          .selected,
-                                                                      s,
-                                                                      -1);
-                                                                }
-                                                                print(
-                                                                    "Selected skills: $selectedskills");
-                                                                setState(() {});
-                                                              },
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    ).then((result) {
-                                                      if (result != null) {
-                                                        // Handle the selected options
-                                                        print(
-                                                            "Selected options: $result");
-                                                        selectedskills = result;
-                                                      }
-                                                    });
-                                                    // Navigator.push(
-                                                    //     context,
-                                                    //     MaterialPageRoute(
-                                                    //         builder: (context) =>
-                                                    //             const JobResume()));
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(GlobalVariables
+                                                  .instance.xmlHandler
+                                                  .getString('addr')),
+                                              Expanded(
+                                                child: TextField(
+                                                  onChanged: (value) {
+                                                    newaddr =
+                                                        value; // Update username from input
                                                   },
-                                                  child: const Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.add,
-                                                        color: Colors.cyan,
-                                                      ),
-                                                      Text(
-                                                        'Add Skill',
-                                                        style: TextStyle(
-                                                            color: Colors.cyan,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                    ],
+                                                  controller:
+                                                      TextEditingController(
+                                                          text: _myaddr),
+                                                  decoration: InputDecoration(
+                                                      hintText:
+                                                          "Enter new Address"),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text("Date of Birth:"),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  validator: (value) {
+                                                    if (value == null ||
+                                                        value.isEmpty) {
+                                                      return 'Please Select Date of Birth';
+                                                    }
+                                                    return _mydob;
+                                                  },
+                                                  controller: dobcontroller,
+
+                                                  onTap: () {
+                                                    showDialog(
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return AlertDialog(
+                                                            title: const Text(
+                                                                'Select Date of Birth'),
+                                                            content: SizedBox(
+                                                              height: 200,
+                                                              width: 300,
+                                                              child:
+                                                                  CupertinoDatePicker(
+                                                                mode:
+                                                                    CupertinoDatePickerMode
+                                                                        .date,
+                                                                initialDateTime: _mydob ==
+                                                                        ''
+                                                                    ? DateTime
+                                                                        .now()
+                                                                    : DateTime
+                                                                        .parse(
+                                                                            _mydob!),
+                                                                onDateTimeChanged:
+                                                                    (DateTime
+                                                                        newDateTime) {
+                                                                  dt =
+                                                                      newDateTime;
+                                                                  dte = dateFormat
+                                                                      .format(
+                                                                          dt);
+                                                                  dobcontroller
+                                                                          .text =
+                                                                      dte;
+                                                                  newdob =
+                                                                      dobcontroller
+                                                                          .text;
+                                                                  _dobColor =
+                                                                      const Color
+                                                                          .fromARGB(
+                                                                          255,
+                                                                          0,
+                                                                          0,
+                                                                          0);
+                                                                  // Do something
+                                                                },
+                                                              ),
+                                                            ),
+                                                          );
+                                                        });
+                                                    FocusScope.of(context)
+                                                        .requestFocus(
+                                                            FocusNode());
+                                                  },
+
+                                                  // controller: passwordcontroller,
+                                                  decoration: InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: _mydob,
+                                                      hintStyle: TextStyle(
+                                                          color: _dobColor,
+                                                          fontSize: 18.0)),
+                                                  readOnly: true,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Text(
+                                            'Languages:',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(
+                                            height: 100,
+                                            width: 300,
+                                            child: ListView.builder(
+                                              shrinkWrap: true,
+                                              itemCount: languages?.length,
+                                              itemBuilder: (context, index) {
+                                                String language =
+                                                    languages![index]
+                                                        .toString();
+                                                return ListTile(
+                                                  title: Text(language),
+                                                  trailing: IconButton(
+                                                      icon: Icon(
+                                                          Icons.remove_circle,
+                                                          color: Colors.red),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          languages?.remove(
+                                                              language);
+                                                        });
+                                                      }),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextField(
+                                                  controller:
+                                                      _languageController,
+                                                  decoration: InputDecoration(
+                                                    labelText:
+                                                        'Add a new language',
+                                                    border:
+                                                        OutlineInputBorder(),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(
-                      width: 2, // Border thickness
-                      color:
-                          Colors.transparent, // Needed for the gradient border
-                    ),
-                  ),
-                  elevation: 4,
-                  margin: EdgeInsets.only(left: 16, right: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        width: 2, // Border thickness
-                        color: Colors
-                            .transparent, // Needed for gradient border effect
-                      ),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.teal,
-                          Colors.blueAccent
-                        ], // Gradient border colors
-                      ),
-                    ),
-                    child: DefaultTabController(
-                      length: 3,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.teal,
-                                  Colors.blueAccent
-                                ], // Tab bar gradient
-                              ),
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(16)),
-                            ),
-                            child: TabBar(
-                              indicator: BoxDecoration(
-                                color:
-                                    Colors.white, // Selected tab is fully white
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16)),
-                              ),
-                              labelColor:
-                                  Colors.teal, // Teal text for selected tab
-                              unselectedLabelColor: Colors
-                                  .white, // White text for unselected tabs
-                              indicatorSize: TabBarIndicatorSize.tab,
-                              overlayColor:
-                                  MaterialStateProperty.all(Colors.transparent),
-                              tabs: [
-                                _tabItem(GlobalVariables.instance.xmlHandler
-                                    .getString('myserv')),
-                                _tabItem(GlobalVariables.instance.xmlHandler
-                                    .getString('active')),
-                                _tabItem(GlobalVariables.instance.xmlHandler
-                                    .getString('comserv')),
-                              ],
-                            ),
-                          ),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            height: isExpanded
-                                ? MediaQuery.of(context).size.height
-                                : 150, // Expand/Collapse effect
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(16)),
-                            ),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: TabBarView(
-                                    children: [
-                                      showMyServices(),
-                                      _tabContent(
-                                          "This is the content for Tab 2"),
-                                      _tabContent(
-                                          "This is the content for Tab 3"),
-                                    ],
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      isExpanded = !isExpanded;
-                                    });
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        isExpanded ? "Less" : "More",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.teal),
-                                      ),
-                                      Icon(
-                                          isExpanded
-                                              ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
-                                          color: Colors.teal),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Card(
-                              color: Colors.blueAccent[100],
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      (GlobalVariables.instance.xmlHandler
-                                              .getString('active'))
-                                          .toString(),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    SizedBox(height: 8),
-                                    FutureBuilder(
-                                        future: getActiveServices(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Text("loading...");
-                                          }
-                                          if (snapshot.hasData) {
-                                            if (snapshot.data!.docs.isEmpty) {
-                                              return Text(GlobalVariables
-                                                  .instance.xmlHandler
-                                                  .getString('noserv'));
-                                            } else {
-                                              return GridView.builder(
-                                                gridDelegate:
-                                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                                        crossAxisCount: 2),
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    snapshot.data!.docs.length,
-                                                itemBuilder: (context, index) {
-                                                  final item = snapshot
-                                                      .data!.docs[index];
-
-                                                  return SingleChildScrollView(
-                                                    child: Expanded(
-                                                      child: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Expanded(
-                                                            child: Card(
-                                                              elevation:
-                                                                  4, // Adds a slight shadow for a polished look
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12), // Smooth edges for the card
-                                                              ),
-                                                              child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  GestureDetector(
-                                                                    onTap: () {
-                                                                      showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (BuildContext
-                                                                                context) {
-                                                                          return AlertDialog(
-                                                                            title:
-                                                                                FutureBuilder<List<String>>(
-                                                                              future: getActiveName(GlobalVariables.instance.userrole == 1 ? item.get('userid') : item.get('receiver')),
-                                                                              builder: (context, snapshot) {
-                                                                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                                                                  return Row(
-                                                                                    children: [
-                                                                                      CircularProgressIndicator(),
-                                                                                      SizedBox(width: 10),
-                                                                                      Text("Loading Title..."),
-                                                                                    ],
-                                                                                  ); // Display a loading indicator in the title
-                                                                                } else if (snapshot.hasError) {
-                                                                                  return Text('Error: ${snapshot.error}');
-                                                                                } else if (snapshot.hasData) {
-                                                                                  return Row(
-                                                                                    children: [
-                                                                                      CircleAvatar(
-                                                                                        radius: 12,
-                                                                                        backgroundImage: NetworkImage(snapshot.data![1]),
-                                                                                      ),
-                                                                                      SizedBox(width: 7),
-                                                                                      Expanded(
-                                                                                          child: Text(
-                                                                                        snapshot.data!.first,
-                                                                                        style: TextStyle(fontSize: 20),
-                                                                                      )),
-                                                                                    ],
-                                                                                  ); // Display the fetched title
-                                                                                } else {
-                                                                                  return Text('No Title Available');
-                                                                                }
-                                                                              },
-                                                                            ),
-                                                                            content:
-                                                                                _buildActiveServiceList(item),
-                                                                            actions: [
-                                                                              TextButton(
-                                                                                onPressed: () {
-                                                                                  Navigator.of(context).pop(false); // Return false
-                                                                                },
-                                                                                child: Text('Cancel'),
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
-                                                                      );
-                                                                    }, // Action when tapped
-                                                                    child:
-                                                                        Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          16.0), // Adjust padding for better spacing
-                                                                      child:
-                                                                          Column(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
-                                                                        children: [
-                                                                          Center(
-                                                                            child:
-                                                                                Text(
-                                                                              '${GlobalVariables.instance.xmlHandler.getString('current')}${GlobalVariables.instance.userrole == 1 ? GlobalVariables.instance.xmlHandler.getString('employer') : GlobalVariables.instance.xmlHandler.getString('maiden')}',
-                                                                              style: TextStyle(
-                                                                                fontSize: 18, // Slightly larger font for prominence
-                                                                                fontWeight: FontWeight.bold, // Bold text for emphasis
-                                                                                color: Colors.black87, // Darker text for readability
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                          SizedBox(
-                                                                              height: 8), // Spacing between title and subtitle
-                                                                          FutureBuilder<
-                                                                              List<String>>(
-                                                                            future: getActiveName(GlobalVariables.instance.userrole == 1
-                                                                                ? item.get('userid')
-                                                                                : item.get('receiver')), // Your future function
-                                                                            builder:
-                                                                                (context, snapshot) {
-                                                                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                                                                // While waiting for the result, show a loading indicator or text
-                                                                                return CircularProgressIndicator();
-                                                                              } else if (snapshot.hasError) {
-                                                                                // If there's an error, show an error message
-                                                                                return Text(
-                                                                                  'Error: ${snapshot.error}',
-                                                                                  style: TextStyle(fontSize: 14, color: Colors.red),
-                                                                                );
-                                                                              } else if (snapshot.hasData) {
-                                                                                // If data is received, use the result from the snapshot
-
-                                                                                name = snapshot.data![0];
-                                                                                return Row(
-                                                                                  children: [
-                                                                                    CircleAvatar(
-                                                                                      radius: 12,
-                                                                                      backgroundImage: NetworkImage(snapshot.data![1]),
-                                                                                    ),
-                                                                                    SizedBox(width: 7),
-                                                                                    Expanded(
-                                                                                      child: Text(
-                                                                                        name,
-                                                                                        style: TextStyle(
-                                                                                          fontSize: 14, // Smaller font for supporting text
-                                                                                          color: Colors.grey[700], // Subtle color for less emphasis
-                                                                                        ),
-                                                                                      ),
-                                                                                    ),
-                                                                                  ],
-                                                                                );
-                                                                              } else {
-                                                                                // If no data is available, show a fallback message
-                                                                                return Text(
-                                                                                  'No data available',
-                                                                                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                                                                                );
-                                                                              }
-                                                                            },
-                                                                          )
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  item.get('status') ==
-                                                                          4
-                                                                      ? Card(
-                                                                          color:
-                                                                              Colors.amber[300],
-                                                                          child:
-                                                                              Text(
-                                                                            'Completion Request Pending',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                TextStyle(
-                                                                              color: Colors.blueGrey,
-                                                                              fontWeight: FontWeight.bold,
-                                                                            ),
-                                                                          ),
-                                                                        )
-                                                                      : Text('')
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
+                                              SizedBox(width: 10),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  String newLanguage =
+                                                      _languageController.text
+                                                          .trim();
+                                                  if (newLanguage.isNotEmpty &&
+                                                      !languages!.contains(
+                                                          newLanguage)) {
+                                                    setState(() {
+                                                      languages
+                                                          ?.add(newLanguage);
+                                                    });
+                                                    _languageController.clear();
+                                                  }
                                                 },
-                                              );
-                                            }
-                                          } else {
-                                            return Text(GlobalVariables
-                                                .instance.xmlHandler
-                                                .getString('noserv'));
-                                          }
-                                        }),
-
-                                    //_buildActiveServiceList(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                      if (GlobalVariables.instance.urole == 1)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Card(
-                                color: Colors.blueAccent[100],
-                                elevation: 10,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        ((GlobalVariables.instance.xmlHandler
-                                                .getString('myserv'))
-                                            .toString()),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
-                                      FutureBuilder(
-                                        future: fetchOwnServices(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Text("loading...");
-                                          }
-                                          if (snapshot.hasData) {
-                                            if (snapshot.data!.docs.isEmpty) {
-                                              return Text(GlobalVariables
-                                                  .instance.xmlHandler
-                                                  .getString('noserv'));
-                                            } else {
-                                              return GridView.builder(
-                                                gridDelegate:
-                                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 3,
-                                                  mainAxisSpacing: 1,
-                                                ),
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    snapshot.data!.docs.length,
-                                                itemBuilder: (context, index) {
-                                                  final item = snapshot
-                                                      .data!.docs[index];
-                                                  print(item.data());
-                                                  return SingleChildScrollView(
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Card(
-                                                            elevation:
-                                                                4, // Adds a slight shadow for a polished look
-                                                            shape:
-                                                                RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12), // Smooth edges for the card
-                                                            ),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                GestureDetector(
-                                                                  onTap: () {
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (BuildContext
-                                                                              context) {
-                                                                        return AlertDialog(
-                                                                          title:
-                                                                              Text('Service Details'),
-                                                                          content:
-                                                                              _buildServiceList(item),
-                                                                          actions: [
-                                                                            TextButton(
-                                                                                onPressed: () {
-                                                                                  Navigator.push(
-                                                                                    context,
-                                                                                    MaterialPageRoute(
-                                                                                      builder: (context) => JobResume(2),
-                                                                                    ),
-                                                                                  ).whenComplete(() {
-                                                                                    setState(() {});
-                                                                                  });
-                                                                                },
-                                                                                child: Text('Edit')),
-                                                                            TextButton(
-                                                                                onPressed: () {
-                                                                                  _confirmDelete(context, item.id, 'services');
-                                                                                },
-                                                                                child: Text('Remove')),
-                                                                            TextButton(
-                                                                              onPressed: () {
-                                                                                Navigator.of(context).pop(false); // Return false
-                                                                              },
-                                                                              child: const Text('Cancel'),
-                                                                            ),
-                                                                          ],
-                                                                        );
-                                                                      },
-                                                                    );
-                                                                  }, // Action when tapped
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: const EdgeInsets
-                                                                        .all(
-                                                                        16.0), // Adjust padding for better spacing
-                                                                    child:
-                                                                        Column(
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        Center(
-                                                                          child:
-                                                                              Column(
-                                                                            children: [
-                                                                              const Text('Posted on'),
-                                                                              Text(
-                                                                                DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
-                                                                              ),
-                                                                            ],
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            }
-                                          }
-                                          return const SizedBox(); // Fallback in case of no data
-                                        },
-                                      ),
-
-                                      //_buildServiceList(),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      if (GlobalVariables.instance.urole == 2)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Card(
-                                color: Colors.blueAccent[100],
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        (GlobalVariables.instance.xmlHandler
-                                                .getString('posted'))
-                                            .toString(),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
-                                      //_buildJobProfileList(),
-                                      FutureBuilder(
-                                        future: fetchOwnJobProfile(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Text("loading...");
-                                          }
-                                          if (snapshot.hasData) {
-                                            if (snapshot.data!.docs.isEmpty) {
-                                              return Text(GlobalVariables
-                                                  .instance.xmlHandler
-                                                  .getString('noserv'));
-                                            } else {
-                                              return GridView.builder(
-                                                gridDelegate:
-                                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 3,
-                                                  mainAxisSpacing: 1,
-                                                ),
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    snapshot.data!.docs.length,
-                                                itemBuilder: (context, index) {
-                                                  final item = snapshot
-                                                      .data!.docs[index];
-                                                  print(item.data());
-                                                  return SingleChildScrollView(
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Card(
-                                                            elevation:
-                                                                4, // Adds a slight shadow for a polished look
-                                                            shape:
-                                                                RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12), // Smooth edges for the card
-                                                            ),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                GestureDetector(
-                                                                  onTap: () {
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (BuildContext
-                                                                              context) {
-                                                                        return AlertDialog(
-                                                                          title:
-                                                                              Text('Service Details'),
-                                                                          content:
-                                                                              _buildJobProfileList(item),
-                                                                          actions: [
-                                                                            TextButton(
-                                                                              onPressed: () {
-                                                                                Navigator.of(context).pop(false); // Return false
-                                                                              },
-                                                                              child: const Text('Cancel'),
-                                                                            ),
-                                                                          ],
-                                                                        );
-                                                                      },
-                                                                    );
-                                                                  }, // Action when tapped
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: const EdgeInsets
-                                                                        .all(
-                                                                        16.0), // Adjust padding for better spacing
-                                                                    child:
-                                                                        Column(
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        Center(
-                                                                          child:
-                                                                              Column(
-                                                                            children: [
-                                                                              const Text('Posted on'),
-                                                                              Text(
-                                                                                DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
-                                                                              ),
-                                                                            ],
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            }
-                                          }
-                                          return const SizedBox(); // Fallback in case of no data
-                                        },
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Card(
-                                            // elevation: 10,
-                                            color: Colors.blue,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(5.0),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const JobProfile()));
-                                                },
-                                                child: const Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.add,
-                                                      color: Colors.white,
-                                                    ),
-                                                    Text(
-                                                      'Add',
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ),
-                                                  ],
-                                                ),
+                                                child: Text('Add'),
                                               ),
-                                            ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    );
+                                  }),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: Text('Cancel'),
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(); // Close dialog
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text('Save'),
+                                      onPressed: () {
+                                        setState(() {
+                                          _myaddr = newaddr;
+                                          GlobalVariables.instance.username =
+                                              newusrname;
+                                          usrname = newusrname;
+                                          // Update username in UI
+                                          _mydob = newdob;
+                                        });
+                                        if (userDocId!.isNotEmpty) {
+                                          FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(userDocId)
+                                              .update({
+                                            'address': newaddr,
+                                            'name': newusrname,
+                                            'dob': newdob,
+                                            'language': languages,
+                                          }); // Update Firebase
+                                        }
+                                        Navigator.of(context)
+                                            .pop(); // Close dialog
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.teal,
+                            backgroundColor: Colors.white,
+                            shape: StadiumBorder(),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 10),
+                          ),
+                          child: Text("Edit Profile",
+                              style: TextStyle(fontSize: 16)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: Card(
+                  //         child: Padding(
+                  //           padding: const EdgeInsets.all(8.0),
+                  //           child: Row(
+                  //             children: [
+                  //               const SizedBox(height: 10, width: 10),
+                  //               Expanded(
+                  //                 child: Column(
+                  //                   crossAxisAlignment: CrossAxisAlignment.start,
+                  //                   children: [
+                  //                     // Row(
+                  //                     //   mainAxisAlignment: MainAxisAlignment.end,
+                  //                     //   children: [
+                  //                     //     IconButton(
+                  //                     //       icon: Icon(
+                  //                     //         Icons.info_outline,
+                  //                     //         color: Colors.grey,
+                  //                     //       ),
+                  //                     //       onPressed: () {
+                  //                     //         showDialog(
+                  //                     //           context: context,
+                  //                     //           builder: (BuildContext context) {
+                  //                     //             // Use existing username
+                  //                     //             return AlertDialog(
+                  //                     //               scrollable: true,
+                  //                     //               titlePadding:
+                  //                     //                   EdgeInsets.all(0),
+                  //                     //               title: Container(
+                  //                     //                 padding: EdgeInsets.all(16),
+                  //                     //                 decoration: BoxDecoration(
+                  //                     //                     color: Colors.blue,
+                  //                     //                     borderRadius:
+                  //                     //                         BorderRadius.only(
+                  //                     //                             topLeft: Radius
+                  //                     //                                 .circular(
+                  //                     //                                     20),
+                  //                     //                             topRight: Radius
+                  //                     //                                 .circular(
+                  //                     //                                     20))),
+                  //                     //                 child: Row(
+                  //                     //                   children: [
+                  //                     //                     Icon(
+                  //                     //                       Icons.info_outline,
+                  //                     //                       size: 30,
+                  //                     //                       color: Colors.white,
+                  //                     //                     ),
+                  //                     //                     SizedBox(width: 10),
+                  //                     //                     Text(
+                  //                     //                       'User\'s General Info',
+                  //                     //                       style: TextStyle(
+                  //                     //                           color:
+                  //                     //                               Colors.white),
+                  //                     //                     ),
+                  //                     //                   ],
+                  //                     //                 ),
+                  //                     //               ),
+                  //                     //               content: Column(
+                  //                     //                 crossAxisAlignment:
+                  //                     //                     CrossAxisAlignment
+                  //                     //                         .start,
+                  //                     //                 children: [
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text(
+                  //                     //                           GlobalVariables
+                  //                     //                               .instance
+                  //                     //                               .xmlHandler
+                  //                     //                               .getString(
+                  //                     //                                   'nam'),
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       Text("$usrname"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text("Username: ",
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       Text(
+                  //                     //                           "${userDoc?['username']}"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text("Gender: ",
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       userDoc?['gender'] ==
+                  //                     //                               1
+                  //                     //                           ? Text("Male")
+                  //                     //                           : Text("Female"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text(
+                  //                     //                           "Date of Birth: ",
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       Text(
+                  //                     //                           "${userDoc?['dob']}"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text(
+                  //                     //                           GlobalVariables
+                  //                     //                               .instance
+                  //                     //                               .xmlHandler
+                  //                     //                               .getString(
+                  //                     //                                   'addr'),
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       Text(
+                  //                     //                           "${userDoc?['address']}"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text("Primary Role: ",
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       userDoc?['role'] == 1
+                  //                     //                           ? Text("Maid")
+                  //                     //                           : Text(
+                  //                     //                               "Home-Owner"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                   Row(
+                  //                     //                     children: [
+                  //                     //                       Text(
+                  //                     //                           "Language known: ",
+                  //                     //                           style: const TextStyle(
+                  //                     //                               fontWeight:
+                  //                     //                                   FontWeight
+                  //                     //                                       .bold)),
+                  //                     //                       Text(
+                  //                     //                           "${userDoc?['language'].toString()}"),
+                  //                     //                     ],
+                  //                     //                   ),
+                  //                     //                 ],
+                  //                     //               ),
+                  //                     //               actions: <Widget>[
+                  //                     //                 TextButton(
+                  //                     //                   child: Text('Cancel'),
+                  //                     //                   onPressed: () {
+                  //                     //                     Navigator.of(context)
+                  //                     //                         .pop(); // Close dialog
+                  //                     //                   },
+                  //                     //                 ),
+                  //                     //               ],
+                  //                     //             );
+                  //                     //           },
+                  //                     //         );
+                  //                     //       },
+                  //                     //     ),
+                  //                     //     IconButton(
+                  //                     //       icon: Icon(
+                  //                     //         Icons.edit_outlined,
+                  //                     //         color: Colors.grey,
+                  //                     //       ),
+                  //                     //       onPressed: () {
+
+                  //                     //       },
+                  //                     //     ),
+                  //                     //   ],
+                  //                     // ),
+                  //                   ],
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  //Row(children: [Expanded(child: showDocuments())]),
+                  if (GlobalVariables.instance.urole == 1)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  // _buildServiceList(),
+
+                                  Container(
+                                      padding: EdgeInsets.only(
+                                          left: 10, right: 10, bottom: 10),
+                                      width: MediaQuery.of(context).size.width /
+                                          1.1,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(24),
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.blueAccent,
+                                            Colors.teal,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black12,
+                                              blurRadius: 10,
+                                              offset: Offset(0, 5))
+                                        ],
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          showSkills(),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Card(
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            30)),
+                                                // elevation: 10,
+                                                color: Colors.white,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 15.0,
+                                                          right: 20,
+                                                          top: 5,
+                                                          bottom: 5),
+                                                  child: GestureDetector(
+                                                    onTap: () async {
+                                                      List<String> options = [];
+
+                                                      // Fetch skills from Firestore
+                                                      QuerySnapshot snapshot =
+                                                          await FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                  'skills')
+                                                              .get();
+
+                                                      //fetch only skills from the user
+
+                                                      print(snapshot
+                                                          .docs.first.id);
+                                                      // print(myskills);
+                                                      for (var doc
+                                                          in snapshot.docs) {
+                                                        // Get the skill for the selected language
+
+                                                        if (doc[GlobalVariables
+                                                                    .instance
+                                                                    .selected] !=
+                                                                null &&
+                                                            !myskills.contains(
+                                                                doc.id)) {
+                                                          options.add(doc[
+                                                              GlobalVariables
+                                                                  .instance
+                                                                  .selected]);
+                                                        }
+                                                      }
+                                                      List<String>
+                                                          selectedOptions = [];
+
+                                                      await showDialog<
+                                                          List<String>>(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return AlertDialog(
+                                                            title: Text(
+                                                                "Select Options"),
+                                                            content:
+                                                                SingleChildScrollView(
+                                                              child: ListBody(
+                                                                children:
+                                                                    options.map(
+                                                                        (option) {
+                                                                  return CheckboxListTile(
+                                                                    title: Text(
+                                                                        option),
+                                                                    value: selectedOptions
+                                                                        .contains(
+                                                                            option),
+                                                                    onChanged:
+                                                                        (bool?
+                                                                            value) {
+                                                                      if (value ==
+                                                                          true) {
+                                                                        selectedOptions
+                                                                            .add(option);
+                                                                      } else {
+                                                                        selectedOptions
+                                                                            .remove(option);
+                                                                      }
+                                                                      // Update the UI
+                                                                      (context
+                                                                              as Element)
+                                                                          .markNeedsBuild();
+                                                                    },
+                                                                  );
+                                                                }).toList(),
+                                                              ),
+                                                            ),
+                                                            actions: [
+                                                              TextButton(
+                                                                child: Text(
+                                                                    "Cancel"),
+                                                                onPressed: () {
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                              ),
+                                                              TextButton(
+                                                                child: Text(
+                                                                    "Done"),
+                                                                onPressed: () {
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                  selectedskills =
+                                                                      selectedOptions;
+                                                                  for (var s
+                                                                      in selectedskills!
+                                                                          .toList()) {
+                                                                    updateScoreToDB(
+                                                                        GlobalVariables
+                                                                            .instance
+                                                                            .selected,
+                                                                        s,
+                                                                        -1);
+                                                                  }
+                                                                  print(
+                                                                      "Selected skills: $selectedskills");
+                                                                  setState(
+                                                                      () {});
+                                                                },
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      ).then((result) {
+                                                        if (result != null) {
+                                                          // Handle the selected options
+                                                          print(
+                                                              "Selected options: $result");
+                                                          selectedskills =
+                                                              result;
+                                                        }
+                                                      });
+                                                      // Navigator.push(
+                                                      //     context,
+                                                      //     MaterialPageRoute(
+                                                      //         builder: (context) =>
+                                                      //             const JobResume()));
+                                                    },
+                                                    child: const Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.add,
+                                                          color: Colors.cyan,
+                                                        ),
+                                                        Text(
+                                                          'Add Skill',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.cyan,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      )),
+                                ],
                               ),
-                            )
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        width: 2, // Border thickness
+                        color: Colors
+                            .transparent, // Needed for the gradient border
+                      ),
+                    ),
+                    elevation: 4,
+                    margin: EdgeInsets.only(left: 16, right: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          width: 2, // Border thickness
+                          color: Colors
+                              .transparent, // Needed for gradient border effect
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.teal,
+                            Colors.blueAccent
+                          ], // Gradient border colors
+                        ),
+                      ),
+                      child: DefaultTabController(
+                        length: 3,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.teal,
+                                    Colors.blueAccent
+                                  ], // Tab bar gradient
+                                ),
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                              ),
+                              child: TabBar(
+                                indicator: BoxDecoration(
+                                  color: Colors
+                                      .white, // Selected tab is fully white
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(16)),
+                                ),
+                                labelColor:
+                                    Colors.teal, // Teal text for selected tab
+                                unselectedLabelColor: Colors
+                                    .white, // White text for unselected tabs
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                overlayColor: MaterialStateProperty.all(
+                                    Colors.transparent),
+                                tabs: [
+                                  GlobalVariables.instance.userrole == 1
+                                      ? _tabItem(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('myserv'))
+                                      : _tabItem(GlobalVariables
+                                          .instance.xmlHandler
+                                          .getString('posted')),
+                                  _tabItem(GlobalVariables.instance.xmlHandler
+                                      .getString('active')),
+                                  _tabItem(GlobalVariables.instance.xmlHandler
+                                      .getString('comserv')),
+                                ],
+                              ),
+                            ),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              height: isExpanded
+                                  ? MediaQuery.of(context).size.height
+                                  : 200, // Expand/Collapse effect
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.vertical(
+                                    bottom: Radius.circular(16)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: TabBarView(
+                                      children: [
+                                        showMyServices(),
+                                        showActiveAndCompleteServices("Active"),
+                                        showActiveAndCompleteServices(
+                                            "Completed"),
+                                      ],
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        isExpanded = !isExpanded;
+                                      });
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          isExpanded ? "Less" : "More",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.teal),
+                                        ),
+                                        Icon(
+                                            isExpanded
+                                                ? Icons.keyboard_arrow_up
+                                                : Icons.keyboard_arrow_down,
+                                            color: Colors.teal),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
-                )
-              ],
+                  // Container(
+                  //   child: Column(
+                  //     children: [
+                  //       Row(
+                  //         children: [
+                  //           Expanded(
+                  //             child: Card(
+                  //               color: Colors.blueAccent[100],
+                  //               child: Padding(
+                  //                 padding: const EdgeInsets.all(8.0),
+                  //                 child: Column(
+                  //                   children: [
+                  //                     Text(
+                  //                       (GlobalVariables.instance.xmlHandler
+                  //                               .getString('active'))
+                  //                           .toString(),
+                  //                       textAlign: TextAlign.center,
+                  //                     ),
+                  //                     SizedBox(height: 8),
+                  //                     FutureBuilder(
+                  //                         future: getActiveServices(),
+                  //                         builder: (context, snapshot) {
+                  //                           if (snapshot.connectionState ==
+                  //                               ConnectionState.waiting) {
+                  //                             return const Text("loading...");
+                  //                           }
+                  //                           if (snapshot.hasData) {
+                  //                             if (snapshot.data!.docs.isEmpty) {
+                  //                               return Text(GlobalVariables
+                  //                                   .instance.xmlHandler
+                  //                                   .getString('noserv'));
+                  //                             } else {
+                  //                               return GridView.builder(
+                  //                                 gridDelegate:
+                  //                                     const SliverGridDelegateWithFixedCrossAxisCount(
+                  //                                         crossAxisCount: 2),
+                  //                                 shrinkWrap: true,
+                  //                                 itemCount:
+                  //                                     snapshot.data!.docs.length,
+                  //                                 itemBuilder: (context, index) {
+                  //                                   final item = snapshot
+                  //                                       .data!.docs[index];
+
+                  //                                   return SingleChildScrollView(
+                  //                                     child: Expanded(
+                  //                                       child: Row(
+                  //                                         mainAxisAlignment:
+                  //                                             MainAxisAlignment
+                  //                                                 .start,
+                  //                                         children: [
+                  //                                           Expanded(
+                  //                                             child: Card(
+                  //                                               elevation:
+                  //                                                   4, // Adds a slight shadow for a polished look
+                  //                                               shape:
+                  //                                                   RoundedRectangleBorder(
+                  //                                                 borderRadius:
+                  //                                                     BorderRadius
+                  //                                                         .circular(
+                  //                                                             12), // Smooth edges for the card
+                  //                                               ),
+                  //                                               child: Column(
+                  //                                                 crossAxisAlignment:
+                  //                                                     CrossAxisAlignment
+                  //                                                         .start,
+                  //                                                 children: [
+                  //                                                   GestureDetector(
+                  //                                                     onTap: () {
+                  //                                                       showDialog(
+                  //                                                         context:
+                  //                                                             context,
+                  //                                                         builder:
+                  //                                                             (BuildContext
+                  //                                                                 context) {
+                  //                                                           return AlertDialog(
+                  //                                                             title:
+                  //                                                                 FutureBuilder<List<String>>(
+                  //                                                               future: getActiveName(GlobalVariables.instance.userrole == 1 ? item.get('userid') : item.get('receiver')),
+                  //                                                               builder: (context, snapshot) {
+                  //                                                                 if (snapshot.connectionState == ConnectionState.waiting) {
+                  //                                                                   return Row(
+                  //                                                                     children: [
+                  //                                                                       CircularProgressIndicator(),
+                  //                                                                       SizedBox(width: 10),
+                  //                                                                       Text("Loading Title..."),
+                  //                                                                     ],
+                  //                                                                   ); // Display a loading indicator in the title
+                  //                                                                 } else if (snapshot.hasError) {
+                  //                                                                   return Text('Error: ${snapshot.error}');
+                  //                                                                 } else if (snapshot.hasData) {
+                  //                                                                   return Row(
+                  //                                                                     children: [
+                  //                                                                       CircleAvatar(
+                  //                                                                         radius: 12,
+                  //                                                                         backgroundImage: NetworkImage(snapshot.data![1]),
+                  //                                                                       ),
+                  //                                                                       SizedBox(width: 7),
+                  //                                                                       Expanded(
+                  //                                                                           child: Text(
+                  //                                                                         snapshot.data!.first,
+                  //                                                                         style: TextStyle(fontSize: 20),
+                  //                                                                       )),
+                  //                                                                     ],
+                  //                                                                   ); // Display the fetched title
+                  //                                                                 } else {
+                  //                                                                   return Text('No Title Available');
+                  //                                                                 }
+                  //                                                               },
+                  //                                                             ),
+                  //                                                             content:
+                  //                                                                 _buildActiveServiceList(item),
+                  //                                                             actions: [
+                  //                                                               TextButton(
+                  //                                                                 onPressed: () {
+                  //                                                                   Navigator.of(context).pop(false); // Return false
+                  //                                                                 },
+                  //                                                                 child: Text('Cancel'),
+                  //                                                               ),
+                  //                                                             ],
+                  //                                                           );
+                  //                                                         },
+                  //                                                       );
+                  //                                                     }, // Action when tapped
+                  //                                                     child:
+                  //                                                         Padding(
+                  //                                                       padding: const EdgeInsets
+                  //                                                           .all(
+                  //                                                           16.0), // Adjust padding for better spacing
+                  //                                                       child:
+                  //                                                           Column(
+                  //                                                         crossAxisAlignment:
+                  //                                                             CrossAxisAlignment.start,
+                  //                                                         children: [
+                  //                                                           Center(
+                  //                                                             child:
+                  //                                                                 Text(
+                  //                                                               '${GlobalVariables.instance.xmlHandler.getString('current')}${GlobalVariables.instance.userrole == 1 ? GlobalVariables.instance.xmlHandler.getString('employer') : GlobalVariables.instance.xmlHandler.getString('maiden')}',
+                  //                                                               style: TextStyle(
+                  //                                                                 fontSize: 18, // Slightly larger font for prominence
+                  //                                                                 fontWeight: FontWeight.bold, // Bold text for emphasis
+                  //                                                                 color: Colors.black87, // Darker text for readability
+                  //                                                               ),
+                  //                                                             ),
+                  //                                                           ),
+                  //                                                           SizedBox(
+                  //                                                               height: 8), // Spacing between title and subtitle
+                  //                                                           FutureBuilder<
+                  //                                                               List<String>>(
+                  //                                                             future: getActiveName(GlobalVariables.instance.userrole == 1
+                  //                                                                 ? item.get('userid')
+                  //                                                                 : item.get('receiver')), // Your future function
+                  //                                                             builder:
+                  //                                                                 (context, snapshot) {
+                  //                                                               if (snapshot.connectionState == ConnectionState.waiting) {
+                  //                                                                 // While waiting for the result, show a loading indicator or text
+                  //                                                                 return CircularProgressIndicator();
+                  //                                                               } else if (snapshot.hasError) {
+                  //                                                                 // If there's an error, show an error message
+                  //                                                                 return Text(
+                  //                                                                   'Error: ${snapshot.error}',
+                  //                                                                   style: TextStyle(fontSize: 14, color: Colors.red),
+                  //                                                                 );
+                  //                                                               } else if (snapshot.hasData) {
+                  //                                                                 // If data is received, use the result from the snapshot
+
+                  //                                                                 name = snapshot.data![0];
+                  //                                                                 return Row(
+                  //                                                                   children: [
+                  //                                                                     CircleAvatar(
+                  //                                                                       radius: 12,
+                  //                                                                       backgroundImage: NetworkImage(snapshot.data![1]),
+                  //                                                                     ),
+                  //                                                                     SizedBox(width: 7),
+                  //                                                                     Expanded(
+                  //                                                                       child: Text(
+                  //                                                                         name,
+                  //                                                                         style: TextStyle(
+                  //                                                                           fontSize: 14, // Smaller font for supporting text
+                  //                                                                           color: Colors.grey[700], // Subtle color for less emphasis
+                  //                                                                         ),
+                  //                                                                       ),
+                  //                                                                     ),
+                  //                                                                   ],
+                  //                                                                 );
+                  //                                                               } else {
+                  //                                                                 // If no data is available, show a fallback message
+                  //                                                                 return Text(
+                  //                                                                   'No data available',
+                  //                                                                   style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  //                                                                 );
+                  //                                                               }
+                  //                                                             },
+                  //                                                           )
+                  //                                                         ],
+                  //                                                       ),
+                  //                                                     ),
+                  //                                                   ),
+                  //                                                   item.get('status') ==
+                  //                                                           4
+                  //                                                       ? Card(
+                  //                                                           color:
+                  //                                                               Colors.amber[300],
+                  //                                                           child:
+                  //                                                               Text(
+                  //                                                             'Completion Request Pending',
+                  //                                                             textAlign:
+                  //                                                                 TextAlign.center,
+                  //                                                             style:
+                  //                                                                 TextStyle(
+                  //                                                               color: Colors.blueGrey,
+                  //                                                               fontWeight: FontWeight.bold,
+                  //                                                             ),
+                  //                                                           ),
+                  //                                                         )
+                  //                                                       : Text('')
+                  //                                                 ],
+                  //                                               ),
+                  //                                             ),
+                  //                                           ),
+                  //                                         ],
+                  //                                       ),
+                  //                                     ),
+                  //                                   );
+                  //                                 },
+                  //                               );
+                  //                             }
+                  //                           } else {
+                  //                             return Text(GlobalVariables
+                  //                                 .instance.xmlHandler
+                  //                                 .getString('noserv'));
+                  //                           }
+                  //                         }),
+
+                  //                     //_buildActiveServiceList(),
+                  //                   ],
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           )
+                  //         ],
+                  //       ),
+                  //       // if (GlobalVariables.instance.urole == 1)
+                  //       //   Row(
+                  //       //     children: [
+                  //       //       Expanded(
+                  //       //         child: Card(
+                  //       //           color: Colors.blueAccent[100],
+                  //       //           elevation: 10,
+                  //       //           child: Padding(
+                  //       //             padding: const EdgeInsets.all(8.0),
+                  //       //             child: Column(
+                  //       //               children: [
+                  //       //                 Text(
+                  //       //                   ((GlobalVariables.instance.xmlHandler
+                  //       //                           .getString('myserv'))
+                  //       //                       .toString()),
+                  //       //                   textAlign: TextAlign.center,
+                  //       //                   style: const TextStyle(
+                  //       //                       color: Colors.white),
+                  //       //                 ),
+                  //       //                 FutureBuilder(
+                  //       //                   future: fetchOwnServices(),
+                  //       //                   builder: (context, snapshot) {
+                  //       //                     if (snapshot.connectionState ==
+                  //       //                         ConnectionState.waiting) {
+                  //       //                       return const Text("loading...");
+                  //       //                     }
+                  //       //                     if (snapshot.hasData) {
+                  //       //                       if (snapshot.data!.docs.isEmpty) {
+                  //       //                         return Text(GlobalVariables
+                  //       //                             .instance.xmlHandler
+                  //       //                             .getString('noserv'));
+                  //       //                       } else {
+                  //       //                         return GridView.builder(
+                  //       //                           gridDelegate:
+                  //       //                               const SliverGridDelegateWithFixedCrossAxisCount(
+                  //       //                             crossAxisCount: 3,
+                  //       //                             mainAxisSpacing: 1,
+                  //       //                           ),
+                  //       //                           shrinkWrap: true,
+                  //       //                           itemCount:
+                  //       //                               snapshot.data!.docs.length,
+                  //       //                           itemBuilder: (context, index) {
+                  //       //                             final item = snapshot
+                  //       //                                 .data!.docs[index];
+                  //       //                             print(item.data());
+                  //       //                             return SingleChildScrollView(
+                  //       //                               child: Row(
+                  //       //                                 mainAxisAlignment:
+                  //       //                                     MainAxisAlignment
+                  //       //                                         .start,
+                  //       //                                 children: [
+                  //       //                                   Expanded(
+                  //       //                                     child: Card(
+                  //       //                                       elevation:
+                  //       //                                           4, // Adds a slight shadow for a polished look
+                  //       //                                       shape:
+                  //       //                                           RoundedRectangleBorder(
+                  //       //                                         borderRadius:
+                  //       //                                             BorderRadius
+                  //       //                                                 .circular(
+                  //       //                                                     12), // Smooth edges for the card
+                  //       //                                       ),
+                  //       //                                       child: Column(
+                  //       //                                         crossAxisAlignment:
+                  //       //                                             CrossAxisAlignment
+                  //       //                                                 .start,
+                  //       //                                         children: [
+                  //       //                                           GestureDetector(
+                  //       //                                             onTap: () {
+                  //       //                                               showDialog(
+                  //       //                                                 context:
+                  //       //                                                     context,
+                  //       //                                                 builder:
+                  //       //                                                     (BuildContext
+                  //       //                                                         context) {
+                  //       //                                                   return AlertDialog(
+                  //       //                                                     title:
+                  //       //                                                         Text('Service Details'),
+                  //       //                                                     content:
+                  //       //                                                         _buildServiceList(item),
+                  //       //                                                     actions: [
+                  //       //                                                       TextButton(
+                  //       //                                                           onPressed: () {
+                  //       //                                                             Navigator.push(
+                  //       //                                                               context,
+                  //       //                                                               MaterialPageRoute(
+                  //       //                                                                 builder: (context) => JobResume(2),
+                  //       //                                                               ),
+                  //       //                                                             ).whenComplete(() {
+                  //       //                                                               setState(() {});
+                  //       //                                                             });
+                  //       //                                                           },
+                  //       //                                                           child: Text('Edit')),
+                  //       //                                                       TextButton(
+                  //       //                                                           onPressed: () {
+                  //       //                                                             _confirmDelete(context, item.id, 'services');
+                  //       //                                                           },
+                  //       //                                                           child: Text('Remove')),
+                  //       //                                                       TextButton(
+                  //       //                                                         onPressed: () {
+                  //       //                                                           Navigator.of(context).pop(false); // Return false
+                  //       //                                                         },
+                  //       //                                                         child: const Text('Cancel'),
+                  //       //                                                       ),
+                  //       //                                                     ],
+                  //       //                                                   );
+                  //       //                                                 },
+                  //       //                                               );
+                  //       //                                             }, // Action when tapped
+                  //       //                                             child:
+                  //       //                                                 Padding(
+                  //       //                                               padding: const EdgeInsets
+                  //       //                                                   .all(
+                  //       //                                                   16.0), // Adjust padding for better spacing
+                  //       //                                               child:
+                  //       //                                                   Column(
+                  //       //                                                 crossAxisAlignment:
+                  //       //                                                     CrossAxisAlignment
+                  //       //                                                         .start,
+                  //       //                                                 children: [
+                  //       //                                                   Center(
+                  //       //                                                     child:
+                  //       //                                                         Column(
+                  //       //                                                       children: [
+                  //       //                                                         const Text('Posted on'),
+                  //       //                                                         Text(
+                  //       //                                                           DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
+                  //       //                                                         ),
+                  //       //                                                       ],
+                  //       //                                                     ),
+                  //       //                                                   ),
+                  //       //                                                 ],
+                  //       //                                               ),
+                  //       //                                             ),
+                  //       //                                           ),
+                  //       //                                         ],
+                  //       //                                       ),
+                  //       //                                     ),
+                  //       //                                   ),
+                  //       //                                 ],
+                  //       //                               ),
+                  //       //                             );
+                  //       //                           },
+                  //       //                         );
+                  //       //                       }
+                  //       //                     }
+                  //       //                     return const SizedBox(); // Fallback in case of no data
+                  //       //                   },
+                  //       //                 ),
+
+                  //       //                 //_buildServiceList(),
+                  //       //               ],
+                  //       //             ),
+                  //       //           ),
+                  //       //         ),
+                  //       //       )
+                  //       //     ],
+                  //       //   ),
+                  //       // if (GlobalVariables.instance.urole == 2)
+                  //       //   Row(
+                  //       //     children: [
+                  //       //       Expanded(
+                  //       //         child: Card(
+                  //       //           color: Colors.blueAccent[100],
+                  //       //           child: Padding(
+                  //       //             padding: const EdgeInsets.all(8.0),
+                  //       //             child: Column(
+                  //       //               children: [
+                  //       //                 Text(
+                  //       //                   (GlobalVariables.instance.xmlHandler
+                  //       //                           .getString('posted'))
+                  //       //                       .toString(),
+                  //       //                   textAlign: TextAlign.center,
+                  //       //                   style: const TextStyle(
+                  //       //                       color: Colors.white),
+                  //       //                 ),
+                  //       //                 //_buildJobProfileList(),
+                  //       //                 FutureBuilder(
+                  //       //                   future: fetchOwnJobProfile(),
+                  //       //                   builder: (context, snapshot) {
+                  //       //                     if (snapshot.connectionState ==
+                  //       //                         ConnectionState.waiting) {
+                  //       //                       return const Text("loading...");
+                  //       //                     }
+                  //       //                     if (snapshot.hasData) {
+                  //       //                       if (snapshot.data!.docs.isEmpty) {
+                  //       //                         return Text(GlobalVariables
+                  //       //                             .instance.xmlHandler
+                  //       //                             .getString('noserv'));
+                  //       //                       } else {
+                  //       //                         return GridView.builder(
+                  //       //                           gridDelegate:
+                  //       //                               const SliverGridDelegateWithFixedCrossAxisCount(
+                  //       //                             crossAxisCount: 3,
+                  //       //                             mainAxisSpacing: 1,
+                  //       //                           ),
+                  //       //                           shrinkWrap: true,
+                  //       //                           itemCount:
+                  //       //                               snapshot.data!.docs.length,
+                  //       //                           itemBuilder: (context, index) {
+                  //       //                             final item = snapshot
+                  //       //                                 .data!.docs[index];
+                  //       //                             print(item.data());
+                  //       //                             return SingleChildScrollView(
+                  //       //                               child: Row(
+                  //       //                                 mainAxisAlignment:
+                  //       //                                     MainAxisAlignment
+                  //       //                                         .start,
+                  //       //                                 children: [
+                  //       //                                   Expanded(
+                  //       //                                     child: Card(
+                  //       //                                       elevation:
+                  //       //                                           4, // Adds a slight shadow for a polished look
+                  //       //                                       shape:
+                  //       //                                           RoundedRectangleBorder(
+                  //       //                                         borderRadius:
+                  //       //                                             BorderRadius
+                  //       //                                                 .circular(
+                  //       //                                                     12), // Smooth edges for the card
+                  //       //                                       ),
+                  //       //                                       child: Column(
+                  //       //                                         crossAxisAlignment:
+                  //       //                                             CrossAxisAlignment
+                  //       //                                                 .start,
+                  //       //                                         children: [
+                  //       //                                           GestureDetector(
+                  //       //                                             onTap: () {
+                  //       //                                               showDialog(
+                  //       //                                                 context:
+                  //       //                                                     context,
+                  //       //                                                 builder:
+                  //       //                                                     (BuildContext
+                  //       //                                                         context) {
+                  //       //                                                   return AlertDialog(
+                  //       //                                                     title:
+                  //       //                                                         Text('Service Details'),
+                  //       //                                                     content:
+                  //       //                                                         _buildJobProfileList(item),
+                  //       //                                                     actions: [
+                  //       //                                                       TextButton(
+                  //       //                                                         onPressed: () {
+                  //       //                                                           Navigator.of(context).pop(false); // Return false
+                  //       //                                                         },
+                  //       //                                                         child: const Text('Cancel'),
+                  //       //                                                       ),
+                  //       //                                                     ],
+                  //       //                                                   );
+                  //       //                                                 },
+                  //       //                                               );
+                  //       //                                             }, // Action when tapped
+                  //       //                                             child:
+                  //       //                                                 Padding(
+                  //       //                                               padding: const EdgeInsets
+                  //       //                                                   .all(
+                  //       //                                                   16.0), // Adjust padding for better spacing
+                  //       //                                               child:
+                  //       //                                                   Column(
+                  //       //                                                 crossAxisAlignment:
+                  //       //                                                     CrossAxisAlignment
+                  //       //                                                         .start,
+                  //       //                                                 children: [
+                  //       //                                                   Center(
+                  //       //                                                     child:
+                  //       //                                                         Column(
+                  //       //                                                       children: [
+                  //       //                                                         const Text('Posted on'),
+                  //       //                                                         Text(
+                  //       //                                                           DateFormat('dd-MMM-yyyy').format((item.get('timestamp')).toDate()),
+                  //       //                                                         ),
+                  //       //                                                       ],
+                  //       //                                                     ),
+                  //       //                                                   ),
+                  //       //                                                 ],
+                  //       //                                               ),
+                  //       //                                             ),
+                  //       //                                           ),
+                  //       //                                         ],
+                  //       //                                       ),
+                  //       //                                     ),
+                  //       //                                   ),
+                  //       //                                 ],
+                  //       //                               ),
+                  //       //                             );
+                  //       //                           },
+                  //       //                         );
+                  //       //                       }
+                  //       //                     }
+                  //       //                     return const SizedBox(); // Fallback in case of no data
+                  //       //                   },
+                  //       //                 ),
+                  //       //                 Row(
+                  //       //                   mainAxisAlignment:
+                  //       //                       MainAxisAlignment.end,
+                  //       //                   children: [
+                  //       //                     Card(
+                  //       //                       // elevation: 10,
+                  //       //                       color: Colors.red,
+                  //       //                       child: Padding(
+                  //       //                         padding:
+                  //       //                             const EdgeInsets.all(5.0),
+                  //       //                         child: GestureDetector(
+                  //       //                           onTap: () {
+                  //       //                             Navigator.push(
+                  //       //                                 context,
+                  //       //                                 MaterialPageRoute(
+                  //       //                                     builder: (context) =>
+                  //       //                                         const JobProfileB()));
+                  //       //                           },
+                  //       //                           child: const Row(
+                  //       //                             children: [
+                  //       //                               Icon(
+                  //       //                                 Icons.add,
+                  //       //                                 color: Colors.white,
+                  //       //                               ),
+                  //       //                               Text(
+                  //       //                                 'Add',
+                  //       //                                 style: TextStyle(
+                  //       //                                     color: Colors.white),
+                  //       //                               ),
+                  //       //                             ],
+                  //       //                           ),
+                  //       //                         ),
+                  //       //                       ),
+                  //       //                     ),
+                  //       //                   ],
+                  //       //                 ),
+                  //       //               ],
+                  //       //             ),
+                  //       //           ),
+                  //       //         ),
+                  //       //       )
+                  //       //     ],
+                  //       //   ),
+                  //     ],
+                  //   ),
+                  // )
+                ],
+              ),
             ),
           );
         });

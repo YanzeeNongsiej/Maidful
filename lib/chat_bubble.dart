@@ -14,8 +14,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/chatdao.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
+import 'package:ibitf_app/buildui.dart';
+import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
+import 'package:intl/intl.dart';
 
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -65,28 +68,63 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
-  void _showTranslationPopup(BuildContext context, String message) async {
+  void _showTranslationPopup(
+      BuildContext context, String message, TapDownDetails details) async {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
-    final result = await showMenu(
+
+    showMenu(
+      shadowColor: Colors.transparent,
       context: context,
       position: RelativeRect.fromLTRB(
-        overlay.size.width / 2,
-        overlay.size.height / 2,
-        overlay.size.width / 2,
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        overlay.size.width - details.globalPosition.dx,
         0,
       ),
+      color: Colors.transparent, // Makes the background transparent
       items: [
-        const PopupMenuItem(value: 'kha', child: Text('Translate to Khasi')),
-        const PopupMenuItem(value: 'en', child: Text('Translate to English')),
+        PopupMenuItem(
+          value: 'kha',
+          child:
+              _buildPopupItem(Icons.wrap_text_outlined, 'Translate to Khasi'),
+        ),
+        PopupMenuItem(
+          value: 'en',
+          child: _buildPopupItem(Icons.abc, 'Translate to English'),
+        ),
       ],
-    );
+    ).then((result) async {
+      if (result != null) {
+        String translatedText = await translateMessage(
+            message, result == 'kha' ? 'en' : 'kha', result);
+        _showTranslatedMessage(context, translatedText);
+      }
+    });
+  }
 
-    if (result != null) {
-      String translatedText = await translateMessage(
-          message, result == 'kha' ? 'en' : 'kha', result);
-      _showTranslatedMessage(context, translatedText);
-    }
+  Widget _buildPopupItem(IconData icon, String text) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blueAccent, Colors.lightBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white),
+          SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showTranslatedMessage(BuildContext context, String translatedText) {
@@ -110,183 +148,301 @@ class _ChatBubbleState extends State<ChatBubble> {
   @override
   Widget build(BuildContext context) {
     if (widget.data['ackID'] != "") {
-      return FutureBuilder<DocumentSnapshot>(
+      if (widget.data['message']
+          .toString()
+          .contains(RegExp(r'^(New|Old) Completion Request$'))) {
+        return FutureBuilder<DocumentSnapshot>(
           future: getAcknomledgement(widget.data['ackID']),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return const Text("Error");
+              return const Center(
+                  child: Text("Error", style: TextStyle(color: Colors.red)));
             }
-            //loading
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Text("loading...");
+              return const Center(child: CircularProgressIndicator());
             }
+
             final ds = snapshot.data!;
+            bool isAgreed = ds.get("status") == 5;
+            bool isRejected = ds.get("status") == 6;
+            String displayText = '';
+            if (widget.isCurrentUser) {
+              if (ds.get('status') == 4) {
+                displayText = " Completion Request Sent";
+              } else if (isRejected ||
+                  widget.data['message'] == "Old Completion Request") {
+                displayText = "Completion Rejected";
+              } else if (isAgreed) {
+                displayText = "Completion Agreed";
+              }
+            } else {
+              if (ds.get('status') == 4) {
+                displayText = "Completion Request Received";
+              } else if (isRejected ||
+                  widget.data['message'] == "Old Completion Request") {
+                displayText = "Completion Rejected";
+              } else if (isAgreed) {
+                displayText = "Completion Agreed";
+              }
+            }
             return Container(
-              decoration: BoxDecoration(
-                  color: Colors.teal,
-                  borderRadius: widget.isCurrentUser
-                      ? const BorderRadius.only(
-                          bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                          topLeft: Radius.circular(10))
-                      : const BorderRadius.only(
-                          bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                          topRight: Radius.circular(10))),
-              padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-              child: widget.isCurrentUser
-                  ? Column(
-                      children: [
-                        const Text(
-                          "Acknowledgement Sent",
-                          style: TextStyle(color: Colors.white),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: widget.isCurrentUser
+                      ? [Colors.purple.shade700, Colors.purple.shade400]
+                      : [Colors.purple.shade300, Colors.purple.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black26, blurRadius: 5, spreadRadius: 2)
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        displayText,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      Icon(
+                        isRejected ||
+                                widget.data['message'] ==
+                                    "Old Completion Request"
+                            ? Icons.cancel
+                            : isAgreed
+                                ? Icons.verified
+                                : Icons.hourglass_bottom,
+                        color: isRejected ||
+                                widget.data['message'] ==
+                                    "Old Completion Request"
+                            ? Colors.redAccent
+                            : isAgreed
+                                ? Colors.greenAccent
+                                : Colors.yellowAccent,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => getAckDetail(ds),
+                        child: Chip(
+                          label: const Text("View",
+                              style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.blue,
                         ),
+                      ),
+                      if (ds.get("status") == 4 &&
+                          !widget.isCurrentUser &&
+                          widget.data['message'] !=
+                              'Old Completion Request') ...[
+                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: () {
-                            getAckDetail(ds);
+                            agreeAckDetail(ds.id, 5);
+                            setDate(ds.id, "end");
+                            notifyUser(
+                                ds.get('receiverid'),
+                                "Rate Your Experience",
+                                "Please rate your experience with ${getNameFromId(ds.get('userid'))}.",
+                                ratedUserId: ds.get('userid'));
+
+                            notifyUser(ds.get('userid'), "Rate Your Experience",
+                                "Please rate your interaction with ${getNameFromId(ds.get('receiverid'))}.",
+                                ratedUserId: ds.get('receiverid'));
                           },
-                          child: Card(
-                            color: Colors.blue,
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                "View",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
+                          child: Chip(
+                            label: const Text("Agree",
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.green,
                           ),
                         ),
-                        if (ds.get("status") == 2)
-                          Row(
-                            children: [
-                              Text(
-                                // "Agreed"
-                                widget.data['message'],
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Icon(Icons.check, color: Colors.white),
-                            ],
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            agreeAckDetail(ds.id, 6);
+                            setMessage("Old Completion Request");
+                          },
+                          child: Chip(
+                            label: const Text("Reject",
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.red,
                           ),
-                        if (ds.get("status") == 3)
-                          Row(
-                            children: [
-                              Text(
-                                // "Rejected"
-                                widget.data['message'],
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Icon(Icons.close, color: Colors.white),
-                            ],
-                          ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        const Text(
-                          "Acknowledgement Request",
-                          style: TextStyle(color: Colors.white),
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                getAckDetail(ds);
-                              },
-                              child: Card(
-                                color: Colors.blue,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "View",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (ds.get("status") == 1)
-                              GestureDetector(
-                                onTap: () {
-                                  agreeAckDetail(ds.id, 2);
-                                },
-                                child: Card(
-                                  color: Colors.green,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Text(
-                                      "Agree",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            if (ds.get("status") == 1)
-                              GestureDetector(
-                                onTap: () {
-                                  agreeAckDetail(ds.id, 3);
-                                },
-                                child: Card(
-                                  color: Colors.red,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Text(
-                                      "Reject",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            if (ds.get("status") == 2)
-                              Row(
-                                children: [
-                                  Text(
-                                    // "Agreed"
-                                    widget.data['message'],
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  Icon(Icons.check, color: Colors.white),
-                                ],
-                              ),
-                            if (ds.get("status") == 3)
-                              Row(
-                                children: [
-                                  Text(
-                                    // "Rejected"
-                                    widget.data['message'],
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  Icon(Icons.close, color: Colors.white),
-                                ],
-                              ),
-                          ],
-                        )
-                      ],
-                    ),
-              // if(widget.data['status'] == 1)
+                      ]
+                    ],
+                  ),
+                ],
+              ),
             );
-          });
+          },
+        );
+      } else {
+        return FutureBuilder<DocumentSnapshot>(
+          future: getAcknomledgement(widget.data['ackID']),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Center(
+                  child: Text("Error", style: TextStyle(color: Colors.red)));
+            }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final ds = snapshot.data!;
+            bool isAgreed = [2, 4, 5, 6].contains(ds.get("status"));
+            bool isRejected = ds.get("status") == 3;
+            String displayText = '';
+            if (widget.isCurrentUser) {
+              if (isAgreed) {
+                displayText = "Acknowledgement Agreed";
+              } else if (isRejected) {
+                displayText = "Acknowledgement Rejected";
+              } else if (ds.get('status') == 1) {
+                displayText = "Acknowledgement Request Sent";
+              } else {}
+            } else {
+              if (isAgreed) {
+                displayText = "Acknowledgement Agreed";
+              } else if (isRejected) {
+                displayText = "Acknowledgement Rejected";
+              } else if (ds.get('status') == 1) {
+                displayText = "Acknowledgement Request Received";
+              } else {}
+            }
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: widget.isCurrentUser
+                      ? [Colors.teal.shade700, Colors.teal.shade400]
+                      : [Colors.teal.shade700, Colors.teal.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black26, blurRadius: 5, spreadRadius: 2)
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        displayText,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      Icon(
+                        isAgreed
+                            ? Icons.check_circle
+                            : isRejected
+                                ? Icons.cancel
+                                : Icons.hourglass_bottom,
+                        color: isAgreed
+                            ? Colors.greenAccent
+                            : isRejected
+                                ? Colors.redAccent
+                                : Colors.yellowAccent,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // const SizedBox(height: 8),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => getAckDetail(ds),
+                        child: Chip(
+                          label: const Text("View",
+                              style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.blue,
+                        ),
+                      ),
+                      if (ds.get("status") == 1 && !widget.isCurrentUser) ...[
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            agreeAckDetail(ds.id, 2);
+                            setDate(ds.id, "start");
+                          },
+                          child: Chip(
+                            label: const Text("Agree",
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => agreeAckDetail(ds.id, 3),
+                          child: Chip(
+                            label: const Text("Reject",
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.red,
+                          ),
+                        ),
+                      ]
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
     } else {
       return GestureDetector(
-        onTap: () => _showTranslationPopup(context, widget.data['message']),
+        onTapDown: (TapDownDetails details) =>
+            _showTranslationPopup(context, widget.data['message'], details),
         child: Container(
-          decoration: BoxDecoration(
-            color: widget.isCurrentUser ? Colors.green : Colors.grey.shade500,
-            borderRadius: widget.isCurrentUser
-                ? const BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                    topLeft: Radius.circular(10))
-                : const BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                    topRight: Radius.circular(10)),
-          ),
-          padding: const EdgeInsets.all(10),
           margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          decoration: BoxDecoration(
+            gradient: widget.isCurrentUser
+                ? const LinearGradient(
+                    colors: [Colors.blueAccent, Colors.blueAccent],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  )
+                : const LinearGradient(
+                    colors: [Colors.white, Colors.white],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(color: Colors.black26, blurRadius: 3, spreadRadius: 1)
+            ],
+          ),
           child: Text(
             widget.data['message'],
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: widget.isCurrentUser ? Colors.white : Colors.black,
+              fontSize: 16,
+            ),
           ),
         ),
       );
@@ -298,118 +454,32 @@ class _ChatBubbleState extends State<ChatBubble> {
     return ds;
   }
 
+  setMessage(String msg) async {
+    await Chatdao().setMessage(widget.data, widget.messageID, msg).then((a) {
+      setState(() {});
+    });
+  }
+
   getAckDetail(ds) async {
     return showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          scrollable: true,
-          title: Text("Acknowledgement"),
-          content: Card(
-            child: Column(
+            scrollable: true,
+            title: Text("Service Details"),
+            content: Column(
               children: [
-                Row(
-                  children: [
-                    Text(
-                        "${GlobalVariables.instance.xmlHandler.getString('sched')} ${GlobalVariables.instance.xmlHandler.getString(ds.get("schedule"))}"),
-                  ],
-                ),
-                if (ds.get("schedule") == 'Hourly')
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(GlobalVariables.instance.xmlHandler.getString('day'),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      for (var i = 0; i < ds.get("days").length; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 30),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("${i + 1}. "),
-                              Expanded(
-                                child: Text(GlobalVariables.instance.xmlHandler
-                                    .getString(ds.get("days")[i])),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                if (ds.get("schedule") == 'Daily' ||
-                    ds.get("schedule") == 'Hourly')
-                  Row(
-                    children: [
-                      Text(
-                          GlobalVariables.instance.xmlHandler
-                              .getString('timing'),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text("${ds.get("time_from")}-${ds.get("time_to")}"),
-                    ],
-                  ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(GlobalVariables.instance.xmlHandler.getString('serv'),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    for (var i = 0; i < ds.get("services").length; i++)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 30),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("${i + 1}. "),
-                            Expanded(
-                              child: Text(GlobalVariables.instance.xmlHandler
-                                  .getString(ds.get("services")[i])),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(children: [
-                      Row(
-                        children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('wage'),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15)),
-                          ds.get("wage") == 1
-                              ? Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('weekly'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15))
-                              : Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('monthly'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('rate'),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 25)),
-                          Text("\u{20B9}${ds.get("rate")}",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 25)),
-                        ],
-                      )
-                    ])),
+                buildScheduleSection("Schedule", ds.get("schedule")),
+                buildSection("Services", ds.get("services")),
+                buildSection("Timing", ds.get("timing")),
+                buildSection("Days Available", ds.get("days")),
+                buildLongText("Remarks", ds.get("remarks")),
+                SizedBox(
+                  height: 10,
+                )
+                // buildSection("Work History", ds.get("work_history")),
               ],
-            ),
-          ),
-        );
+            ));
       },
     );
   }
@@ -420,6 +490,19 @@ class _ChatBubbleState extends State<ChatBubble> {
         .then((a) {
       setState(() {});
     });
+  }
+
+  Future<void> setDate(String id, String when) async {
+    // if (when != "start" || when != "end") {
+    //   throw ArgumentError("Invalid value for 'when'. Must be 'start' or 'end'.");
+    // }
+
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference docRef = firestore.collection("acknowledgements").doc(id);
+
+    await docRef.set({
+      "period": {when: FieldValue.serverTimestamp()}
+    }, SetOptions(merge: true));
   }
 
   // int getAckStat(ackID) async {

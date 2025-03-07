@@ -9,7 +9,11 @@ class ChatController extends ChangeNotifier {
   final User? user = FirebaseAuth.instance.currentUser;
 
   Future<void> sendMessage(
-      String receiverID, message, ackid, postType, postTypeID, readMsg) async {
+      String receiverID,
+      message,
+      ackid,
+      //  postType, postTypeID,
+      readMsg) async {
     //get current user info
     final String currentUserID = user!.uid;
     final String currentUserEmail = user!.email as String;
@@ -26,8 +30,8 @@ class ChatController extends ChangeNotifier {
           receiverID: receiverID,
           timestamp: timestamp,
           ackID: "",
-          post_Type: postType,
-          post_TypeID: postTypeID,
+          // post_Type: postType,
+          // post_TypeID: postTypeID,
           read_Msg: readMsg);
     } else {
       chat = Chat(
@@ -37,25 +41,35 @@ class ChatController extends ChangeNotifier {
           receiverID: receiverID,
           timestamp: timestamp,
           ackID: ackid,
-          post_Type: postType,
-          post_TypeID: postTypeID,
+          // post_Type: postType,
+          // post_TypeID: postTypeID,
           read_Msg: readMsg);
     }
 
     //construct chatroom ID for two users(sorted)
-    List<String> ids = [currentUserID, receiverID, postTypeID];
+    List<String> ids = [
+      currentUserID, receiverID,
+      // postTypeID
+    ];
     ids.sort();
     String chatRoomID = ids.join('_');
 
     //add new message to database
     await Chatdao().addNewMessage(chatRoomID, chat).then((a) {});
-    notifyUser(receiverID, currentUserID, message, "INbox");
+    String name = await getNameFromId(currentUserID);
+    notifyUser(receiverID, name, message);
   }
 
   // get messages
   Stream<QuerySnapshot> getMessages(
-      String userID, otherUserID, postType, postTypeID) {
-    List<String> ids = [userID, otherUserID, postTypeID];
+    String userID,
+    otherUserID,
+    // postType, postTypeID
+  ) {
+    List<String> ids = [
+      userID, otherUserID,
+      // postTypeID
+    ];
     ids.sort();
     String chatRoomID = ids.join('_');
     return Chatdao().getMessages(chatRoomID);

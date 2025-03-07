@@ -8,7 +8,7 @@
 <string name="maid"> Maids(For Homeowners)</string>
 <string name="job"> Job Profiles(For Maids)</string>
 <string name="myserv"> Posted Service</string>
-<string name="posted"> Posted Job Services</string>
+<string name="posted"> Posted Job Profile</string>
 <string name="nouser">No User Found for that Email</string>
 <string name="wrongpass">Wrong Password Provided by User</string>
 <string name="nam">Name: </string>
@@ -51,7 +51,7 @@
 <string name="Monthly">Monthly</string>
 <string name="sendack">Send Acknowledgement Request</string>
 <string name="maiddetails">Maid Details</string>
-<string name="servdetails">Service Details</string>
+<string name="jobdetails">Job Details</string>
 <string name="addedsucc">Added Successfully</string>
 <string name="updatesucc">Updated Successfully</string>
 <string name="avail">Already Available</string>
@@ -84,6 +84,7 @@ Do you want to take the assessment now? </string>
 <string name="nowork">No work History Yet</string>
 <string name="noserv">No Services Yet</string>
 <string name="servoff">Services Offered:</string>
+<string name="servreq">Services Required:</string>
 <string name="nego"> Negotiable</string>
 <string name="nonnego"> Non Negotiable</string>
 <string name="read"> I have read the terms and conditions</string>
@@ -95,4 +96,5 @@ Do you want to take the assessment now? </string>
 <string name="perday">per day</string>
 <string name="perhour">per hour</string>
 <string name="permonth">per month</string>
+<string name="hiringdet">Hiring Details</string>
 </strings>

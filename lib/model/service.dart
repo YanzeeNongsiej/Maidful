@@ -8,7 +8,7 @@ class Service {
   final String nego;
   final List<String> work_history;
   final bool ack;
-
+  final String remarks;
   Service(
       {required this.nego,
       required this.days,
@@ -17,7 +17,8 @@ class Service {
       required this.timing,
       required this.userid,
       required this.work_history,
-      required this.ack});
+      required this.ack,
+      required this.remarks});
 
   Map<String, dynamic> toMap() {
     return {
@@ -28,7 +29,8 @@ class Service {
       'userid': userid,
       'work_history': work_history,
       'ack': ack,
-      'nego': nego
+      'nego': nego,
+      'remarks': remarks
     };
   }
 }

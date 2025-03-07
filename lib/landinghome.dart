@@ -732,7 +732,11 @@ class _NestedTabBarState extends State<NestedTabBar>
             scrollable: true,
             insetPadding: const EdgeInsets.only(left: 8, right: 8),
             title: Text(
-                GlobalVariables.instance.xmlHandler.getString('maiddetails'),
+                GlobalVariables.instance.userrole == 2
+                    ? GlobalVariables.instance.xmlHandler
+                        .getString('maiddetails')
+                    : GlobalVariables.instance.xmlHandler
+                        .getString('jobdetails'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             content: Card(
               elevation: 5,
@@ -747,7 +751,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                         DateFormat('dd MMM yyyy').format(
                             (servItem.get("timestamp") as Timestamp).toDate())),
                     buildScheduleSection("Schedule", servItem.get("schedule")),
-                    buildServiceSection("Services", servItem.get("services")),
+                    GlobalVariables.instance.userrole == 2
+                        ? buildServiceSection(
+                            "Services", servItem.get("services"))
+                        : buildSection("Services", servItem.get("services")),
                     buildSection("Timing", servItem.get("timing")),
                     buildSection("Days Available", servItem.get("days")),
                     buildTextInfo("Negotiable", servItem.get("negotiable")),
@@ -776,70 +783,6 @@ class _NestedTabBarState extends State<NestedTabBar>
                             ),
                           ),
                       ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Card(
-                                // elevation: 10,
-                                color: Colors.green,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      // Navigator.push(
-                                      //     context,
-                                      //     MaterialPageRoute(
-                                      //         builder: (context) => ChatPage(
-                                      //             name: item.get("name"),
-                                      //             receiverID: item.get("userid"),
-                                      //             postType: "services",
-                                      //             postTypeID: servItem.id)));
-                                    },
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.handshake,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          GlobalVariables.instance.xmlHandler
-                                              .getString('hire'),
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              //     Card(
-                              //       // elevation: 10,
-                              //       color: Colors.amber[600],
-                              //       child: Padding(
-                              //         padding: const EdgeInsets.all(5.0),
-                              //         child: GestureDetector(
-                              //           onTap: () {
-                              //             // Navigator.pop(context);
-                              //           },
-                              //           child: const Row(
-                              //             children: [
-                              //               Icon(Icons.threesixty_sharp),
-                              //               Text('Counter'),
-                              //             ],
-                              //           ),
-                              //         ),
-                              //       ),
-                              //     ),
-                            ],
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
@@ -930,7 +873,9 @@ class _NestedTabBarState extends State<NestedTabBar>
                                               .replaceAll(']', '')),
                                         ],
                                       ),
-                                      showSkills(item.get('userid')),
+                                      if (GlobalVariables.instance.userrole ==
+                                          2)
+                                        showSkills(item.get('userid')),
                                     ],
                                   ),
                                 ),
@@ -974,9 +919,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                               MaterialPageRoute(
                                   builder: (context) => ChatPage(
                                         name: item.get("name"),
+                                        photo: item.get('url'),
                                         receiverID: item.get("userid"),
-                                        postType: "services",
-                                        postTypeID: servItem.id,
+                                        // postType: "services",
+                                        // postTypeID: servItem.id,
                                         readMsg: true,
                                       )));
                         },
@@ -1032,402 +978,402 @@ class _NestedTabBarState extends State<NestedTabBar>
         });
   }
 
-  getJobProfileDetail(item, servItem) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          Map<String, dynamic> time = servItem.get('timing');
-          List<String> allShifts = [];
-          time.forEach((key, value) {
-            if (value is List<dynamic>) {
-              allShifts.addAll(value.map((e) => e.toString()));
-            }
-          });
-          return AlertDialog(
-            scrollable: true,
-            insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: Text(
-                GlobalVariables.instance.xmlHandler.getString('servdetails'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            content: Card(
-              elevation: 5,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('nam'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(item.get("name")),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('addr'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(item.get("address")),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('sched'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(GlobalVariables.instance.xmlHandler
-                            .getString(servItem.get("schedule"))),
-                      ],
-                    ),
-                    if (servItem.get("schedule") == 'Hourly')
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('day'),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          for (var i = 0; i < servItem.get("days").length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 30),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("${i + 1}. "),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString(servItem.get("days")[i])),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    if (servItem.get("schedule") == 'Daily' ||
-                        servItem.get("schedule") == 'Hourly')
-                      Row(
-                        children: [
-                          Text(
-                              GlobalVariables.instance.xmlHandler
-                                  .getString('timing'),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          Text.rich(TextSpan(
-                            children: <InlineSpan>[
-                              ...List.generate(
-                                (allShifts.length / 2).ceil(),
-                                (i) => TextSpan(
-                                  text:
-                                      '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
-                                  style: const TextStyle(color: Colors.black),
-                                ),
-                              ),
-                            ],
-                          ))
-                        ],
-                      ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('serv'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        for (var i = 0;
-                            i < servItem.get("services").length;
-                            i++)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("${i + 1}. "),
-                                Expanded(
-                                  child: Text(GlobalVariables
-                                      .instance.xmlHandler
-                                      .getString(servItem.get("services")[i])),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('wage'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString(servItem.get("wage")),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('rate'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25)),
-                              Text("\u{20B9}${servItem.get("rate")}",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25)),
-                            ],
-                          ),
-                          // Row(
-                          //   mainAxisAlignment: MainAxisAlignment.center,
-                          //   children: [
-                          //     Card(
-                          //       // elevation: 10,
-                          //       color: Colors.green,
-                          //       child: Padding(
-                          //         padding: const EdgeInsets.all(5.0),
-                          //         child: GestureDetector(
-                          //           onTap: () {
-                          //             Navigator.pop(context);
-                          //             // Navigator.push(
-                          //             //     context,
-                          //             //     MaterialPageRoute(
-                          //             //         builder: (context) => ChatPage(
-                          //             //             name: item.get("name"),
-                          //             //             receiverID: item.get("userid"),
-                          //             //             postType: "services",
-                          //             //             postTypeID: servItem.id)));
-                          //           },
-                          //           child: Row(
-                          //             children: [
-                          //               const Icon(
-                          //                 Icons.handshake,
-                          //                 color: Colors.white,
-                          //               ),
-                          //               Text(
-                          //                 GlobalVariables.instance.xmlHandler
-                          //                     .getString('hire'),
-                          //                 style: const TextStyle(
-                          //                     color: Colors.white),
-                          //               ),
-                          //             ],
-                          //           ),
-                          //         ),
-                          //       ),
-                          //     ),
-                          //     //     Card(
-                          //     //       // elevation: 10,
-                          //     //       color: Colors.amber[600],
-                          //     //       child: Padding(
-                          //     //         padding: const EdgeInsets.all(5.0),
-                          //     //         child: GestureDetector(
-                          //     //           onTap: () {
-                          //     //             // Navigator.pop(context);
-                          //     //           },
-                          //     //           child: const Row(
-                          //     //             children: [
-                          //     //               Icon(Icons.threesixty_sharp),
-                          //     //               Text('Counter'),
-                          //     //             ],
-                          //     //           ),
-                          //     //         ),
-                          //     //       ),
-                          //     //     ),
-                          //   ],
-                          // ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Card(
-                    // elevation: 10,
-                    color: Colors.blue,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('User Profile'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Center(
-                                      child: CircleAvatar(
-                                        radius: 40,
-                                        backgroundImage: NetworkImage(item.get(
-                                            'url')), // Replace with your image asset or network URL
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Icon(
-                                      Icons.person_2_outlined,
-                                      color: Colors.blueAccent,
-                                    ),
-                                    Text('${item.get('name')}'),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.house_outlined,
-                                          color: Colors.blueAccent,
-                                        ),
-                                        Text('${item.get('address')}'),
-                                      ],
-                                    ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.group_rounded,
-                                          color: Colors.blueAccent,
-                                        ),
-                                        Text(item.get('gender') == 1
-                                            ? 'Female'
-                                            : 'Male'),
-                                      ],
-                                    ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.abc_outlined,
-                                          color: Colors.blueAccent,
-                                        ),
-                                        Text(item
-                                            .get('language')
-                                            .toString()
-                                            .replaceAll('[', '')
-                                            .replaceAll(']', '')),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.person_3_rounded,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              'Profile',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Card(
-                    // elevation: 10,
-                    color: Colors.green,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ChatPage(
-                                        name: item.get("name"),
-                                        receiverID: item.get("userid"),
-                                        postType: "services",
-                                        postTypeID: servItem.id,
-                                        readMsg: true,
-                                      )));
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.chat,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              'Chat',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Card(
-                    // elevation: 10,
-                    color: Colors.orange,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(Icons.cancel, color: Colors.white),
-                            Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+  // getJobProfileDetail(item, servItem) {
+  //   showDialog(
+  //       context: context,
+  //       builder: (context) {
+  //         Map<String, dynamic> time = servItem.get('timing');
+  //         List<String> allShifts = [];
+  //         time.forEach((key, value) {
+  //           if (value is List<dynamic>) {
+  //             allShifts.addAll(value.map((e) => e.toString()));
+  //           }
+  //         });
+  //         return AlertDialog(
+  //           scrollable: true,
+  //           insetPadding: const EdgeInsets.only(left: 8, right: 8),
+  //           title: Text(
+  //               GlobalVariables.instance.xmlHandler.getString('servdetails'),
+  //               style: const TextStyle(fontWeight: FontWeight.bold)),
+  //           content: Card(
+  //             elevation: 5,
+  //             child: Padding(
+  //               padding: const EdgeInsets.all(8.0),
+  //               child: Column(
+  //                 children: [
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                           GlobalVariables.instance.xmlHandler
+  //                               .getString('nam'),
+  //                           style:
+  //                               const TextStyle(fontWeight: FontWeight.bold)),
+  //                       Text(item.get("name")),
+  //                     ],
+  //                   ),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                           GlobalVariables.instance.xmlHandler
+  //                               .getString('addr'),
+  //                           style:
+  //                               const TextStyle(fontWeight: FontWeight.bold)),
+  //                       Text(item.get("address")),
+  //                     ],
+  //                   ),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                           GlobalVariables.instance.xmlHandler
+  //                               .getString('sched'),
+  //                           style:
+  //                               const TextStyle(fontWeight: FontWeight.bold)),
+  //                       Text(GlobalVariables.instance.xmlHandler
+  //                           .getString(servItem.get("schedule"))),
+  //                     ],
+  //                   ),
+  //                   if (servItem.get("schedule") == 'Hourly')
+  //                     Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         Text(
+  //                             GlobalVariables.instance.xmlHandler
+  //                                 .getString('day'),
+  //                             style:
+  //                                 const TextStyle(fontWeight: FontWeight.bold)),
+  //                         for (var i = 0; i < servItem.get("days").length; i++)
+  //                           Padding(
+  //                             padding: const EdgeInsets.only(left: 30),
+  //                             child: Row(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               children: [
+  //                                 Text("${i + 1}. "),
+  //                                 Expanded(
+  //                                   child: Text(GlobalVariables
+  //                                       .instance.xmlHandler
+  //                                       .getString(servItem.get("days")[i])),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                       ],
+  //                     ),
+  //                   if (servItem.get("schedule") == 'Daily' ||
+  //                       servItem.get("schedule") == 'Hourly')
+  //                     Row(
+  //                       children: [
+  //                         Text(
+  //                             GlobalVariables.instance.xmlHandler
+  //                                 .getString('timing'),
+  //                             style:
+  //                                 const TextStyle(fontWeight: FontWeight.bold)),
+  //                         Text.rich(TextSpan(
+  //                           children: <InlineSpan>[
+  //                             ...List.generate(
+  //                               (allShifts.length / 2).ceil(),
+  //                               (i) => TextSpan(
+  //                                 text:
+  //                                     '${allShifts[i * 2]} - ${allShifts[i * 2 + 1]}\n',
+  //                                 style: const TextStyle(color: Colors.black),
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ))
+  //                       ],
+  //                     ),
+  //                   Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(
+  //                           GlobalVariables.instance.xmlHandler
+  //                               .getString('serv'),
+  //                           style:
+  //                               const TextStyle(fontWeight: FontWeight.bold)),
+  //                       for (var i = 0;
+  //                           i < servItem.get("services").length;
+  //                           i++)
+  //                         Padding(
+  //                           padding: const EdgeInsets.only(left: 30),
+  //                           child: Row(
+  //                             crossAxisAlignment: CrossAxisAlignment.start,
+  //                             children: [
+  //                               Text("${i + 1}. "),
+  //                               Expanded(
+  //                                 child: Text(GlobalVariables
+  //                                     .instance.xmlHandler
+  //                                     .getString(servItem.get("services")[i])),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                     ],
+  //                   ),
+  //                   Padding(
+  //                     padding: const EdgeInsets.all(8.0),
+  //                     child: Column(
+  //                       children: [
+  //                         Row(
+  //                           children: [
+  //                             Text(
+  //                                 GlobalVariables.instance.xmlHandler
+  //                                     .getString('wage'),
+  //                                 style: const TextStyle(
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 15)),
+  //                             Text(
+  //                                 GlobalVariables.instance.xmlHandler
+  //                                     .getString(servItem.get("wage")),
+  //                                 style: const TextStyle(
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 15)),
+  //                           ],
+  //                         ),
+  //                         Row(
+  //                           children: [
+  //                             Text(
+  //                                 GlobalVariables.instance.xmlHandler
+  //                                     .getString('rate'),
+  //                                 style: const TextStyle(
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 25)),
+  //                             Text("\u{20B9}${servItem.get("rate")}",
+  //                                 style: const TextStyle(
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 25)),
+  //                           ],
+  //                         ),
+  //                         // Row(
+  //                         //   mainAxisAlignment: MainAxisAlignment.center,
+  //                         //   children: [
+  //                         //     Card(
+  //                         //       // elevation: 10,
+  //                         //       color: Colors.green,
+  //                         //       child: Padding(
+  //                         //         padding: const EdgeInsets.all(5.0),
+  //                         //         child: GestureDetector(
+  //                         //           onTap: () {
+  //                         //             Navigator.pop(context);
+  //                         //             // Navigator.push(
+  //                         //             //     context,
+  //                         //             //     MaterialPageRoute(
+  //                         //             //         builder: (context) => ChatPage(
+  //                         //             //             name: item.get("name"),
+  //                         //             //             receiverID: item.get("userid"),
+  //                         //             //             postType: "services",
+  //                         //             //             postTypeID: servItem.id)));
+  //                         //           },
+  //                         //           child: Row(
+  //                         //             children: [
+  //                         //               const Icon(
+  //                         //                 Icons.handshake,
+  //                         //                 color: Colors.white,
+  //                         //               ),
+  //                         //               Text(
+  //                         //                 GlobalVariables.instance.xmlHandler
+  //                         //                     .getString('hire'),
+  //                         //                 style: const TextStyle(
+  //                         //                     color: Colors.white),
+  //                         //               ),
+  //                         //             ],
+  //                         //           ),
+  //                         //         ),
+  //                         //       ),
+  //                         //     ),
+  //                         //     //     Card(
+  //                         //     //       // elevation: 10,
+  //                         //     //       color: Colors.amber[600],
+  //                         //     //       child: Padding(
+  //                         //     //         padding: const EdgeInsets.all(5.0),
+  //                         //     //         child: GestureDetector(
+  //                         //     //           onTap: () {
+  //                         //     //             // Navigator.pop(context);
+  //                         //     //           },
+  //                         //     //           child: const Row(
+  //                         //     //             children: [
+  //                         //     //               Icon(Icons.threesixty_sharp),
+  //                         //     //               Text('Counter'),
+  //                         //     //             ],
+  //                         //     //           ),
+  //                         //     //         ),
+  //                         //     //       ),
+  //                         //     //     ),
+  //                         //   ],
+  //                         // ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //           actions: [
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.end,
+  //               children: [
+  //                 Card(
+  //                   // elevation: 10,
+  //                   color: Colors.blue,
+  //                   child: Padding(
+  //                     padding: const EdgeInsets.all(5.0),
+  //                     child: GestureDetector(
+  //                       onTap: () {
+  //                         showDialog(
+  //                           context: context,
+  //                           builder: (BuildContext context) {
+  //                             return AlertDialog(
+  //                               title: const Text('User Profile'),
+  //                               content: Column(
+  //                                 mainAxisSize: MainAxisSize.min,
+  //                                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                                 children: [
+  //                                   Center(
+  //                                     child: CircleAvatar(
+  //                                       radius: 40,
+  //                                       backgroundImage: NetworkImage(item.get(
+  //                                           'url')), // Replace with your image asset or network URL
+  //                                     ),
+  //                                   ),
+  //                                   const SizedBox(height: 16),
+  //                                   Icon(
+  //                                     Icons.person_2_outlined,
+  //                                     color: Colors.blueAccent,
+  //                                   ),
+  //                                   Text('${item.get('name')}'),
+  //                                   SizedBox(height: 8),
+  //                                   Row(
+  //                                     children: [
+  //                                       Icon(
+  //                                         Icons.house_outlined,
+  //                                         color: Colors.blueAccent,
+  //                                       ),
+  //                                       Text('${item.get('address')}'),
+  //                                     ],
+  //                                   ),
+  //                                   SizedBox(height: 8),
+  //                                   Row(
+  //                                     children: [
+  //                                       Icon(
+  //                                         Icons.group_rounded,
+  //                                         color: Colors.blueAccent,
+  //                                       ),
+  //                                       Text(item.get('gender') == 1
+  //                                           ? 'Female'
+  //                                           : 'Male'),
+  //                                     ],
+  //                                   ),
+  //                                   SizedBox(height: 8),
+  //                                   Row(
+  //                                     children: [
+  //                                       Icon(
+  //                                         Icons.abc_outlined,
+  //                                         color: Colors.blueAccent,
+  //                                       ),
+  //                                       Text(item
+  //                                           .get('language')
+  //                                           .toString()
+  //                                           .replaceAll('[', '')
+  //                                           .replaceAll(']', '')),
+  //                                     ],
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                               actions: [
+  //                                 TextButton(
+  //                                   onPressed: () {
+  //                                     Navigator.of(context).pop();
+  //                                   },
+  //                                   child: const Text('Close'),
+  //                                 ),
+  //                               ],
+  //                             );
+  //                           },
+  //                         );
+  //                       },
+  //                       child: const Row(
+  //                         children: [
+  //                           Icon(
+  //                             Icons.person_3_rounded,
+  //                             color: Colors.white,
+  //                           ),
+  //                           Text(
+  //                             'Profile',
+  //                             style: TextStyle(color: Colors.white),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 Card(
+  //                   // elevation: 10,
+  //                   color: Colors.green,
+  //                   child: Padding(
+  //                     padding: const EdgeInsets.all(5.0),
+  //                     child: GestureDetector(
+  //                       onTap: () {
+  //                         Navigator.pop(context);
+  //                         Navigator.push(
+  //                             context,
+  //                             MaterialPageRoute(
+  //                                 builder: (context) => ChatPage(
+  //                                       name: item.get("name"),
+  //                                       receiverID: item.get("userid"),
+  //                                       postType: "services",
+  //                                       postTypeID: servItem.id,
+  //                                       readMsg: true,
+  //                                     )));
+  //                       },
+  //                       child: const Row(
+  //                         children: [
+  //                           Icon(
+  //                             Icons.chat,
+  //                             color: Colors.white,
+  //                           ),
+  //                           Text(
+  //                             'Chat',
+  //                             style: TextStyle(color: Colors.white),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 Card(
+  //                   // elevation: 10,
+  //                   color: Colors.orange,
+  //                   child: Padding(
+  //                     padding: const EdgeInsets.all(5.0),
+  //                     child: GestureDetector(
+  //                       onTap: () {
+  //                         Navigator.pop(context);
+  //                       },
+  //                       child: const Row(
+  //                         children: [
+  //                           Icon(Icons.cancel, color: Colors.white),
+  //                           Text(
+  //                             'Cancel',
+  //                             style: TextStyle(color: Colors.white),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
 
-                  // TextButton(
-                  //   onPressed: () {
-                  //     Navigator.pop(context);
-                  //   },
-                  //   child: Row(
-                  //     children: [const Icon(Icons.chat), Text("chat")],
-                  //   ),
-                  // ),
-                ],
-              ),
-            ],
-          );
-        });
-  }
+  //                 // TextButton(
+  //                 //   onPressed: () {
+  //                 //     Navigator.pop(context);
+  //                 //   },
+  //                 //   child: Row(
+  //                 //     children: [const Icon(Icons.chat), Text("chat")],
+  //                 //   ),
+  //                 // ),
+  //               ],
+  //             ),
+  //           ],
+  //         );
+  //       });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -1438,117 +1384,130 @@ class _NestedTabBarState extends State<NestedTabBar>
         builder: (context, child) {
           return Column(
             children: [
-              if (GlobalVariables.instance.userrole == 2)
-                Container(
-                  height: screenHeight * 0.80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.teal.shade400,
-                        Colors.blueAccent.shade700
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 12,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
+              Container(
+                height: screenHeight * 0.80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(25),
+                    topRight: Radius.circular(25),
                   ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: TweenAnimationBuilder(
-                          tween: Tween<double>(begin: 0, end: 1),
-                          duration: Duration(milliseconds: 600),
-                          builder: (context, value, child) => Opacity(
-                            opacity: value,
-                            child: Transform.translate(
-                              offset: Offset(0, (1 - value) * 20),
-                              child: child,
-                            ),
+                  gradient: LinearGradient(
+                    colors: [Colors.teal.shade400, Colors.blueAccent.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: Duration(milliseconds: 600),
+                        builder: (context, value, child) => Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, (1 - value) * 20),
+                            child: child,
                           ),
-                          child: Text(
-                            'Available Jobs',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 1.2,
-                            ),
+                        ),
+                        child: Text(
+                          GlobalVariables.instance.userrole == 1
+                              ? 'Available Jobs'
+                              : 'Available Maids',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _nestedTabController,
-                          children: <Widget>[
-                            FutureBuilder(
-                              future: searchqs,
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return GridView.builder(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 10),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      childAspectRatio: 0.85,
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                    ),
-                                    itemCount: snapshot.data!.docs.length,
-                                    itemBuilder: (context, index) {
-                                      final servitem =
-                                          snapshot.data!.docs[index];
-                                      return FutureBuilder(
-                                        future: fetchUserData(
-                                            servitem.get("userid")),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            final item =
-                                                snapshot.data!.docs.first;
-                                            return GestureDetector(
-                                              onTap: () => getServiceDetail(
-                                                  item, servitem),
-                                              child: Card(
-                                                clipBehavior:
-                                                    Clip.antiAliasWithSaveLayer,
-                                                color: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                                elevation: 8,
-                                                shadowColor: Colors.blueAccent
-                                                    .withOpacity(0.2),
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 8),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          CircleAvatar(
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _nestedTabController,
+                        children: <Widget>[
+                          FutureBuilder(
+                            future: searchqs,
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return GridView.builder(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 10),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.80,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                                  itemCount: snapshot.data!.docs.length,
+                                  itemBuilder: (context, index) {
+                                    final servitem = snapshot.data!.docs[index];
+                                    return FutureBuilder(
+                                      future:
+                                          fetchUserData(servitem.get("userid")),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          final item =
+                                              snapshot.data!.docs.first;
+                                          return GestureDetector(
+                                            onTap: () => getServiceDetail(
+                                                item, servitem),
+                                            child: Card(
+                                              clipBehavior:
+                                                  Clip.antiAliasWithSaveLayer,
+                                              color: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                              elevation: 8,
+                                              shadowColor: Colors.blueAccent
+                                                  .withOpacity(0.2),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 8),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withOpacity(
+                                                                        0.9), // Inner glow
+                                                                blurRadius: 15,
+                                                                spreadRadius:
+                                                                    0.1,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          child: CircleAvatar(
                                                             radius: 20,
                                                             backgroundColor:
                                                                 Colors
@@ -1565,406 +1524,193 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                     item.get(
                                                                         'url')),
                                                           ),
-                                                          SizedBox(
-                                                              height:
-                                                                  8), // Spacing
-                                                          FittedBox(
-                                                            fit: BoxFit
-                                                                .scaleDown,
-                                                            alignment: Alignment
-                                                                .centerLeft,
-                                                            child: Text(
-                                                              item.get("name"),
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    16, // Initial max font size
-                                                              ),
+                                                        ),
+                                                        // Spacing
+                                                        FittedBox(
+                                                          fit: BoxFit.scaleDown,
+                                                          alignment: Alignment
+                                                              .centerLeft,
+                                                          child: Text(
+                                                            item.get("name"),
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize:
+                                                                  16, // Initial max font size
                                                             ),
                                                           ),
-                                                          SizedBox(
-                                                              height:
-                                                                  4), // Spacing
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .center,
-                                                            children: [
-                                                              Icon(
-                                                                  Icons
-                                                                      .location_pin,
-                                                                  size: 14,
-                                                                  color: Colors
-                                                                      .blueAccent),
-                                                              SizedBox(
-                                                                  width: 3),
-                                                              Flexible(
-                                                                child: Text(
-                                                                  item.get(
-                                                                      "address"),
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          12),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .center,
-                                                                  softWrap:
-                                                                      true,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Divider(
-                                                          color:
-                                                              Colors.grey[300]),
-                                                      SizedBox(height: 5),
-                                                      Text(
-                                                        GlobalVariables
-                                                            .instance.xmlHandler
-                                                            .getString(
-                                                                'servoff'),
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 14,
-                                                          color:
-                                                              Colors.blueAccent,
                                                         ),
+                                                        // SizedBox(
+                                                        //     height:
+                                                        //         4), // Spacing
+                                                        Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                                Icons
+                                                                    .location_pin,
+                                                                size: 14,
+                                                                color: Colors
+                                                                    .blueAccent),
+                                                            SizedBox(width: 3),
+                                                            Flexible(
+                                                              child: Text(
+                                                                item.get(
+                                                                    "address"),
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        12),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                softWrap: true,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Divider(
+                                                        color:
+                                                            Colors.grey[300]),
+                                                    // SizedBox(height: 5),
+                                                    Text(
+                                                      GlobalVariables.instance
+                                                                  .userrole ==
+                                                              1
+                                                          ? GlobalVariables
+                                                              .instance
+                                                              .xmlHandler
+                                                              .getString(
+                                                                  'servreq')
+                                                          : GlobalVariables
+                                                              .instance
+                                                              .xmlHandler
+                                                              .getString(
+                                                                  'servoff'),
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                        color:
+                                                            Colors.blueAccent,
                                                       ),
-                                                      SizedBox(height: 3),
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: servitem
-                                                            .get("services")
-                                                            .keys
-                                                            .take(2)
-                                                            .map<Widget>(
-                                                                (service) =>
-                                                                    Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .symmetric(
-                                                                          vertical:
-                                                                              2),
-                                                                      child:
-                                                                          Text(
-                                                                        "• " +
-                                                                            GlobalVariables.instance.xmlHandler.getString(service),
-                                                                        style: TextStyle(
-                                                                            fontSize:
-                                                                                12),
-                                                                      ),
-                                                                    ))
-                                                            .toList(),
-                                                      ),
-                                                      Spacer(),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          } else if (snapshot.hasError) {
-                                            return Center(
-                                              child: Text(
-                                                "Error: ${snapshot.error}",
-                                                style: TextStyle(
-                                                    color: Colors.red),
-                                              ),
-                                            );
-                                          } else {
-                                            return Center(
-                                                child:
-                                                    CircularProgressIndicator());
-                                          }
-                                        },
-                                      );
-                                    },
-                                  );
-                                } else if (snapshot.hasError) {
-                                  return Center(
-                                    child: Text("Error: ${snapshot.error}",
-                                        style: TextStyle(color: Colors.red)),
-                                  );
-                                } else {
-                                  return Center(
-                                      child: CircularProgressIndicator());
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (GlobalVariables.instance.userrole == 1)
-                Container(
-                  height: screenHeight * 0.80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.teal.shade400,
-                        Colors.blueAccent.shade700
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 12,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: TweenAnimationBuilder(
-                          tween: Tween<double>(begin: 0, end: 1),
-                          duration: Duration(milliseconds: 600),
-                          builder: (context, value, child) => Opacity(
-                            opacity: value,
-                            child: Transform.translate(
-                              offset: Offset(0, (1 - value) * 20),
-                              child: child,
-                            ),
-                          ),
-                          child: Text(
-                            'Available Jobs',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _nestedTabController,
-                          children: <Widget>[
-                            FutureBuilder(
-                              future: searchqs,
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return GridView.builder(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 10),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      childAspectRatio: 0.85,
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                    ),
-                                    itemCount: snapshot.data!.docs.length,
-                                    itemBuilder: (context, index) {
-                                      final servitem =
-                                          snapshot.data!.docs[index];
-                                      return FutureBuilder(
-                                        future: fetchUserData(
-                                            servitem.get("userid")),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            final item =
-                                                snapshot.data!.docs.first;
-                                            return GestureDetector(
-                                              onTap: () => getJobProfileDetail(
-                                                  item, servitem),
-                                              child: Card(
-                                                clipBehavior:
-                                                    Clip.antiAliasWithSaveLayer,
-                                                color: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                                elevation: 8,
-                                                shadowColor: Colors.blueAccent
-                                                    .withOpacity(0.2),
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 8),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Column(
+                                                    ),
+                                                    // SizedBox(height: 1),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: GlobalVariables
+                                                                  .instance
+                                                                  .userrole ==
+                                                              1
+                                                          ? servitem
+                                                              .get("services")
+                                                              .take(2)
+                                                              .map<Widget>(
+                                                                  (service) =>
+                                                                      Padding(
+                                                                        padding: const EdgeInsets
+                                                                            .symmetric(
+                                                                            vertical:
+                                                                                2),
+                                                                        child:
+                                                                            Text(
+                                                                          // ignore: prefer_interpolation_to_compose_strings
+                                                                          "• " +
+                                                                              (GlobalVariables.instance.xmlHandler.getString(service) == '' ? service : GlobalVariables.instance.xmlHandler.getString(service)),
+                                                                          style:
+                                                                              TextStyle(fontSize: 12),
+                                                                        ),
+                                                                      ))
+                                                              .toList()
+                                                          : servitem
+                                                              .get("services")
+                                                              .keys
+                                                              .take(2)
+                                                              .map<Widget>(
+                                                                  (service) =>
+                                                                      Padding(
+                                                                        padding: const EdgeInsets
+                                                                            .symmetric(
+                                                                            vertical:
+                                                                                2),
+                                                                        child:
+                                                                            Text(
+                                                                          // ignore: prefer_interpolation_to_compose_strings
+                                                                          "• " +
+                                                                              (GlobalVariables.instance.xmlHandler.getString(service) == '' ? service : GlobalVariables.instance.xmlHandler.getString(service)),
+                                                                          style:
+                                                                              TextStyle(fontSize: 12),
+                                                                        ),
+                                                                      ))
+                                                              .toList(),
+                                                    ),
+                                                    if (servitem
+                                                            .get('services')
+                                                            .length >
+                                                        2)
+                                                      Row(
                                                         mainAxisAlignment:
                                                             MainAxisAlignment
                                                                 .center,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
                                                         children: [
-                                                          CircleAvatar(
-                                                            radius: 20,
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .grey[200],
-                                                            foregroundImage: item
-                                                                        .get(
-                                                                            'url') ==
-                                                                    null
-                                                                ? AssetImage(
-                                                                        "assets/profile.png")
-                                                                    as ImageProvider<
-                                                                        Object>
-                                                                : NetworkImage(
-                                                                    item.get(
-                                                                        'url')),
-                                                          ),
-                                                          SizedBox(
-                                                              height:
-                                                                  8), // Spacing
-                                                          FittedBox(
-                                                            fit: BoxFit
-                                                                .scaleDown,
-                                                            alignment: Alignment
-                                                                .centerLeft,
-                                                            child: Text(
-                                                              item.get("name"),
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    16, // Initial max font size
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                              height:
-                                                                  4), // Spacing
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .center,
-                                                            children: [
-                                                              Icon(
-                                                                  Icons
-                                                                      .location_pin,
-                                                                  size: 14,
-                                                                  color: Colors
-                                                                      .blueAccent),
-                                                              SizedBox(
-                                                                  width: 3),
-                                                              Flexible(
-                                                                child: Text(
-                                                                  item.get(
-                                                                      "address"),
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          12),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .center,
-                                                                  softWrap:
-                                                                      true,
-                                                                ),
-                                                              ),
-                                                            ],
+                                                          Text(
+                                                            'and more...',
+                                                            style: TextStyle(
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                                fontSize: 12,
+                                                                color: Colors
+                                                                    .blue[300]),
                                                           ),
                                                         ],
                                                       ),
-                                                      Divider(
-                                                          color:
-                                                              Colors.grey[300]),
-                                                      SizedBox(height: 5),
-                                                      Text(
-                                                        GlobalVariables
-                                                            .instance.xmlHandler
-                                                            .getString(
-                                                                'servoff'),
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 14,
-                                                          color:
-                                                              Colors.blueAccent,
-                                                        ),
-                                                      ),
-                                                      SizedBox(height: 3),
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: servitem
-                                                            .get("services")
-                                                            .take(2)
-                                                            .map<Widget>(
-                                                                (service) =>
-                                                                    Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .symmetric(
-                                                                          vertical:
-                                                                              2),
-                                                                      child:
-                                                                          Text(
-                                                                        "• " +
-                                                                            GlobalVariables.instance.xmlHandler.getString(service),
-                                                                        style: TextStyle(
-                                                                            fontSize:
-                                                                                12),
-                                                                      ),
-                                                                    ))
-                                                            .toList(),
-                                                      ),
-                                                      Spacer(),
-                                                    ],
-                                                  ),
+                                                    // Spacer(),
+                                                  ],
                                                 ),
                                               ),
-                                            );
-                                          } else if (snapshot.hasError) {
-                                            return Center(
-                                              child: Text(
-                                                "Error: ${snapshot.error}",
-                                                style: TextStyle(
-                                                    color: Colors.red),
-                                              ),
-                                            );
-                                          } else {
-                                            return Center(
-                                                child:
-                                                    CircularProgressIndicator());
-                                          }
-                                        },
-                                      );
-                                    },
-                                  );
-                                } else if (snapshot.hasError) {
-                                  return Center(
-                                    child: Text("Error: ${snapshot.error}",
-                                        style: TextStyle(color: Colors.red)),
-                                  );
-                                } else {
-                                  return Center(
-                                      child: CircularProgressIndicator());
-                                }
-                              },
-                            ),
-                          ],
-                        ),
+                                            ),
+                                          );
+                                        } else if (snapshot.hasError) {
+                                          return Center(
+                                            child: Text(
+                                              "Error: ${snapshot.error}",
+                                              style:
+                                                  TextStyle(color: Colors.red),
+                                            ),
+                                          );
+                                        } else {
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        }
+                                      },
+                                    );
+                                  },
+                                );
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Text("Error: ${snapshot.error}",
+                                      style: TextStyle(color: Colors.red)),
+                                );
+                              } else {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
             ],
           );
         });

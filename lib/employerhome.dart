@@ -540,7 +540,7 @@ class _FABState extends State<FAB> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const JobProfile()))
+                                builder: (context) => JobResume(1)))
                       },
                       heroTag: null,
                       label: const Text(

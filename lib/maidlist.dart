@@ -290,9 +290,10 @@ class _MaidListState extends State<MaidList>
                               MaterialPageRoute(
                                   builder: (context) => ChatPage(
                                         name: item.get("name"),
+                                        photo: item.get('url'),
                                         receiverID: item.get("userid"),
-                                        postType: "services",
-                                        postTypeID: servItem.id,
+                                        // postType: "services",
+                                        // postTypeID: servItem.id,
                                         readMsg: item.get('read_Msg'),
                                       )));
                         },
@@ -448,18 +449,23 @@ class _MaidListState extends State<MaidList>
                                                     Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
-                                                            builder: (context) => ChatPage(
-                                                                name: item.get(
-                                                                    "name"),
-                                                                receiverID:
-                                                                    item.get(
-                                                                        "userid"),
-                                                                postType:
-                                                                    "services",
-                                                                postTypeID:
-                                                                    servitem.id,
-                                                                readMsg: item.get(
-                                                                    'read_Msg'))));
+                                                            builder: (context) =>
+                                                                ChatPage(
+                                                                    name: item.get(
+                                                                        "name"),
+                                                                    photo: item
+                                                                        .get(
+                                                                            'url'),
+                                                                    receiverID:
+                                                                        item.get(
+                                                                            "userid"),
+                                                                    // postType:
+                                                                    //     "services",
+                                                                    // postTypeID:
+                                                                    //     servitem.id,
+                                                                    readMsg:
+                                                                        item.get(
+                                                                            'read_Msg'))));
                                                   },
                                                   icon: const Icon(
                                                       Icons.chat_rounded),

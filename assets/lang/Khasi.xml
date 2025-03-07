@@ -52,7 +52,7 @@
 <string name="Monthly">Bnai</string>
 <string name="sendack">Phah iaka Jingmynjur</string>
 <string name="maiddetails">Jingtip Ba Kham Bniah shaphang Nongtrei</string>
-<string name="servdetails">Jingtip Ba Kham Bniah shaphang Kane Ka Kam</string>
+<string name="jobdetails">Jingtip Ba Kham Bniah shaphang Kane Ka Kam</string>
 <string name="addedsucc">Lah Dep Add</string>
 <string name="updatesucc">Lah Dep Edit</string>
 <string name="avail">Lah Don Lypa</string>
@@ -85,6 +85,7 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="nowork">Ym pat don ki kam barim</string>
 <string name="noserv">Ym pat don ki kam</string>
 <string name="servoff">Ki Kam ba Trei:</string>
+<string name="servreq">Ki Kam ba Donkam:</string>
 <string name="nego"> Lah ban Pan Dor</string>
 <string name="nonnego"> Ym Lah ban Pan Dor</string>
 <string name="read"> Nga lah dep pule iaki terms and conditions</string>
@@ -95,4 +96,5 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="perday">shi Sngi</string>
 <string name="perhour">shi Kynta</string>
 <string name="permonth">shi Bnai</string>
+<string name="hiringdet">Ki Jingtip Bniah Ban Khot Kam</string>
 </strings>
