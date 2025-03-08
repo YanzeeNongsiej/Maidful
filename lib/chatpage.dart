@@ -130,12 +130,53 @@ class _ChatPageState extends State<ChatPage> {
                 .jumpTo(_scrollController.position.maxScrollExtent);
           }
         });
+        List<Widget> messageWidgets = [];
+        String? lastDisplayedDate;
+
+        for (var doc in snapshot.data!.docs) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          Timestamp timestamp = data['timestamp'] ?? Timestamp.now();
+          String messageDate =
+              DateFormat('dd MMM yyyy').format(timestamp.toDate());
+
+          // Add a date separator if the date changes
+          if (lastDisplayedDate != messageDate) {
+            messageWidgets.add(
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    messageDate,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            );
+            lastDisplayedDate = messageDate;
+          }
+
+          // Add the actual message
+          messageWidgets.add(_buildMessageItem(doc));
+        }
+
         return ListView(
           controller: _scrollController,
           padding: const EdgeInsets.all(10),
-          children:
-              snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+          children: messageWidgets,
         );
+        // return ListView(
+        //   controller: _scrollController,
+        //   padding: const EdgeInsets.all(10),
+        //   children:
+        //       snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+        // );
       },
     );
   }

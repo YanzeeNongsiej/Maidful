@@ -10,7 +10,9 @@ import 'package:ibitf_app/notifservice.dart';
 import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:intl/intl.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:animate_do/animate_do.dart';
 
 class LandingHomePage extends StatefulWidget {
   final String? uname;
@@ -510,49 +512,220 @@ class _NestedTabBarState extends State<NestedTabBar>
 
   Widget showSkills(thisid) {
     return FutureBuilder<void>(
-      future: fetchSkills(thisid), // Wait for fetchSkills to complete
+      future: fetchSkills(thisid),
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // While fetchSkills is running, show a loading spinner
-          return Center(child: CircularProgressIndicator());
+          return Center(
+              child: CircularProgressIndicator(color: Colors.blueAccent));
         } else if (snapshot.hasError) {
-          // Handle any errors from fetchSkills
-          return Text('Error: ${snapshot.error}');
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Error: ${snapshot.error}',
+                style: TextStyle(color: Colors.redAccent, fontSize: 14)),
+          );
         }
 
-        // After fetchSkills completes, return the actual widget
-        return Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            title: Row(
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          elevation: 3,
+          shadowColor: Colors.black26,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              collapsedBackgroundColor: Colors.blueAccent.withOpacity(0.1),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              title: Row(
+                children: [
+                  Icon(Icons.build_circle_outlined,
+                      color: Colors.blueAccent, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    GlobalVariables.instance.xmlHandler.getString('skills'),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
+                  ),
+                ],
+              ),
               children: [
-                Icon(
-                  Icons.align_vertical_center,
-                  color: Colors.blueAccent,
-                ),
-                Text(
-                  GlobalVariables.instance.xmlHandler.getString('skills'),
-                ),
+                if (selectedskills == null && myskills.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      GlobalVariables.instance.xmlHandler.getString('noskills'),
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ),
+                if (selectedskills == null && myskills.isNotEmpty)
+                  createSkillsList(myskills),
+                if (selectedskills != null && myskills.isNotEmpty)
+                  Column(
+                    children: [
+                      createSkillsList(myskills),
+                      createSkillsList(selectedskills!.toList()),
+                    ],
+                  ),
               ],
             ),
-            children: [
-              if (selectedskills == null && myskills.isEmpty)
-                Text(GlobalVariables.instance.xmlHandler.getString('noskills')),
-              if (selectedskills == null && myskills.isNotEmpty)
-                createSkillsFirst(myskills),
-              if (selectedskills != null && myskills.isNotEmpty)
-                Column(
-                  children: [
-                    createSkillsFirst(myskills),
-                    createSkillsFirst(selectedskills!.toList()),
-                  ],
-                ),
-            ],
           ),
         );
       },
     );
   }
+
+  Widget createSkillsList(List<String> res) {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.29,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Assessment',
+                    style: TextStyle(
+                        color: Colors.grey, fontStyle: FontStyle.italic),
+                  )
+                ],
+              ),
+            ),
+            Column(
+              children: res.map((skill) {
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 1, horizontal: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            skill == getSkillName(skill)
+                                ? skillsWithNames
+                                    .firstWhere((s) => s[0] == skill)[1]
+                                : skill,
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        myskills.contains(getSkillName(skill)) &&
+                                checkVerified(skill)
+                            ? showSkillLevel(getSkillName(skill))
+                            : Text(
+                                'Unverified',
+                                style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget showSkillLevel(String currentSkill) {
+    double level = 0;
+    int res = 0;
+    for (var s in skillsWithScores) {
+      if (s['skill'] == currentSkill) {
+        res = s['score'];
+      }
+      level = res.toDouble().abs();
+    }
+
+    return CircularPercentIndicator(
+      radius: 24.0,
+      lineWidth: 5.0,
+      animation: true,
+      percent: level / 100,
+      center: Text(
+        "${level.toInt()}%",
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: Colors.grey[300]!,
+      linearGradient: LinearGradient(
+        colors: [_getSkillColor(level), Colors.blueAccent.shade700],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      circularStrokeCap: CircularStrokeCap.round,
+    );
+  }
+
+  Color _getSkillColor(double level) {
+    if (level >= 75) return Colors.greenAccent.shade700;
+    if (level >= 50) return Colors.yellowAccent.shade700;
+    if (level >= 25) return Colors.orangeAccent.shade700;
+    return Colors.redAccent.shade700;
+  }
+
+  // Widget showSkills(thisid) {
+  //   return FutureBuilder<void>(
+  //     future: fetchSkills(thisid), // Wait for fetchSkills to complete
+  //     builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         // While fetchSkills is running, show a loading spinner
+  //         return Center(child: CircularProgressIndicator());
+  //       } else if (snapshot.hasError) {
+  //         // Handle any errors from fetchSkills
+  //         return Text('Error: ${snapshot.error}');
+  //       }
+
+  //       // After fetchSkills completes, return the actual widget
+  //       return Theme(
+  //         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+  //         child: ExpansionTile(
+  //           title: Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               Icon(
+  //                 Icons.align_vertical_center,
+  //                 color: Colors.blueAccent,
+  //               ),
+  //               Text(
+  //                 GlobalVariables.instance.xmlHandler.getString('skills'),
+  //                 style: TextStyle(fontSize: 14),
+  //               ),
+  //             ],
+  //           ),
+  //           children: [
+  //             if (selectedskills == null && myskills.isEmpty)
+  //               Text(GlobalVariables.instance.xmlHandler.getString('noskills')),
+  //             if (selectedskills == null && myskills.isNotEmpty)
+  //               createSkillsFirst(myskills),
+  //             if (selectedskills != null && myskills.isNotEmpty)
+  //               Column(
+  //                 children: [
+  //                   createSkillsFirst(myskills),
+  //                   createSkillsFirst(selectedskills!.toList()),
+  //                 ],
+  //               ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> fetchSkills(thisid) async {
     try {
@@ -597,15 +770,15 @@ class _NestedTabBarState extends State<NestedTabBar>
     }
   }
 
-  Color _getColor(double level) {
-    if (level >= 75) {
-      return Colors.green; // High skill
-    } else if (level >= 50) {
-      return Colors.orange; // Medium skill
-    } else {
-      return Colors.red; // Low skill
-    }
-  }
+  // Color _getColor(double level) {
+  //   if (level >= 75) {
+  //     return Colors.green; // High skill
+  //   } else if (level >= 50) {
+  //     return Colors.orange; // Medium skill
+  //   } else {
+  //     return Colors.red; // Low skill
+  //   }
+  // }
 
   String getSkillName(String sName) {
     String s = sName;
@@ -629,97 +802,115 @@ class _NestedTabBarState extends State<NestedTabBar>
     return res;
   }
 
-  Widget showLevels(currentSkill) {
-    double level = 0;
-    int res = 0;
-    for (var s in skillsWithScores) {
-      if (s['skill'] == currentSkill) {
-        res = s['score'];
-        // Return the score if found
-      }
-      level = res.toDouble().abs();
-    }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 150,
-          height: 20,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.grey[300],
-          ),
-          child: Stack(
-            children: [
-              Container(
-                width:
-                    level * 1.5, // Scale the width according to level (0-300)
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: _getColor(level),
-                ),
-              ),
-              Center(
-                child: LinearPercentIndicator(
-                  width: 150,
-                  lineHeight: 20,
-                  animation: true,
-                  animationDuration: 1000,
-                  percent: level / 100,
-                  center: Text(
-                    "${level.toInt()}%",
-                    style: TextStyle(color: Colors.black, fontSize: 13),
-                  ),
-                  linearStrokeCap: LinearStrokeCap.roundAll,
-                  progressColor: _getColor(level),
-                  backgroundColor: Colors.grey[300]!,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget showLevels(currentSkill) {
+  //   double level = 0;
+  //   int res = 0;
+  //   for (var s in skillsWithScores) {
+  //     if (s['skill'] == currentSkill) {
+  //       res = s['score'];
+  //       // Return the score if found
+  //     }
+  //     level = res.toDouble().abs();
+  //   }
+  //   return Column(
+  //     mainAxisAlignment: MainAxisAlignment.center,
+  //     children: [
+  //       Container(
+  //         width: 150,
+  //         height: 20,
+  //         decoration: BoxDecoration(
+  //           borderRadius: BorderRadius.circular(10),
+  //           color: Colors.grey[300],
+  //         ),
+  //         child: Stack(
+  //           children: [
+  //             Container(
+  //               width:
+  //                   level * 1.5, // Scale the width according to level (0-300)
+  //               decoration: BoxDecoration(
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 color: _getColor(level),
+  //               ),
+  //             ),
+  //             Center(
+  //               child: LinearPercentIndicator(
+  //                 width: 150,
+  //                 lineHeight: 20,
+  //                 animation: true,
+  //                 animationDuration: 1000,
+  //                 percent: level / 100,
+  //                 center: Text(
+  //                   "${level.toInt()}%",
+  //                   style: TextStyle(color: Colors.black, fontSize: 13),
+  //                 ),
+  //                 linearStrokeCap: LinearStrokeCap.roundAll,
+  //                 progressColor: _getColor(level),
+  //                 backgroundColor: Colors.grey[300]!,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
-  Widget createSkillsFirst(List<String> res) {
-    return SingleChildScrollView(
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent, // Removes the divider line
-        ),
-        child: Column(
-          children: res.map((skill) {
-            // print("My skills is:$myskills");
-            // print("Current skill is$skill");
-            // print("$skillsWithScores is skills with scores");
-            // print(
-            //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
-            // print(
-            //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
+  // Widget createSkillsFirst(List<String> res) {
+  //   return SingleChildScrollView(
+  //     child: Theme(
+  //       data: Theme.of(context).copyWith(
+  //         dividerColor: Colors.transparent, // Removes the divider line
+  //       ),
+  //       child: Column(
+  //         children: res.map((skill) {
+  //           // print("My skills is:$myskills");
+  //           // print("Current skill is$skill");
+  //           // print("$skillsWithScores is skills with scores");
+  //           // print(
+  //           //     "Is that skill in myskills?:${myskills.contains(getSkillName(skill))}");
+  //           // print(
+  //           //     "Myskills is $myskills and this skill is $skill and getskillname is ${skillsWithNames}");
 
-            return ListTile(
-              dense: true,
-              minVerticalPadding: 0,
-              contentPadding: EdgeInsets.all(0),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      skill == getSkillName(skill)
-                          ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
-                          : skill,
-                    ),
-                  ),
-                  myskills.contains(getSkillName(skill)) && checkVerified(skill)
-                      ? showLevels(getSkillName(skill))
-                      : Text('Unverified'),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
+  //           return ListTile(
+  //             dense: true,
+  //             minVerticalPadding: 0,
+  //             contentPadding: EdgeInsets.all(0),
+  //             title: Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 Expanded(
+  //                   child: Text(
+  //                     skill == getSkillName(skill)
+  //                         ? skillsWithNames.firstWhere((s) => s[0] == skill)[1]
+  //                         : skill,
+  //                   ),
+  //                 ),
+  //                 myskills.contains(getSkillName(skill)) && checkVerified(skill)
+  //                     ? showLevels(getSkillName(skill))
+  //                     : Text('Unverified'),
+  //               ],
+  //             ),
+  //           );
+  //         }).toList(),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildIconText(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blueAccent, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -728,254 +919,337 @@ class _NestedTabBarState extends State<NestedTabBar>
     showDialog(
         context: context,
         builder: (context) {
-          return AlertDialog(
-            scrollable: true,
-            insetPadding: const EdgeInsets.only(left: 8, right: 8),
-            title: Text(
-                GlobalVariables.instance.userrole == 2
-                    ? GlobalVariables.instance.xmlHandler
-                        .getString('maiddetails')
-                    : GlobalVariables.instance.xmlHandler
-                        .getString('jobdetails'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            content: Card(
-              elevation: 5,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    buildTextInfo("Name", item.get("name")),
-                    buildTextInfo("Address", item.get("address")),
-                    buildTextInfo(
+          return FadeInLeft(
+              duration: Duration(milliseconds: 500),
+              child: AlertDialog(
+                backgroundColor: Colors.white.withOpacity(0.9),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                scrollable: true,
+                insetPadding: const EdgeInsets.all(10),
+                title: Center(
+                  child: Text(
+                    GlobalVariables.instance.userrole == 2
+                        ? GlobalVariables.instance.xmlHandler
+                            .getString('maiddetails')
+                        : GlobalVariables.instance.xmlHandler
+                            .getString('jobdetails'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildTextInfo("Name", item.get("name")),
+                      buildTextInfo("Address", item.get("address")),
+                      buildTextInfo(
                         "Posted on",
                         DateFormat('dd MMM yyyy').format(
-                            (servItem.get("timestamp") as Timestamp).toDate())),
-                    buildScheduleSection("Schedule", servItem.get("schedule")),
-                    GlobalVariables.instance.userrole == 2
-                        ? buildServiceSection(
-                            "Services", servItem.get("services"))
-                        : buildSection("Services", servItem.get("services")),
-                    buildSection("Timing", servItem.get("timing")),
-                    buildSection("Days Available", servItem.get("days")),
-                    buildTextInfo("Negotiable", servItem.get("negotiable")),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('workhist'),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        for (var i = 0;
-                            i < servItem.get("work_history").length;
-                            i++)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            (servItem.get("timestamp") as Timestamp).toDate()),
+                      ),
+                      buildScheduleSection(
+                          "Schedule", servItem.get("schedule")),
+                      GlobalVariables.instance.userrole == 2
+                          ? buildServiceSection(
+                              "Services", servItem.get("services"))
+                          : buildSection("Services", servItem.get("services")),
+                      buildSection("Timing", servItem.get("timing")),
+                      buildSection("Days Available", servItem.get("days")),
+                      buildTextInfo("Negotiable", servItem.get("negotiable")),
+                      SizedBox(height: 10),
+                      buildWorkHistory(servItem.get("work_history")),
+                    ],
+                  ),
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Card(
+                        // elevation: 10,
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    backgroundColor: Colors.transparent,
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Refined Background Card
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 30),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            color: Colors.white.withOpacity(
+                                                0.9), // More solid background
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                blurRadius: 15,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              // Profile Image with a Soft Glow Effect
+                                              Hero(
+                                                tag:
+                                                    'profile-${item.get('userid')}',
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.grey
+                                                            .withOpacity(
+                                                                0.9), // Inner glow
+                                                        blurRadius: 15,
+                                                        spreadRadius: 0.1,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: CircleAvatar(
+                                                    radius: 50,
+                                                    backgroundColor:
+                                                        Colors.grey[200],
+                                                    foregroundImage: item
+                                                                .get('url') ==
+                                                            null
+                                                        ? AssetImage(
+                                                                "assets/profile.png")
+                                                            as ImageProvider<
+                                                                Object>
+                                                        : NetworkImage(
+                                                            item.get('url')),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+
+                                              // Name
+                                              Text(
+                                                item.get('name'),
+                                                style: TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors
+                                                      .blueAccent.shade700,
+                                                ),
+                                              ),
+
+                                              const SizedBox(height: 8),
+
+                                              // Address
+                                              _buildIconText(
+                                                  Icons.house_outlined,
+                                                  item.get('address')),
+
+                                              // Gender
+                                              _buildIconText(
+                                                  Icons.group_rounded,
+                                                  item.get('gender') == 1
+                                                      ? 'Female'
+                                                      : 'Male'),
+
+                                              // Date of Birth
+                                              _buildIconText(Icons.date_range,
+                                                  item.get('dob')),
+
+                                              // Languages Spoken
+                                              _buildIconText(
+                                                Icons.abc,
+                                                item
+                                                    .get('language')
+                                                    .toString()
+                                                    .replaceAll('[', '')
+                                                    .replaceAll(']', ''),
+                                              ),
+
+                                              // 🌟 Average Rating Section 🌟
+                                              if (item
+                                                      .data()
+                                                      .containsKey('rating') &&
+                                                  item.get('rating') is Map)
+                                                _buildAverageRating(
+                                                    item.get('rating')),
+
+                                              // Show Skills (Only for certain users)
+                                              if (GlobalVariables
+                                                      .instance.userrole ==
+                                                  2)
+                                                showSkills(item.get('userid')),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Close Button with a Floating Effect
+                                        Positioned(
+                                          top: -10,
+                                          right: -10,
+                                          child: GestureDetector(
+                                            onTap: () =>
+                                                Navigator.of(context).pop(),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.redAccent,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.red
+                                                        .withOpacity(0.3),
+                                                    blurRadius: 6,
+                                                    spreadRadius: 1,
+                                                  )
+                                                ],
+                                              ),
+                                              padding: const EdgeInsets.all(5),
+                                              child: const Icon(
+                                                  Icons.close_rounded,
+                                                  color: Colors.white,
+                                                  size: 24),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+
+// Utility function for icons & text
+                            },
+                            child: const Row(
                               children: [
-                                Text("${i + 1}. "),
-                                Expanded(
-                                  child: Text(
-                                      "${servItem.get("work_history")[i]}"),
+                                Icon(
+                                  Icons.person_3_rounded,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  'Profile',
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ],
                             ),
                           ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Card(
-                    // elevation: 10,
-                    color: Colors.blue,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('User Profile'),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Center(
-                                        child: CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage: NetworkImage(item.get(
-                                              'url')), // Replace with your image asset or network URL
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.person_2_outlined,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text('${item.get('name')}'),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.house_outlined,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text('${item.get('address')}'),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.group_rounded,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text(item.get('gender') == 1
-                                              ? 'Female'
-                                              : 'Male'),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.date_range,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text('${item.get('dob')}'),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.abc_outlined,
-                                            color: Colors.blueAccent,
-                                          ),
-                                          Text(item
-                                              .get('language')
-                                              .toString()
-                                              .replaceAll('[', '')
-                                              .replaceAll(']', '')),
-                                        ],
-                                      ),
-                                      if (GlobalVariables.instance.userrole ==
-                                          2)
-                                        showSkills(item.get('userid')),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              );
+                        ),
+                      ),
+                      Card(
+                        // elevation: 10,
+                        color: Colors.green,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ChatPage(
+                                            name: item.get("name"),
+                                            photo: item.get('url'),
+                                            receiverID: item.get("userid"),
+                                            // postType: "services",
+                                            // postTypeID: servItem.id,
+                                            readMsg: true,
+                                          )));
                             },
-                          );
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.person_3_rounded,
-                              color: Colors.white,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.chat,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  'Chat',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Profile',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Card(
-                    // elevation: 10,
-                    color: Colors.green,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ChatPage(
-                                        name: item.get("name"),
-                                        photo: item.get('url'),
-                                        receiverID: item.get("userid"),
-                                        // postType: "services",
-                                        // postTypeID: servItem.id,
-                                        readMsg: true,
-                                      )));
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.chat,
-                              color: Colors.white,
+                      Card(
+                        // elevation: 10,
+                        color: Colors.orange,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Row(
+                              children: [
+                                Icon(Icons.cancel, color: Colors.white),
+                                Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Chat',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Card(
-                    // elevation: 10,
-                    color: Colors.orange,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(Icons.cancel, color: Colors.white),
-                            Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  // TextButton(
-                  //   onPressed: () {
-                  //     Navigator.pop(context);
-                  //   },
-                  //   child: Row(
-                  //     children: [const Icon(Icons.chat), Text("chat")],
-                  //   ),
-                  // ),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     Navigator.pop(context);
+                      //   },
+                      //   child: Row(
+                      //     children: [const Icon(Icons.chat), Text("chat")],
+                      //   ),
+                      // ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
-          );
+              ));
         });
+  }
+
+  Widget _buildAverageRating(Map<String, dynamic> ratings) {
+    if (ratings.isEmpty) return SizedBox(); // No ratings available
+
+    // Convert ratings to a list of values & calculate average
+    List<int> ratingValues = ratings.values.map((r) => r as int).toList();
+    double avgRating =
+        ratingValues.reduce((a, b) => a + b) / ratingValues.length;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(Icons.star_border_purple500, color: Colors.blueAccent),
+            SizedBox(width: 5),
+            Text("Average Rating: ${avgRating.toStringAsFixed(2)}"),
+          ],
+        ),
+        Row(
+          children: List.generate(
+            5,
+            (index) => Icon(
+              index < avgRating.round() ? Icons.star : Icons.star_border,
+              color: Colors.amber,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   // getJobProfileDetail(item, servItem) {

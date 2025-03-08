@@ -763,6 +763,34 @@ class _ProfilePageState extends State<ProfilePage> {
   // }
 
   Widget _buildActiveServiceList(item, what) {
+    //   if (what == "Completed") {
+    //     String ratedUserId = item.get('userid') == userID ? item.get('receiverid') : item.get('userid');
+    //     FirebaseFirestore.instance
+    //       .collection('users')
+    //       .where('userid', isEqualTo: ratedUserId)
+    //       .limit(1)
+    //       .get()
+    //       .then((querySnapshot) {
+    //     if (querySnapshot.docs.isNotEmpty) {
+    //       DocumentSnapshot userSnapshot = querySnapshot.docs.first;
+
+    //       // Cast to Map<String, dynamic> safely
+    //       Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+    //       Map<String, dynamic> ratings = userData['rating'] as Map<String, dynamic>? ?? {};
+
+    //       // If the current user has not provided a rating, show the dialog
+    //       if (!ratings.containsKey(userID)) {
+    //         designOfRating(ratedUserId, userID);
+    //       }
+    //     } else {
+    //       // User not found, still allow rating
+    //       designOfRating(ratedUserId, userID);
+    //     }
+    //   }).catchError((error) {
+    //     print("Error fetching user rating: $error");
+    //   });
+    // }
+
     return SingleChildScrollView(
       child: Column(
         children: [

@@ -184,15 +184,19 @@ class NotificationService {
   void showRatingPopup(RemoteMessage message) {
     String ratedUserId =
         message.data['ratedUserId']; // Get user ID from notification data
-    String raterUserId =
-        FirebaseAuth.instance.currentUser!.uid; // Get current user ID
+    String raterUserId = FirebaseAuth.instance.currentUser!.uid;
+    designOfRating(ratedUserId, raterUserId);
+  }
+}
 
-    showDialog(
-      context: navigatorKey.currentContext!,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Rate Your Experience"),
-          content: Column(
+void designOfRating(String ratedUserId, String raterUserId) {
+  showDialog(
+    context: navigatorKey.currentContext!,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Rate Your Experience"),
+        content: Expanded(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text("Please rate your interaction with this user."),
@@ -211,46 +215,46 @@ class NotificationService {
               ),
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
-  Future<void> submitRating(
-      int rating, String ratedUserId, String raterUserId) async {
-    CollectionReference usersCollection =
-        FirebaseFirestore.instance.collection('users');
+Future<void> submitRating(
+    int rating, String ratedUserId, String raterUserId) async {
+  CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('users');
 
-    // Find the document where 'userid' matches 'ratedUserId'
-    QuerySnapshot querySnapshot = await usersCollection
-        .where('userid', isEqualTo: ratedUserId)
-        .limit(1)
-        .get();
+  // Find the document where 'userid' matches 'ratedUserId'
+  QuerySnapshot querySnapshot = await usersCollection
+      .where('userid', isEqualTo: ratedUserId)
+      .limit(1)
+      .get();
 
-    if (querySnapshot.docs.isNotEmpty) {
-      DocumentReference userRef = querySnapshot.docs.first.reference;
+  if (querySnapshot.docs.isNotEmpty) {
+    DocumentReference userRef = querySnapshot.docs.first.reference;
 
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        DocumentSnapshot userSnapshot = await transaction.get(userRef);
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot userSnapshot = await transaction.get(userRef);
 
-        if (userSnapshot.exists) {
-          // 🔹 Explicitly cast `data()` to `Map<String, dynamic>` before accessing fields
-          Map<String, dynamic> userData =
-              userSnapshot.data() as Map<String, dynamic>;
-          Map<String, dynamic> ratings =
-              userData['rating'] as Map<String, dynamic>? ?? {};
+      if (userSnapshot.exists) {
+        // 🔹 Explicitly cast `data()` to `Map<String, dynamic>` before accessing fields
+        Map<String, dynamic> userData =
+            userSnapshot.data() as Map<String, dynamic>;
+        Map<String, dynamic> ratings =
+            userData['rating'] as Map<String, dynamic>? ?? {};
 
-          ratings[raterUserId] = rating; // Update or add rating
+        ratings[raterUserId] = rating; // Update or add rating
 
-          transaction.update(userRef, {'rating': ratings});
-        }
-      }).then((_) {
-        print("Rating submitted: $rating by $raterUserId for $ratedUserId");
-      }).catchError((error) {
-        print("Error submitting rating: $error");
-      });
-    } else {
-      print("User not found with userid: $ratedUserId");
-    }
+        transaction.update(userRef, {'rating': ratings});
+      }
+    }).then((_) {
+      print("Rating submitted: $rating by $raterUserId for $ratedUserId");
+    }).catchError((error) {
+      print("Error submitting rating: $error");
+    });
+  } else {
+    print("User not found with userid: $ratedUserId");
   }
 }
