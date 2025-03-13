@@ -12,8 +12,8 @@ import 'package:ibitf_app/singleton.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("Background Message received: ${message.notification?.title}");
-  GlobalVariables.instance.hasnewmsg = true;
-  print("hehe background${GlobalVariables.instance.hasnewmsg}");
+  // GlobalVariables.instance.hasnewmsg = true;
+  // print("hehe background${GlobalVariables.instance.hasnewmsg}");
 }
 
 void main() async {
@@ -21,7 +21,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await GlobalVariables.instance.loadHasNewMsg();
+  // await GlobalVariables.instance.loadHasNewMsg();
   // TODO: Request permission
   final messaging = FirebaseMessaging.instance;
 

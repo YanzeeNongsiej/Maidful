@@ -1,29 +1,24 @@
-import 'dart:ffi';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ibitf_app/chatpage.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
-import 'package:ibitf_app/starrating.dart';
+import 'package:ibitf_app/notifservice.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:ibitf_app/assessment.dart';
 import 'package:ibitf_app/DAO/skilldao.dart';
-import 'package:ibitf_app/jobprofile.dart';
+
 import 'package:ibitf_app/jobresume.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:ibitf_app/rating.dart';
-import 'package:ibitf_app/notifservice.dart';
+
 import 'package:ibitf_app/buildui.dart';
-import 'package:ibitf_app/profile1.dart';
-import 'package:ibitf_app/profile2.dart';
-import 'package:ibitf_app/profile3.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -560,96 +555,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return await maidDao().getActiveName(receive);
   }
 
-  void completeService(BuildContext context, item) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Are you sure you want to complete the service?"),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the first dialog
-              },
-              child: Text("No"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(); // Close the first dialog
-                showCompleteDoneDialog(context, item); // Show the rating dialog
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //       builder: (context) => CompletionRequestWidget()),
-                // );
-              },
-              child: Text("Yes"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void showCompleteDoneDialog(BuildContext context, item) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                "Completion Request Sent!",
-                style: TextStyle(
-                  fontSize: 18, // Slightly larger font for prominence
-                  fontWeight: FontWeight.bold, // Bold text for emphasis
-                  color: Colors.black87,
-                ),
-              ),
-              content: Text(
-                'A completion request has been sent to $name',
-                style: TextStyle(
-                  fontSize: 14, // Slightly larger font for prominence
-                  // Bold text for emphasis
-                  color: Colors.black87,
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    ChatController().sendMessage(item.get('receiverid'),
-                        "New Completion Request", item.id, false);
-                    updateStatus(4, item);
-
-                    Navigator.of(context).pop();
-                    //status=3 means the completion request has been sent
-
-                    // Close the dialog
-                    // showRatingConfirmation(
-                    //     context, selectedRating); // Show thank-you message
-                  },
-                  child: Text("OK"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  updateStatus(int val, item) {
-    FirebaseFirestore.instance
-        .collection("acknowledgements")
-        .doc(item.id)
-        .update({
-      "status": val,
-    }).whenComplete(() {
-      setState(() {});
-    });
-  }
-
   // void showRatingConfirmation(BuildContext context, int rating) {
   //   showDialog(
   //     context: context,
@@ -761,107 +666,6 @@ class _ProfilePageState extends State<ProfilePage> {
   //     },
   //   );
   // }
-
-  Widget _buildActiveServiceList(item, what) {
-    //   if (what == "Completed") {
-    //     String ratedUserId = item.get('userid') == userID ? item.get('receiverid') : item.get('userid');
-    //     FirebaseFirestore.instance
-    //       .collection('users')
-    //       .where('userid', isEqualTo: ratedUserId)
-    //       .limit(1)
-    //       .get()
-    //       .then((querySnapshot) {
-    //     if (querySnapshot.docs.isNotEmpty) {
-    //       DocumentSnapshot userSnapshot = querySnapshot.docs.first;
-
-    //       // Cast to Map<String, dynamic> safely
-    //       Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
-    //       Map<String, dynamic> ratings = userData['rating'] as Map<String, dynamic>? ?? {};
-
-    //       // If the current user has not provided a rating, show the dialog
-    //       if (!ratings.containsKey(userID)) {
-    //         designOfRating(ratedUserId, userID);
-    //       }
-    //     } else {
-    //       // User not found, still allow rating
-    //       designOfRating(ratedUserId, userID);
-    //     }
-    //   }).catchError((error) {
-    //     print("Error fetching user rating: $error");
-    //   });
-    // }
-
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          if (what == "Completed")
-            Column(
-              children: [
-                buildTextInfo(
-                  "Started on",
-                  item.data().containsKey("period") &&
-                          item["period"].containsKey("start")
-                      ? DateFormat('dd MMM yyyy').format(
-                          (item.get("period.start") as Timestamp).toDate(),
-                        )
-                      : "Not available",
-                ),
-                buildTextInfo(
-                  "Completed on",
-                  item.data().containsKey("period") &&
-                          item["period"].containsKey("end")
-                      ? DateFormat('dd MMM yyyy').format(
-                          (item.get("period.end") as Timestamp).toDate(),
-                        )
-                      : "Not available",
-                ),
-              ],
-            ),
-          buildScheduleSection("Schedule", item.get("schedule")),
-          buildSection("Services", item.get("services")),
-          buildSection("Timing", item.get("timing")),
-          buildSection("Days Available", item.get("days")),
-          buildLongText("Remarks", item.get("remarks")),
-          if (GlobalVariables.instance.userrole == 2 &&
-              [2, 6].contains(item.get('status')))
-            Row(
-              // mainAxisAlignment: MainAxisAlignment.end,
-
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Card(
-                    // elevation: 10,
-                    color: Colors.blue,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          completeService(context, item);
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.done_outline_rounded,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              'Complete Service',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 15),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildServiceList(item) {
     return NotificationListener<ScrollNotification>(
@@ -1457,93 +1261,96 @@ class _ProfilePageState extends State<ProfilePage> {
               itemBuilder: (context, index) {
                 final item = snapshot.data!.docs[index];
 
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.teal, Colors.blueAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: GestureDetector(
-                    onTap: () async {
-                      if (item.get('status') == 4) {
-                        List<String> res = await getActiveName(
-                            GlobalVariables.instance.userrole == 1
-                                ? item.get('userid')
-                                : item.get('receiverid'));
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ChatPage(
-                                      name: res[0],
-                                      photo: res[1],
-                                      receiverID: item.get("receiverid"),
-                                      // postType: chatRoomItem
-                                      //     .get("postType"),
-                                      // postTypeID: chatRoomItem
-                                      //     .get("postTypeID"),
-                                      readMsg: true,
-                                    )));
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: FutureBuilder<List<String>>(
-                                future: getActiveName(
-                                    GlobalVariables.instance.userrole == 1
-                                        ? item.get('userid')
-                                        : item.get('receiverid')),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return Row(
-                                      children: [
-                                        CircularProgressIndicator(),
-                                        SizedBox(width: 10),
-                                        Text("Loading Title..."),
-                                      ],
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Text('Error: ${snapshot.error}');
-                                  } else if (snapshot.hasData) {
-                                    return Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 12,
-                                          backgroundImage:
-                                              NetworkImage(snapshot.data![1]),
+                return GestureDetector(
+                  onTap: () async {
+                    if (item.get('status') == 4) {
+                      List<String> res = await getActiveName(
+                          GlobalVariables.instance.userrole == 1
+                              ? item.get('userid')
+                              : item.get('receiverid'));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChatPage(
+                                    name: res[0],
+                                    photo: res[1],
+                                    receiverID: item.get("receiverid"),
+                                    // postType: chatRoomItem
+                                    //     .get("postType"),
+                                    // postTypeID: chatRoomItem
+                                    //     .get("postTypeID"),
+                                    readMsg: true,
+                                  )));
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: FutureBuilder<List<String>>(
+                              future: getActiveName(
+                                  GlobalVariables.instance.userrole == 1
+                                      ? item.get('userid')
+                                      : item.get('receiverid')),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Row(
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(width: 10),
+                                      Text("Loading Title..."),
+                                    ],
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else if (snapshot.hasData) {
+                                  return Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundImage:
+                                            NetworkImage(snapshot.data![1]),
+                                      ),
+                                      SizedBox(width: 7),
+                                      Expanded(
+                                        child: Text(
+                                          snapshot.data!.first,
+                                          style: TextStyle(fontSize: 20),
                                         ),
-                                        SizedBox(width: 7),
-                                        Expanded(
-                                          child: Text(
-                                            snapshot.data!.first,
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  } else {
-                                    return Text('No Title Available');
-                                  }
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return Text('No Title Available');
+                                }
+                              },
+                            ),
+                            content: buildActiveServiceList(
+                                item, what, context, userID),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
                                 },
+                                child: Text('Cancel'),
                               ),
-                              content: _buildActiveServiceList(item, what),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                  child: Text('Cancel'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
+                            ],
+                          );
+                        },
+                      );
+                    }
+                  },
+                  child: Container(
+                    // width: MediaQuery.of(context).size.width,
+                    // height: MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.teal, Colors.blueAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

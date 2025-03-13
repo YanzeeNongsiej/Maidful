@@ -8,6 +8,7 @@
 // import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
 
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -151,8 +152,11 @@ class _ChatBubbleState extends State<ChatBubble> {
       if (widget.data['message']
           .toString()
           .contains(RegExp(r'^(New|Old) Completion Request$'))) {
-        return FutureBuilder<DocumentSnapshot>(
-          future: getAcknomledgement(widget.data['ackID']),
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection("acknowledgements")
+              .doc(widget.data['ackID'])
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return const Center(
@@ -234,65 +238,107 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () => getAckDetail(ds),
-                        child: Chip(
-                          label: const Text("View",
-                              style: TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.blue,
+                  if (ds.get('status') == 5)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Service is Completed",
+                          style: TextStyle(fontStyle: FontStyle.italic),
                         ),
-                      ),
-                      if (ds.get("status") == 4 &&
-                          !widget.isCurrentUser &&
-                          widget.data['message'] !=
-                              'Old Completion Request') ...[
-                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Completed Service"),
+                              content: buildActiveServiceList(
+                                  ds,
+                                  "Completed",
+                                  context,
+                                  FirebaseAuth.instance.currentUser!.uid),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text("Close"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          child: const Text("Go to Service"),
+                        ),
+                      ],
+                    ),
+                  if (![5].contains(ds.get("status")))
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
                         GestureDetector(
-                          onTap: () {
-                            agreeAckDetail(ds.id, 5);
-                            setDate(ds.id, "end");
-                            notifyUser(
-                                ds.get('receiverid'),
-                                "Rate Your Experience",
-                                "Please rate your experience with ${getNameFromId(ds.get('userid'))}.",
-                                ratedUserId: ds.get('userid'));
+                          onTap: () => getAckDetail(ds),
+                          child: Chip(
+                            label: const Text("View",
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.blue,
+                          ),
+                        ),
+                        if (ds.get("status") == 4 &&
+                            !widget.isCurrentUser &&
+                            widget.data['message'] !=
+                                'Old Completion Request') ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              agreeAckDetail(ds.id, 5);
+                              setDate(ds.id, "end");
+                              String name1 =
+                                  await getNameFromId(ds.get('userid'));
+                              String name2 =
+                                  await getNameFromId(ds.get('receiverid'));
+                              designOfRating(
+                                  ds.get('userid'), ds.get('receiverid'));
+                              // notifyUser(
+                              //     ds.get('receiverid'),
+                              //     "Rate Your Experience",
+                              //     "Please rate your experience with $name1.",
+                              //     ratedUserId: ds.get('userid'));
 
-                            notifyUser(ds.get('userid'), "Rate Your Experience",
-                                "Please rate your interaction with ${getNameFromId(ds.get('receiverid'))}.",
-                                ratedUserId: ds.get('receiverid'));
-                          },
-                          child: Chip(
-                            label: const Text("Agree",
-                                style: TextStyle(color: Colors.white)),
-                            backgroundColor: Colors.green,
+                              notifyUser(
+                                  ds.get('userid'),
+                                  "Rate Your Experience",
+                                  "Please rate your interaction with $name2.",
+                                  ratedUserId: ds.get('receiverid'));
+                            },
+                            child: Chip(
+                              label: const Text("Agree",
+                                  style: TextStyle(color: Colors.white)),
+                              backgroundColor: Colors.green,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () {
-                            agreeAckDetail(ds.id, 6);
-                            setMessage("Old Completion Request");
-                          },
-                          child: Chip(
-                            label: const Text("Reject",
-                                style: TextStyle(color: Colors.white)),
-                            backgroundColor: Colors.red,
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              agreeAckDetail(ds.id, 6);
+                              setMessage("Old Completion Request");
+                            },
+                            child: Chip(
+                              label: const Text("Reject",
+                                  style: TextStyle(color: Colors.white)),
+                              backgroundColor: Colors.red,
+                            ),
                           ),
-                        ),
-                      ]
-                    ],
-                  ),
+                        ]
+                      ],
+                    ),
                 ],
               ),
             );
           },
         );
       } else {
-        return FutureBuilder<DocumentSnapshot>(
-          future: getAcknomledgement(widget.data['ackID']),
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection("acknowledgements")
+              .doc(widget.data['ackID'])
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return const Center(
@@ -368,45 +414,81 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ],
                   ),
                   const SizedBox(height: 10),
+                  if ([2, 4].contains(ds.get("status")))
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Service is active",
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Active Service"),
+                              content: buildActiveServiceList(
+                                  ds,
+                                  "Active",
+                                  context,
+                                  FirebaseAuth.instance.currentUser!.uid),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text("Close"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          child: const Text("Go to Service"),
+                        ),
+                      ],
+                    ),
 
                   // const SizedBox(height: 8),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () => getAckDetail(ds),
-                        child: Chip(
-                          label: const Text("View",
-                              style: TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.blue,
-                        ),
-                      ),
-                      if (ds.get("status") == 1 && !widget.isCurrentUser) ...[
-                        const SizedBox(width: 8),
+                  if (![2, 4, 5].contains(ds.get("status")))
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
                         GestureDetector(
-                          onTap: () {
-                            agreeAckDetail(ds.id, 2);
-                            setDate(ds.id, "start");
-                          },
+                          onTap: () => getAckDetail(ds),
                           child: Chip(
-                            label: const Text("Agree",
+                            label: const Text("View",
                                 style: TextStyle(color: Colors.white)),
-                            backgroundColor: Colors.green,
+                            backgroundColor: Colors.blue,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => agreeAckDetail(ds.id, 3),
-                          child: Chip(
-                            label: const Text("Reject",
-                                style: TextStyle(color: Colors.white)),
-                            backgroundColor: Colors.red,
+                        if (ds.get("status") == 1 && !widget.isCurrentUser) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              String name = await getNameFromId(
+                                  widget.data['receiverID']);
+                              agreeAckDetail(ds.id, 2);
+                              setDate(ds.id, "start");
+                              notifyUser(
+                                  widget.data['senderID'],
+                                  'Acknowledgement Agreed',
+                                  '$name has agreed to be hired by you');
+                            },
+                            child: Chip(
+                              label: const Text("Agree",
+                                  style: TextStyle(color: Colors.white)),
+                              backgroundColor: Colors.green,
+                            ),
                           ),
-                        ),
-                      ]
-                    ],
-                  ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => agreeAckDetail(ds.id, 3),
+                            child: Chip(
+                              label: const Text("Reject",
+                                  style: TextStyle(color: Colors.white)),
+                              backgroundColor: Colors.red,
+                            ),
+                          ),
+                        ]
+                      ],
+                    ),
                 ],
               ),
             );

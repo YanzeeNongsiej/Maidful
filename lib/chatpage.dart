@@ -33,12 +33,32 @@ class _ChatPageState extends State<ChatPage> {
   final ChatController chatcontroller = ChatController();
   bool ownServ = false;
   @override
-  Widget build(BuildContext context) {
-    if (GlobalVariables.instance.userrole == 1) {
-      ownServ = false;
-    } else {
-      ownServ = true;
+  Future<bool> checkForStatus(String receiverID) async {
+    String currentUserID = userID; // Replace with actual user ID retrieval
+    CollectionReference acknowledgements =
+        FirebaseFirestore.instance.collection('acknowledgements');
+
+    QuerySnapshot querySnapshot = await acknowledgements
+        .where('userid', isEqualTo: currentUserID)
+        .where('receiverid', isEqualTo: receiverID)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      return true; // No acknowledgement found for given userID and receiverID
     }
+
+    for (var doc in querySnapshot.docs) {
+      int status = doc['status'];
+      if (status == 1 || status == 2 || status == 4 || status == 6) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         // backgroundColor: Colors.blueAccent.shade100,
@@ -66,48 +86,61 @@ class _ChatPageState extends State<ChatPage> {
               child: _buildMessageList(),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Visibility(
-                visible: ownServ,
-                child: Card(
-                  elevation: 10,
-                  color: Colors.blueAccent.shade700,
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => JobResume(
-                                      3,
-                                      receiverID: widget.receiverID,
-                                    )
-                                // HireMaid(
-                                //     name: widget.name)
-                                ));
-                      },
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.handshake,
-                            color: Colors.white,
+          FutureBuilder<bool>(
+              future: checkForStatus(widget.receiverID),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Text('Error loading status');
+                }
+                ownServ = snapshot.data ?? false;
+                if (GlobalVariables.instance.userrole == 1) {
+                  ownServ = false;
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Visibility(
+                      visible: ownServ,
+                      child: Card(
+                        elevation: 10,
+                        color: Colors.blueAccent.shade700,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => JobResume(
+                                            3,
+                                            receiverID: widget.receiverID,
+                                          )
+                                      // HireMaid(
+                                      //     name: widget.name)
+                                      ));
+                            },
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.handshake,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('hire'),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text(
-                            GlobalVariables.instance.xmlHandler
-                                .getString('hire'),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+                  ],
+                );
+              }),
           _buildUserInput(),
         ],
       ),

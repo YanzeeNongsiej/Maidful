@@ -90,13 +90,13 @@ class _EmployerHomePageState extends State<EmployerHome>
   void initState() {
     _tabController = TabController(length: 3, vsync: this);
 
-    _tabController.addListener(() {
-      if (_tabController.index == 1) {
-        // Chat tab is selected -> clear red dot
-        GlobalVariables.instance.hasnewmsg = false;
-        updateParentState();
-      }
-    });
+    // _tabController.addListener(() {
+    //   if (_tabController.index == 1) {
+    //     // Chat tab is selected -> clear red dot
+    //     GlobalVariables.instance.hasnewmsg = false;
+    //     updateParentState();
+    //   }
+    // });
     super.initState();
     GlobalVariables.instance.xmlHandler
         .loadStrings(GlobalVariables.instance.selected)
@@ -156,11 +156,34 @@ class _EmployerHomePageState extends State<EmployerHome>
   // Document ID for the user in Firestore
   // Fetch the document ID based on the current user's UID
 //  void changeRole(int role) {}
-  @override
+
+  Stream<bool> hasUnreadMessages(String currentUserId) {
+    try {
+      return FirebaseFirestore.instance
+          .collection('chat_rooms')
+          .snapshots()
+          .map((snapshot) {
+        for (var doc in snapshot.docs) {
+          final docId = doc.id; // Get the document ID
+          if (docId.contains(currentUserId)) {
+            // Check if user is in the chat
+            final data = doc.data();
+            if (data['lastSender'] != currentUserId &&
+                data['read_Msg'] == false) {
+              return true; // Unread message exists
+            }
+          }
+        }
+        return false; // No unread messages
+      });
+    } catch (e) {
+      print('Error fetching unread messages: $e');
+      return Stream.value(false); // Return a fallback stream on error
+    }
+  }
 
 //old build
   Widget build(BuildContext context) {
-    print("hehe emplhome${GlobalVariables.instance.hasnewmsg}");
     return AnimatedBuilder(
         animation: GlobalVariables.instance,
         builder: (context, child) {
@@ -168,205 +191,7 @@ class _EmployerHomePageState extends State<EmployerHome>
             appBar: ModernAppBar(
               profileImageUrl: _downloadUrl,
               handleClick: handleClick,
-              // languageSelection: _iss,
-              // roleSelection: _isrs,
-              // onLanguageChange: (index) {
-              //   setState(() {
-              //     _iss[0] = index == 0;
-              //     _iss[1] = index == 1;
-              //     GlobalVariables.instance.selected = lang[index];
-              //     GlobalVariables.instance.xmlHandler.loadStrings(
-              //         GlobalVariables.instance.selected.toString());
-              //   });
-              // },
-              // onRoleChange: (index) {
-              //   setState(() {
-              //     _isrs[0] = index == 0;
-              //     _isrs[1] = index == 1;
-              //     GlobalVariables.instance.userrole = index + 1;
-              //     GlobalVariables.instance.xmlHandler.loadStrings(
-              //         GlobalVariables.instance.selected.toString());
-              //   });
-              // updateSearchqs();
-              // },
             ),
-
-            //old code for appbar
-            //     AppBar(
-            //   leading: Builder(
-            //     builder: (BuildContext context) {
-            //       return SizedBox(
-            //           width: MediaQuery.of(context).size.width,
-            //           child: Image.asset(
-            //             "assets/maidful__1_-removebg-preview.png",
-            //             fit: BoxFit.scaleDown,
-            //           ));
-            //     },
-            //   ),
-            //   foregroundColor: Colors.black,
-            //   surfaceTintColor: Colors.red,
-            //   title: const Text('Maidful'),
-            //   actions: <Widget>[
-            //     PopupMenuButton(
-            //       icon: CircleAvatar(
-            //         foregroundImage: _downloadUrl != null
-            //             ? NetworkImage(_downloadUrl!)
-            //             : loadImage() as ImageProvider<Object>,
-            //       ),
-            //       onSelected: handleClick,
-            //       itemBuilder: (BuildContext context) {
-            //         return [
-            //           const PopupMenuItem(
-            //             value: "Logout",
-            //             child: Text("Logout"),
-            //           ),
-            //           const PopupMenuItem(
-            //             value: "Settings",
-            //             child: Text("Settings"),
-            //           ),
-            //           const PopupMenuItem(
-            //             value: "Contact",
-            //             child: Text("Contact Us"),
-            //           ),
-            //           PopupMenuItem(
-            //             value: "Language",
-            //             child: StatefulBuilder(builder: (context, setState) {
-            //               return SizedBox(
-            //                 height: (Checkbox.width) * 1.5,
-            //                 child: Center(
-            //                     child: ToggleButtons(
-            //                   isSelected: _iss,
-            //                   selectedColor: Colors.white,
-            //                   fillColor: Colors.green,
-            //                   color: Colors.black,
-            //                   borderRadius: BorderRadius.circular(10),
-            //                   borderColor: Colors.grey,
-            //                   borderWidth: 0,
-            //                   onPressed: (int index) {
-            //                     setState(() {
-            //                       if (index == 0) {
-            //                         _iss[0] = true;
-            //                         _iss[1] = false;
-            //                       } else {
-            //                         _iss[0] = false;
-            //                         _iss[1] = true;
-            //                       }
-
-            //                       GlobalVariables.instance.selected =
-            //                           lang[index];
-            //                       GlobalVariables.instance.xmlHandler
-            //                           .loadStrings(GlobalVariables
-            //                               .instance.selected
-            //                               .toString());
-            //                       //updateParentState();
-            //                     });
-            //                   },
-            //                   children: const [Text('English'), Text('Khasi')],
-            //                 )),
-            //               );
-            //             }),
-            //           ),
-            //           PopupMenuItem(
-            //             padding: EdgeInsets.all(0),
-            //             value: "Role",
-            //             child: StatefulBuilder(builder: (context, setState) {
-            //               return SizedBox(
-            //                 height: (Checkbox.width) * 1.5,
-            //                 // width: MediaQuery.of(context).size.width,
-            //                 child: Center(
-            //                   child: ToggleButtons(
-            //                     isSelected: _isrs,
-            //                     selectedColor: Colors.white,
-            //                     fillColor: Colors.blue,
-            //                     color: Colors.black,
-            //                     // borderRadius: BorderRadius.circular(10),
-            //                     borderColor: Colors.grey,
-            //                     borderWidth: 0,
-            //                     onPressed: (int index) {
-            //                       setState(() {
-            //                         if (index == 0) {
-            //                           _isrs[0] = true;
-            //                           _isrs[1] = false;
-            //                         } else {
-            //                           _isrs[0] = false;
-            //                           _isrs[1] = true;
-            //                         }
-
-            //                         GlobalVariables.instance.userrole =
-            //                             index + 1;
-            //                         GlobalVariables.instance.xmlHandler
-            //                             .loadStrings(GlobalVariables
-            //                                 .instance.selected
-            //                                 .toString());
-            //                       });
-            //                       updateSearchqs();
-            //                     },
-            //                     children: const [
-            //                       Text('Maid'),
-            //                       Padding(
-            //                         padding: EdgeInsets.only(left: 8, right: 8),
-            //                         child: Text('Employer'),
-            //                       )
-            //                     ],
-            //                   ),
-            //                 ),
-            //               );
-            //             }),
-            //           ),
-            //         ];
-            //       },
-            //     ),
-            //   ],
-            // ),
-
-            //old code
-            // bottomNavigationBar: TabBar(
-
-            //   controller: _tabController,
-            //   tabs: [
-            //     Tab(icon: Icon(Icons.home)),
-            //     Tab(
-            //         icon: Stack(
-            //       children: [
-            //         Icon(Icons.chat), // Chat icon
-            //         if (GlobalVariables.instance
-            //             .hasnewmsg) // Show red dot if there's a new message
-            //           Positioned(
-            //             right: 0,
-            //             top: 0,
-            //             child: Container(
-            //               width: 10,
-            //               height: 10,
-            //               decoration: BoxDecoration(
-            //                 color: Colors.red,
-            //                 shape: BoxShape.circle,
-            //               ),
-            //             ),
-            //           )
-            //       ],
-            //     )),
-            //     Tab(icon: Icon(Icons.person_2_sharp)),
-            //   ],
-            //   unselectedLabelColor: Colors.black,
-            //   labelColor: _selectedColor,
-            //   indicatorSize: TabBarIndicatorSize.tab,
-            //   indicator: BoxDecoration(
-            //     borderRadius: const BorderRadius.only(
-            //         bottomLeft: Radius.circular(30),
-            //         bottomRight: Radius.circular(30)),
-            //     color: _selectedColor.withOpacity(0.2),
-            //   ),
-            // ),
-
-            // body: TabBarView(
-            //   controller: _tabController,
-            //   children: [
-            //     LandingHomePage(uname: widget.uname.toString()),
-            //     ChatListPage(),
-            //     ProfilePage(),
-            //   ],
-            // ),
-
             body: Stack(
               children: [
                 /// TabBarView is the main content (Body)
@@ -412,21 +237,29 @@ class _EmployerHomePageState extends State<EmployerHome>
                           Tab(
                             icon: Stack(
                               children: [
-                                Icon(Icons.chat), // Chat icon
-                                if (GlobalVariables.instance
-                                    .hasnewmsg) // Red dot if new message
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
+                                Icon(Icons.chat),
+                                StreamBuilder<bool>(
+                                  stream: hasUnreadMessages(userID),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData &&
+                                        snapshot.data == true) {
+                                      return Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          width: 10,
+                                          height: 10,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return SizedBox
+                                        .shrink(); // Hide the red dot if no unread messages
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -445,7 +278,6 @@ class _EmployerHomePageState extends State<EmployerHome>
                 ),
               ],
             ),
-
             floatingActionButton: const FAB(),
           );
         });

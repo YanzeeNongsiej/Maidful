@@ -920,7 +920,7 @@ class _NestedTabBarState extends State<NestedTabBar>
         context: context,
         builder: (context) {
           return FadeInLeft(
-              duration: Duration(milliseconds: 500),
+              duration: Duration(milliseconds: 300),
               child: AlertDialog(
                 backgroundColor: Colors.white.withOpacity(0.9),
                 shape: RoundedRectangleBorder(
@@ -959,7 +959,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                       buildSection("Days Available", servItem.get("days")),
                       buildTextInfo("Negotiable", servItem.get("negotiable")),
                       SizedBox(height: 10),
-                      buildWorkHistory(servItem.get("work_history")),
+                      //buildWorkHistory(servItem.get("work_history")),
                     ],
                   ),
                 ),

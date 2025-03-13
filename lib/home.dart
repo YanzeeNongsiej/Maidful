@@ -49,11 +49,11 @@ class _HomePageState extends State<Home>
   final _formkey = GlobalKey<FormState>();
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      await GlobalVariables.instance.loadHasNewMsg();
-    } else if (state == AppLifecycleState.paused) {
-      await GlobalVariables.instance.loadHasNewMsg();
-    }
+    // if (state == AppLifecycleState.resumed) {
+    //   await GlobalVariables.instance.loadHasNewMsg();
+    // } else if (state == AppLifecycleState.paused) {
+    //   await GlobalVariables.instance.loadHasNewMsg();
+    // }
   }
 
   register() async {

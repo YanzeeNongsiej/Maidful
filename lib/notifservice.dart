@@ -159,7 +159,7 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Foreground Notification received: ${message.notification?.title}");
       // Show red dot on Chat icon
-      GlobalVariables.instance.hasnewmsg = true;
+      //GlobalVariables.instance.hasnewmsg = true;
       if (message.notification?.title == "Rate Your Experience") {
         showRatingPopup(message);
       }
@@ -190,32 +190,61 @@ class NotificationService {
 }
 
 void designOfRating(String ratedUserId, String raterUserId) {
+  int selectedRating = 0;
+
   showDialog(
     context: navigatorKey.currentContext!,
     builder: (context) {
-      return AlertDialog(
-        title: Text("Rate Your Experience"),
-        content: Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Please rate your interaction with this user."),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    icon: Icon(Icons.star, color: Colors.grey),
-                    onPressed: () {
-                      submitRating(index + 1, ratedUserId, raterUserId);
-                      Navigator.pop(context);
-                    },
-                  );
-                }),
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text("Rate Your Experience"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Please rate your interaction with this user."),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: List.generate(5, (index) {
+                    return Flexible(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.star,
+                          color: index < selectedRating
+                              ? Colors.yellow
+                              : Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            selectedRating = index + 1;
+                          });
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+            actions: [
+              // TextButton(
+              //   onPressed: () {
+              //     Navigator.pop(context); // Close dialog without submitting
+              //   },
+              //   child: Text("Cancel"),
+              // ),
+              TextButton(
+                onPressed: () {
+                  if (selectedRating > 0) {
+                    submitRating(selectedRating, ratedUserId, raterUserId);
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text("Submit"),
               ),
             ],
-          ),
-        ),
+          );
+        },
       );
     },
   );
@@ -226,35 +255,65 @@ Future<void> submitRating(
   CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
 
-  // Find the document where 'userid' matches 'ratedUserId'
-  QuerySnapshot querySnapshot = await usersCollection
-      .where('userid', isEqualTo: ratedUserId)
-      .limit(1)
-      .get();
+  BuildContext? context =
+      navigatorKey.currentContext; // Get the current context
 
-  if (querySnapshot.docs.isNotEmpty) {
-    DocumentReference userRef = querySnapshot.docs.first.reference;
+  if (context == null) return; // Prevent execution if context is null
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot userSnapshot = await transaction.get(userRef);
+  try {
+    // Find the document where 'userid' matches 'ratedUserId'
+    QuerySnapshot querySnapshot = await usersCollection
+        .where('userid', isEqualTo: ratedUserId)
+        .limit(1)
+        .get();
 
-      if (userSnapshot.exists) {
-        // 🔹 Explicitly cast `data()` to `Map<String, dynamic>` before accessing fields
-        Map<String, dynamic> userData =
-            userSnapshot.data() as Map<String, dynamic>;
-        Map<String, dynamic> ratings =
-            userData['rating'] as Map<String, dynamic>? ?? {};
+    if (querySnapshot.docs.isNotEmpty) {
+      DocumentReference userRef = querySnapshot.docs.first.reference;
 
-        ratings[raterUserId] = rating; // Update or add rating
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot userSnapshot = await transaction.get(userRef);
 
-        transaction.update(userRef, {'rating': ratings});
-      }
-    }).then((_) {
+        if (userSnapshot.exists) {
+          Map<String, dynamic> userData =
+              userSnapshot.data() as Map<String, dynamic>;
+          Map<String, dynamic> ratings =
+              userData['rating'] as Map<String, dynamic>? ?? {};
+
+          ratings[raterUserId] = rating; // Update or add rating
+
+          transaction.update(userRef, {'rating': ratings});
+        }
+      });
+
+      // ✅ Show success SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Rating submitted successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       print("Rating submitted: $rating by $raterUserId for $ratedUserId");
-    }).catchError((error) {
-      print("Error submitting rating: $error");
-    });
-  } else {
-    print("User not found with userid: $ratedUserId");
+    } else {
+      print("User not found with userid: $ratedUserId");
+
+      // ❌ Show error SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("User not found!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (error) {
+    print("Error submitting rating: $error");
+
+    // ❌ Show error SnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error submitting rating. Please try again."),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 }

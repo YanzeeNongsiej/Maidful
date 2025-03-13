@@ -57,6 +57,9 @@ class ChatController extends ChangeNotifier {
     //add new message to database
     await Chatdao().addNewMessage(chatRoomID, chat).then((a) {});
     String name = await getNameFromId(currentUserID);
+    if (message == "@ck") {
+      message = "$name has sent an acknowledgement request to hire you";
+    }
     notifyUser(receiverID, name, message);
   }
 

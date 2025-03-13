@@ -6,6 +6,7 @@ import 'package:ibitf_app/controller/chat_controller.dart';
 
 import 'package:ibitf_app/model/jobProfile.dart';
 import 'package:ibitf_app/model/service.dart';
+import 'package:ibitf_app/notifservice.dart';
 
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
@@ -292,6 +293,8 @@ class _JobResumeState extends State<JobResume>
                     style: const TextStyle(fontSize: 20.0),
                   ))))
           .whenComplete(() => Navigator.pop(context));
+
+      setState(() {});
       print(ackid);
       await chatcontroller.sendMessage(
           widget.receiverID!,

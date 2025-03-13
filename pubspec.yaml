@@ -59,6 +59,7 @@ dependencies:
   translator: 1.0.3+1
   shared_preferences: ^2.5.1
   animate_do: ^4.2.0
+  badges: ^3.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

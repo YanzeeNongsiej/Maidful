@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ibitf_app/controller/chat_controller.dart';
+import 'package:ibitf_app/notifservice.dart';
 import 'package:ibitf_app/singleton.dart';
+import 'package:intl/intl.dart';
 
 Widget buildScheduleSection(String title, List<dynamic> schedule) {
   List<String> scheduleTypes = ["Live-in", "Daily", "Hourly"];
@@ -71,7 +75,7 @@ Widget buildWorkHistory(List<dynamic> workHistory) {
 // Modern Text Info Widget
 Widget buildTextInfo(String title, String value) {
   return FadeInLeft(
-    duration: Duration(milliseconds: 300),
+    duration: Duration(milliseconds: 500),
     child: Container(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       margin: EdgeInsets.symmetric(vertical: 6),
@@ -121,7 +125,7 @@ Widget buildTextInfo(String title, String value) {
 // Modern Section Widget
 Widget buildSection(String title, List<dynamic> items) {
   return FadeInLeft(
-    duration: Duration(milliseconds: 400),
+    duration: Duration(milliseconds: 500),
     child: Container(
       width: double.infinity,
       padding: EdgeInsets.all(12),
@@ -180,7 +184,7 @@ Widget buildSection(String title, List<dynamic> items) {
 // Modern Long Text Section
 Widget buildLongText(String title, String content) {
   return FadeInLeft(
-    duration: Duration(milliseconds: 400),
+    duration: Duration(milliseconds: 500),
     child: Container(
       width: double.infinity,
       padding: EdgeInsets.all(12),
@@ -285,5 +289,199 @@ Widget buildServiceSection(String title, Map<String, dynamic> services) {
         ],
       ),
     ),
+  );
+}
+
+Widget buildActiveServiceList(item, what, context, userID) {
+  if (what == "Completed") {
+    String ratedUserId = item.get('userid') == userID
+        ? item.get('receiverid')
+        : item.get('userid');
+    FirebaseFirestore.instance
+        .collection('users')
+        .where('userid', isEqualTo: ratedUserId)
+        .limit(1)
+        .get()
+        .then((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userSnapshot = querySnapshot.docs.first;
+
+        // Cast to Map<String, dynamic> safely
+        Map<String, dynamic> userData =
+            userSnapshot.data() as Map<String, dynamic>;
+        Map<String, dynamic> ratings =
+            userData['rating'] as Map<String, dynamic>? ?? {};
+
+        // If the current user has not provided a rating, show the dialog
+        if (!ratings.containsKey(userID)) {
+          designOfRating(ratedUserId, userID);
+        }
+      } else {
+        // User not found, still allow rating
+        designOfRating(ratedUserId, userID);
+      }
+    }).catchError((error) {
+      print("Error fetching user rating: $error");
+    });
+  }
+
+  return SingleChildScrollView(
+    child: Column(
+      children: [
+        if (what == "Completed")
+          Column(
+            children: [
+              buildTextInfo(
+                "Started on",
+                item.data().containsKey("period") &&
+                        item["period"].containsKey("start")
+                    ? DateFormat('dd MMM yyyy').format(
+                        (item.get("period.start") as Timestamp).toDate(),
+                      )
+                    : "Not available",
+              ),
+              buildTextInfo(
+                "Completed on",
+                item.data().containsKey("period") &&
+                        item["period"].containsKey("end")
+                    ? DateFormat('dd MMM yyyy').format(
+                        (item.get("period.end") as Timestamp).toDate(),
+                      )
+                    : "Not available",
+              ),
+            ],
+          ),
+        buildScheduleSection("Schedule", item.get("schedule")),
+        buildSection("Services", item.get("services")),
+        buildSection("Timing", item.get("timing")),
+        buildSection("Days Available", item.get("days")),
+        buildLongText("Remarks", item.get("remarks")),
+        if (GlobalVariables.instance.userrole == 2 &&
+            [2, 6].contains(item.get('status')))
+          Row(
+            // mainAxisAlignment: MainAxisAlignment.end,
+
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Card(
+                  // elevation: 10,
+                  color: Colors.blue,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        completeService(context, item);
+                      },
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.done_outline_rounded,
+                            color: Colors.white,
+                          ),
+                          Text(
+                            'Complete Service',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
+}
+
+void completeService(BuildContext context, item) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Are you sure you want to complete the service?"),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the first dialog
+            },
+            child: Text("No"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+
+              showCompleteDoneDialog(context, item); // Show the rating dialog
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //       builder: (context) => CompletionRequestWidget()),
+              // );
+            },
+            child: Text("Yes"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+updateStatus(int val, item) {
+  FirebaseFirestore.instance
+      .collection("acknowledgements")
+      .doc(item.id)
+      .update({
+    "status": val,
+  }).whenComplete(() {
+    //setState(() {});
+  });
+}
+
+void showCompleteDoneDialog(context, item) async {
+  ChatController().sendMessage(
+      item.get('receiverid'), "New Completion Request", item.id, false);
+  updateStatus(4, item);
+  String name = await getNameFromId(item.get('receiverid'));
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              "Completion Request Sent!",
+              style: TextStyle(
+                fontSize: 18, // Slightly larger font for prominence
+                fontWeight: FontWeight.bold, // Bold text for emphasis
+                color: Colors.black87,
+              ),
+            ),
+            content: Text(
+              'A completion request has been sent to $name',
+              style: TextStyle(
+                fontSize: 14, // Slightly larger font for prominence
+                // Bold text for emphasis
+                color: Colors.black87,
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  //status=3 means the completion request has been sent
+
+                  // Close the dialog
+                  // showRatingConfirmation(
+                  //     context, selectedRating); // Show thank-you message
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    },
   );
 }

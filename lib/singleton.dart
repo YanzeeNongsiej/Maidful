@@ -23,39 +23,39 @@ class GlobalVariables extends ChangeNotifier {
     uname = u;
   }
 
-  bool hasnew = false;
-  bool get hasnewmsg => hasnew;
-  set hasnewmsg(bool h) {
-    hasnew = h;
-    _saveHasNewMsg(h).then((a) {
-      notifyListeners();
-    });
-  }
+//   bool hasnew = false;
+//   bool get hasnewmsg => hasnew;
+//   set hasnewmsg(bool h) {
+//     hasnew = h;
+//     _saveHasNewMsg(h).then((a) {
+//       notifyListeners();
+//     });
+//   }
 
-  // Save hasnewmsg to SharedPreferences
-  Future<void> _saveHasNewMsg(bool value) async {
-    prefs = await SharedPreferences.getInstance();
-    print("Saving value: $value");
-    if (prefs != null) {
-      await prefs!.setBool('hasnewmsg', value);
-      print("Saved prefs as ${prefs!.getBool('hasnewmsg')}");
-    } else {
-      print("SharedPreferences not initialized");
-    }
-  }
+//   // Save hasnewmsg to SharedPreferences
+//   Future<void> _saveHasNewMsg(bool value) async {
+//     prefs = await SharedPreferences.getInstance();
+//     print("Saving value: $value");
+//     if (prefs != null) {
+//       await prefs!.setBool('hasnewmsg', value);
+//       print("Saved prefs as ${prefs!.getBool('hasnewmsg')}");
+//     } else {
+//       print("SharedPreferences not initialized");
+//     }
+//   }
 
-// Load hasnewmsg from SharedPreferences
-  Future<void> loadHasNewMsg() async {
-    prefs = await SharedPreferences.getInstance();
-    if (prefs != null) {
-      print('Loaded pref as ${prefs!.getBool('hasnewmsg')}');
-      hasnew = prefs!.getBool('hasnewmsg') ?? false;
-      print("hasnew value: $hasnew");
-    } else {
-      print("SharedPreferences not initialized");
-    }
-    notifyListeners();
-  }
+// // Load hasnewmsg from SharedPreferences
+//   Future<void> loadHasNewMsg() async {
+//     prefs = await SharedPreferences.getInstance();
+//     if (prefs != null) {
+//       print('Loaded pref as ${prefs!.getBool('hasnewmsg')}');
+//       hasnew = prefs!.getBool('hasnewmsg') ?? false;
+//       print("hasnew value: $hasnew");
+//     } else {
+//       print("SharedPreferences not initialized");
+//     }
+//     notifyListeners();
+//   }
 
   int urole = -1;
   int get userrole => urole;
