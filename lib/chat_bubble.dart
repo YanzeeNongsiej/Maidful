@@ -295,11 +295,6 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   await getNameFromId(ds.get('receiverid'));
                               designOfRating(
                                   ds.get('userid'), ds.get('receiverid'));
-                              // notifyUser(
-                              //     ds.get('receiverid'),
-                              //     "Rate Your Experience",
-                              //     "Please rate your experience with $name1.",
-                              //     ratedUserId: ds.get('userid'));
 
                               notifyUser(
                                   ds.get('userid'),
@@ -315,9 +310,15 @@ class _ChatBubbleState extends State<ChatBubble> {
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               agreeAckDetail(ds.id, 6);
                               setMessage("Old Completion Request");
+                              String name = await getNameFromId(
+                                  widget.data['receiverID']);
+                              notifyUser(
+                                  widget.data['senderID'],
+                                  'Completion Rejected',
+                                  '$name has rejected your completion request');
                             },
                             child: Chip(
                               label: const Text("Reject",
@@ -479,7 +480,15 @@ class _ChatBubbleState extends State<ChatBubble> {
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: () => agreeAckDetail(ds.id, 3),
+                            onTap: () async {
+                              String name = await getNameFromId(
+                                  widget.data['receiverID']);
+                              agreeAckDetail(ds.id, 3);
+                              notifyUser(
+                                  widget.data['senderID'],
+                                  'Acknowledgement Rejected',
+                                  '$name has rejected to be hired by you');
+                            },
                             child: Chip(
                               label: const Text("Reject",
                                   style: TextStyle(color: Colors.white)),

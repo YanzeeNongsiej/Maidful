@@ -9,6 +9,7 @@ class JobProfile {
   final List<String> work_history;
   final bool ack;
   final String remarks;
+  final List<String> imageUrl;
   JobProfile(
       {required this.nego,
       required this.days,
@@ -18,7 +19,8 @@ class JobProfile {
       required this.userid,
       required this.work_history,
       required this.ack,
-      required this.remarks});
+      required this.remarks,
+      required this.imageUrl});
 
   Map<String, dynamic> toMap() {
     return {
@@ -30,7 +32,8 @@ class JobProfile {
       'work_history': work_history,
       'ack': ack,
       'nego': nego,
-      'remarks': remarks
+      'remarks': remarks,
+      'imageurl': imageUrl
     };
   }
 }

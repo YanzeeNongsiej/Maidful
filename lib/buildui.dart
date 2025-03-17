@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
@@ -7,7 +9,7 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:intl/intl.dart';
 
 Widget buildScheduleSection(String title, List<dynamic> schedule) {
-  List<String> scheduleTypes = ["Live-in", "Daily", "Hourly"];
+  List<String> scheduleTypes = ["Live-in", "Daily", "Hourly", "One-Time"];
   List<String> activeSchedules = [];
 
   for (int i = 0; i < schedule.length; i++) {
@@ -481,6 +483,124 @@ void showCompleteDoneDialog(context, item) async {
             ],
           );
         },
+      );
+    },
+  );
+}
+
+Widget buildImageSection(List<dynamic> imageUrls, context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        "Uploaded Images",
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      SizedBox(height: 10),
+      Wrap(
+        spacing: 8.0, // Space between images
+        runSpacing: 8.0, // Space between rows
+        children: imageUrls.map((imageUrl) {
+          return GestureDetector(
+            onTap: () => viewFullImage(context, imageUrl), // Open enlarged view
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
+
+void viewFullImage(BuildContext context, String imageUrl) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true, // Tap outside to close
+    barrierLabel: "",
+    transitionDuration: Duration(milliseconds: 300), // Smooth animation
+    pageBuilder: (context, anim1, anim2) {
+      return Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // **Blurred Background Effect**
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  color: Colors.black.withOpacity(0.2), // Light overlay
+                ),
+              ),
+
+              // **Image Expanding View**
+              ScaleTransition(
+                scale:
+                    CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+                child: Container(
+                  width: 300, // Stylishly contained size
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Hero(
+                      tag: imageUrl,
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // **Close Button (Modern Floating)**
+              Positioned(
+                top: 20,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.all(8),
+                    child: Icon(Icons.close, size: 24, color: Colors.black),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, anim1, anim2, child) {
+      return FadeTransition(
+        opacity: anim1,
+        child: child,
       );
     },
   );

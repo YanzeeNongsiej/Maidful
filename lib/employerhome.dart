@@ -157,32 +157,34 @@ class _EmployerHomePageState extends State<EmployerHome>
   // Fetch the document ID based on the current user's UID
 //  void changeRole(int role) {}
 
-  Stream<bool> hasUnreadMessages(String currentUserId) {
+  Stream<int> getUnreadMessageCount(String currentUserId) {
     try {
       return FirebaseFirestore.instance
           .collection('chat_rooms')
           .snapshots()
           .map((snapshot) {
+        int unreadCount = 0;
+
         for (var doc in snapshot.docs) {
-          final docId = doc.id; // Get the document ID
+          final docId = doc.id; // Get document ID
           if (docId.contains(currentUserId)) {
             // Check if user is in the chat
             final data = doc.data();
             if (data['lastSender'] != currentUserId &&
                 data['read_Msg'] == false) {
-              return true; // Unread message exists
+              unreadCount++; // Increase count if unread
             }
           }
         }
-        return false; // No unread messages
+        return unreadCount; // Return the number of unread messages
       });
     } catch (e) {
-      print('Error fetching unread messages: $e');
-      return Stream.value(false); // Return a fallback stream on error
+      print('Error fetching unread message count: $e');
+      return Stream.value(0); // Return 0 on error
     }
   }
 
-//old build
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
         animation: GlobalVariables.instance,
@@ -237,27 +239,43 @@ class _EmployerHomePageState extends State<EmployerHome>
                           Tab(
                             icon: Stack(
                               children: [
-                                Icon(Icons.chat),
-                                StreamBuilder<bool>(
-                                  stream: hasUnreadMessages(userID),
+                                Icon(Icons.chat), // Chat icon
+                                StreamBuilder<int>(
+                                  stream: getUnreadMessageCount(userID),
                                   builder: (context, snapshot) {
-                                    if (snapshot.hasData &&
-                                        snapshot.data == true) {
+                                    int unreadCount = snapshot.data ?? 0;
+                                    if (unreadCount > 0) {
                                       return Positioned(
                                         right: 0,
                                         top: 0,
                                         child: Container(
-                                          width: 10,
-                                          height: 10,
+                                          padding: EdgeInsets.all(4),
                                           decoration: BoxDecoration(
                                             color: Colors.red,
                                             shape: BoxShape.circle,
+                                          ),
+                                          constraints: BoxConstraints(
+                                            minWidth: 18,
+                                            minHeight: 18,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              unreadCount > 9
+                                                  ? '9+'
+                                                  : unreadCount
+                                                      .toString(), // Show '9+' if more than 9
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       );
                                     }
                                     return SizedBox
-                                        .shrink(); // Hide the red dot if no unread messages
+                                        .shrink(); // Hide badge if no unread messages
                                   },
                                 ),
                               ],
@@ -305,99 +323,83 @@ class _FABState extends State<FAB> {
     });
   }
 
-  Future<void> _checkServiceExistence() async {
-    var querySnapshot;
-    if (GlobalVariables.instance.userrole == 1) {
-      querySnapshot = await FirebaseFirestore.instance
-          .collection("services")
-          .where("userid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-          .get();
-    } else {
-      querySnapshot = await FirebaseFirestore.instance
-          .collection("jobprofile")
-          .where("userid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-          .get();
-    }
-
-    setState(() {
-      _isServicePresent = querySnapshot.docs.isNotEmpty;
-      print(
-          '$_isServicePresent is the value'); // Update the state based on query result
-    });
+  Stream<bool> checkServiceExistenceStream() {
+    return FirebaseFirestore.instance
+        .collection(
+            GlobalVariables.instance.userrole == 1 ? "services" : "jobprofile")
+        .where("userid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .snapshots()
+        .map((querySnapshot) => querySnapshot.docs.isNotEmpty);
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _checkServiceExistence();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Visibility(
-      visible: !_isServicePresent,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 60),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Visibility(
-              visible:
-                  showOptions, // Show the options only if showOptions is true
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (GlobalVariables.instance.urole == 1)
-                    FloatingActionButton.extended(
-                      onPressed: () => {
-                        // Add your action for Option 1
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => JobResume(1)))
-                      },
-                      heroTag: null,
-                      label: const Text(
-                        "Post a Service (Maids)",
-                      ),
-                      icon: const Icon(Icons.person_add_rounded),
-                    ),
-                  const SizedBox(height: 16.0),
-                  if (GlobalVariables.instance.urole == 2)
-                    FloatingActionButton.extended(
-                      onPressed: () => {
-                        // Add your action for Option 1
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => JobResume(1)))
-                      },
-                      heroTag: null,
-                      label: const Text(
-                        "Post a Job Profile",
-                      ),
-                      icon: const Icon(Icons.add_card_sharp),
-                    ),
-                ],
-              ),
+    return StreamBuilder<bool>(
+      stream: checkServiceExistenceStream(),
+      builder: (context, snapshot) {
+        bool isServicePresent = snapshot.data ?? false;
+
+        return Visibility(
+          visible: !isServicePresent,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 60),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Visibility(
+                  visible: showOptions,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (GlobalVariables.instance.urole == 1)
+                        FloatingActionButton.extended(
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => JobResume(1))),
+                          heroTag: null,
+                          label: const Text("Post a Service (Maids)"),
+                          icon: const Icon(Icons.person_add_rounded),
+                        ),
+                      const SizedBox(height: 16.0),
+                      if (GlobalVariables.instance.urole == 2)
+                        FloatingActionButton.extended(
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => JobResume(1))),
+                          heroTag: null,
+                          label: const Text("Post a Job Profile"),
+                          icon: const Icon(Icons.add_card_sharp),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                FloatingActionButton(
+                  onPressed: () {
+                    toggleOptions();
+                  },
+                  heroTag: null,
+                  shape: const CircleBorder(),
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  child: showOptions
+                      ? const Icon(Icons.close)
+                      : const Icon(Icons.add),
+                ),
+              ],
             ),
-            const SizedBox(height: 16.0),
-            FloatingActionButton(
-              onPressed: () {
-                toggleOptions(); // When the main FAB is pressed, toggleOptions is called
-              },
-              heroTag: null,
-              shape: const CircleBorder(),
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              child:
-                  showOptions ? const Icon(Icons.close) : const Icon(Icons.add),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

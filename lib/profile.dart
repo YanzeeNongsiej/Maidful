@@ -964,7 +964,6 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () {
                 Navigator.pop(dialogContext); // Close dialog
                 _removeService(docId, kind);
-                Navigator.pop(context);
                 setState(() {});
               },
               child: const Text("Delete", style: TextStyle(color: Colors.red)),

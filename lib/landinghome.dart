@@ -955,6 +955,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                           ? buildServiceSection(
                               "Services", servItem.get("services"))
                           : buildSection("Services", servItem.get("services")),
+                      if (GlobalVariables.instance.userrole == 1 &&
+                          servItem.get('imageurl') != null &&
+                          (servItem.get('imageurl') as List).isNotEmpty)
+                        buildImageSection(servItem.get('imageurl'), context),
                       buildSection("Timing", servItem.get("timing")),
                       buildSection("Days Available", servItem.get("days")),
                       buildTextInfo("Negotiable", servItem.get("negotiable")),

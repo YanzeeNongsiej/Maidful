@@ -1,18 +1,21 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
-
 import 'package:ibitf_app/model/jobProfile.dart';
 import 'package:ibitf_app/model/service.dart';
 import 'package:ibitf_app/notifservice.dart';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
-
 import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/changelang.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 class JobResume extends StatefulWidget {
   final int kind;
@@ -25,12 +28,13 @@ class JobResume extends StatefulWidget {
 
 class _JobResumeState extends State<JobResume>
     with SingleTickerProviderStateMixin {
+  List<dynamic> selectedImages = [];
   Future<List<String>>? _futureSkills;
   final fromTimeController = TextEditingController();
   final toTimeController = TextEditingController();
-  // final whcontroller = TextEditingController();
+
   final remrkcontroller = TextEditingController();
-  // final whController1 = TextEditingController();
+
   final TextEditingController shiftcont = TextEditingController();
   String selectedText = '';
   List<String> timeEntries = [];
@@ -43,11 +47,7 @@ class _JobResumeState extends State<JobResume>
       timeToValid = false,
       servicesValid = false,
       rateValid = false;
-  int
-      // whcount = 0,
-      // maxlinevalue = 1,
-      timingcount = 0,
-      maxlinevalueshift = 1;
+  int timingcount = 0, maxlinevalueshift = 1;
 
   int _selectedNegoValue = 1;
   final _formkey = GlobalKey<FormState>();
@@ -63,9 +63,8 @@ class _JobResumeState extends State<JobResume>
     "Sunday"
   ];
 
-  // List<String> workHistory = [];
   List<String> shifts = [];
-  List<bool> selectedTimings = [false, false, false];
+  List<bool> selectedTimings = [false, false, false, false];
 
   List<String> timeSlots = [
     for (int i = 0; i < 24; i++)
@@ -81,7 +80,7 @@ class _JobResumeState extends State<JobResume>
   TimeOfDay? selectedTime;
   TimePickerEntryMode entryMode = TimePickerEntryMode.dial;
   Orientation? orientation;
-  // TextDirection textDirection = TextDirection.ltr;
+
   int defaultValue = 0000;
   MaterialTapTargetSize tapTargetSize = MaterialTapTargetSize.padded;
   bool use24HourTime = false;
@@ -114,7 +113,6 @@ class _JobResumeState extends State<JobResume>
     }
   }
 
-  // Function to validate if at least one time slot is selected
   String? validateTimeSlots() {
     if (!_selectedTimeSlots.contains(true)) {
       return '*Please select at least one time slot';
@@ -142,10 +140,7 @@ class _JobResumeState extends State<JobResume>
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('skills').get();
 
-    //fetch only skills from the user
     for (var doc in snapshot.docs) {
-      // Get the skill for the selected language
-
       if (doc[GlobalVariables.instance.selected] != null) {
         res.add(doc[GlobalVariables.instance.selected]);
       }
@@ -158,21 +153,19 @@ class _JobResumeState extends State<JobResume>
         await english(selectedDaysValue, GlobalVariables.instance.selected);
     List<String> res2 =
         await english(daysList, GlobalVariables.instance.selected);
-    // List<String> res2 = await english(selectedCheckBoxValue, GlobalVariables.instance.selected);
+
     selectedDaysValue = res;
     daysList = res2;
     if (GlobalVariables.instance.selected == 'Khasi') {
       List<String> englishSkills = [];
       final firestoreInstance = FirebaseFirestore.instance;
       for (String skill in selectedRates.keys) {
-        // Query Firebase to find the document where 'Khasi' equals the native skill
         QuerySnapshot query = await firestoreInstance
             .collection('skills')
             .where('Khasi', isEqualTo: skill)
             .get();
 
         if (query.docs.isNotEmpty) {
-          // Extract the 'English' field from the document
           String englishSkill = query.docs.first.get('English');
           englishSkills.add(englishSkill);
         } else {
@@ -185,7 +178,7 @@ class _JobResumeState extends State<JobResume>
       for (int i = 0; i < oldKeys.length; i++) {
         selectedRates[englishSkills[i]] = selectedRates[oldKeys[i]]!;
       }
-      // Remove the old keys
+
       for (String oldKey in oldKeys) {
         selectedRates.remove(oldKey);
       }
@@ -193,7 +186,6 @@ class _JobResumeState extends State<JobResume>
         selectedRates[service]![1] =
             getKeyFromValue(selectedRates[service]![1])!;
       }
-      //selectedCheckBoxValue = englishSkills;
     }
   }
 
@@ -216,7 +208,6 @@ class _JobResumeState extends State<JobResume>
           ? selectedRates
           : selectedServices.keys,
       "negotiable": _selectedNegoValue == 1 ? "Yes" : "No",
-      // "work_history": workHistory,
       "remarks": remrkcontroller.text,
       "ack": false,
       "timestamp": FieldValue.serverTimestamp(),
@@ -238,6 +229,9 @@ class _JobResumeState extends State<JobResume>
           setState(() {});
         });
       } else {
+        //upload images and add the urls to uploadService
+        List<String> imageUrls = await uploadImagesToFirebase(selectedImages);
+        uploadService["imageurl"] = imageUrls;
         await maidDao()
             .addJobProfile(uploadService)
             .whenComplete(() =>
@@ -296,12 +290,7 @@ class _JobResumeState extends State<JobResume>
 
       setState(() {});
       print(ackid);
-      await chatcontroller.sendMessage(
-          widget.receiverID!,
-          "@ck",
-          ackid,
-          // "services", itemGlobal?.id,
-          false);
+      await chatcontroller.sendMessage(widget.receiverID!, "@ck", ackid, false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
@@ -311,60 +300,39 @@ class _JobResumeState extends State<JobResume>
     }
   }
 
-  // void addWH() async {
-  //   //open a dialog box to enter work History..
-  //   whcount = whcount + 1;
-  //   showDialog(
-  //       context: context,
-  //       builder: (context) {
-  //         return AlertDialog(
-  //           title: Text(
-  //               'Add ${GlobalVariables.instance.xmlHandler.getString('workhist')}'),
-  //           content: TextFormField(
-  //             controller: whController1,
-  //             decoration: InputDecoration(
-  //               labelText:
-  //                   GlobalVariables.instance.xmlHandler.getString('workhist'),
-  //             ),
-  //           ),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () {
-  //                 Navigator.pop(context);
-  //               },
-  //               child: const Text('Cancel'),
-  //             ),
-  //             TextButton(
-  //               onPressed: () {
-  //                 workHistory.add(whController1.text);
-  //                 setState(() {
-  //                   maxlinevalue = maxlinevalue + 1;
-  //                   whcontroller.text =
-  //                       "${whcontroller.text}$whcount. ${whController1.text}\n";
-  //                   whController1.clear();
-  //                 });
-  //                 Navigator.pop(context);
-  //               },
-  //               child: const Text('Add'),
-  //             ),
-  //           ],
-  //         );
-  //       });
-  // }
+  Future<List<String>> uploadImagesToFirebase(List<dynamic> images) async {
+    List<String> imageUrls = [];
 
-  // void handleClick(String value) async {
-  //   switch (value) {
-  //     case 'Logout':
-  //       await AuthMethods.signOut();
-  //       if (mounted) {
-  //         Navigator.of(context).pushReplacement(
-  //             MaterialPageRoute(builder: (context) => const LogIn()));
-  //       }
-  //       break;
-  //     case 'Settings':
-  //       break;
-  //   }
-  // }
+    if (images.isEmpty) return imageUrls; // Return empty list if no images
+
+    for (var image in images) {
+      try {
+        // If it's an existing URL (String), just add it to the list
+        if (image is String) {
+          imageUrls.add(image);
+          continue; // Skip processing, as it's already uploaded
+        }
+
+        // Otherwise, it's a new File that needs compression & upload
+        File compressedImage = await compressImage(image);
+
+        // Generate a filename with user’s name
+        String name =
+            await getNameFromId(FirebaseAuth.instance.currentUser!.uid);
+        String fileName = "$name${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+        Reference storageRef =
+            FirebaseStorage.instance.ref().child("job_images/$fileName");
+
+        await storageRef.putFile(compressedImage);
+        String imageUrl = await storageRef.getDownloadURL();
+        imageUrls.add(imageUrl);
+      } catch (e) {
+        print("Error uploading image: $e");
+      }
+    }
+    return imageUrls;
+  }
 
   void fetchOwnServices() async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
@@ -389,12 +357,6 @@ class _JobResumeState extends State<JobResume>
           return serv.timing.contains(slot);
         });
         finalrate = true;
-        // workHistory = serv.work_history;
-        // for (var i in workHistory) {
-        //   whcount = whcount + 1;
-        //   maxlinevalue = maxlinevalue + 1;
-        //   whcontroller.text = "${whcontroller.text}$whcount. $i\n";
-        // }
       }
     } else {
       List<JobProfile> qs =
@@ -416,12 +378,7 @@ class _JobResumeState extends State<JobResume>
           return serv.timing.contains(slot);
         });
         finalrate = true;
-        // workHistory = serv.work_history;
-        // for (var i in workHistory) {
-        //   whcount = whcount + 1;
-        //   maxlinevalue = maxlinevalue + 1;
-        //   whcontroller.text = "${whcontroller.text}$whcount. $i\n";
-        // }
+        selectedImages.addAll(serv.imageUrl);
       }
     }
 
@@ -429,101 +386,12 @@ class _JobResumeState extends State<JobResume>
   }
 
   bool showOptionsDay = false, showOptionsHour = false;
-  // void checkPostAvailability() async {
-  //   print("_selectedTimingValue:$_selectedTimingValue");
-  //   String schdle = "";
-  //   if (_selectedTimingValue == 1) {
-  //     schdle = "Live-in";
-  //   } else if (_selectedTimingValue == 2) {
-  //     schdle = "Daily";
-  //   } else {
-  //     schdle = "Hourly";
-  //   }
-  //   List<Service> services = await fetchOwnServices();
-  //   for (var serv in services) {
-  //     if (serv.schedule == schdle) {
-  //       print("schdle present");
-  //       if (_selectedTimingValue == 1) {
-  //         showDialog(
-  //             context: context,
-  //             builder: (context) {
-  //               return AlertDialog(
-  //                 title: const Text("Warning"),
-  //                 content: Text(
-  //                     GlobalVariables.instance.xmlHandler.getString('avail')),
-  //               );
-  //             });
-  //       } else if (_selectedTimingValue == 2) {
-  //         String selTimeF = fromTimeController.text;
-  //         String selTimeT = toTimeController.text;
-  //         if (selTimeF.isNotEmpty && selTimeT.isNotEmpty) {
-  //           TimeOfDay selTimeFrom = stringToTimeOfDay(selTimeF),
-  //               selTimeTo = stringToTimeOfDay(selTimeT),
-  //               timeF = stringToTimeOfDay(
-  //                   serv.timing[0].toString().split(' - ')[0]),
-  //               timet = stringToTimeOfDay(
-  //                   serv.timing[0].toString().split(' - ')[1]);
-  //           if (timeIsPresent(selTimeFrom, selTimeTo, timeF, timet)) {
-  //             showDialog(
-  //                 context: context,
-  //                 builder: (context) {
-  //                   return AlertDialog(
-  //                     title: const Text("Warning"),
-  //                     content: Text(GlobalVariables.instance.xmlHandler
-  //                         .getString('avail')),
-  //                   );
-  //                 });
-  //           }
-  //         }
-  //         // return const SizedBox.shrink();
-  //         // if(serv.time_from)
-  //       } else {
-  //         // for hourly
-  //         String selTimeF = fromTimeController.text;
-  //         String selTimeT = toTimeController.text;
-  //         if (selTimeF.isNotEmpty &&
-  //             selTimeT.isNotEmpty &&
-  //             selectedDaysValue.isNotEmpty) {
-  //           for (var d in selectedDaysValue) {
-  //             for (var servday in serv.days) {
-  //               if (d == servday) {
-  //                 TimeOfDay selTimeFrom = stringToTimeOfDay(selTimeF),
-  //                     selTimeTo = stringToTimeOfDay(selTimeT),
-  //                     timeF = stringToTimeOfDay(
-  //                         serv.timing[0].toString().split(' - ')[0]),
-  //                     timet = stringToTimeOfDay(
-  //                         serv.timing[0].toString().split(' - ')[1]);
-  //                 if (timeIsPresent(selTimeFrom, selTimeTo, timeF, timet)) {
-  //                   showDialog(
-  //                       context: context,
-  //                       builder: (context) {
-  //                         return AlertDialog(
-  //                           title: const Text("Warning"),
-  //                           content: Text(GlobalVariables.instance.xmlHandler
-  //                               .getString('avail')),
-  //                         );
-  //                       });
-  //                   break;
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //         // for hourly
-  //         // return const SizedBox.shrink();
-  //       }
-  //     } else {
-  //       print("no post, OK!");
-  //     }
-  //   }
-  // }
 
   TimeOfDay stringToTimeOfDay(String tod) {
     DateTime date = DateFormat('hh:mm a').parse(tod);
     return TimeOfDay.fromDateTime(date);
   }
 
-  //thisone fix
   bool timeIsPresent(todSelTime, selTimeTo, timeF, timet) {
     print(
         "todseltime:${timeToInteger(todSelTime)}\nselTimeTo:${timeToInteger(selTimeTo)}\ntimeF:${timeToInteger(timeF)}\ntimet:${timeToInteger(timet)}\n");
@@ -593,6 +461,81 @@ class _JobResumeState extends State<JobResume>
     return null;
   }
 
+  Future<File> compressImage(File file) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    XFile? compressedXFile = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path, // Use .absolute.path for safety
+      targetPath,
+      quality: 50, // Adjust quality (higher = better quality, larger size)
+    );
+
+    if (compressedXFile != null) {
+      return File(compressedXFile.path); // Convert XFile to File
+    } else {
+      return file; // Return original file if compression fails
+    }
+  }
+
+  Future<void> pickImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile>? pickedFiles = await picker.pickMultiImage();
+
+    if (pickedFiles != null) {
+      for (XFile file in pickedFiles) {
+        File compressedFile =
+            await compressImage(File(file.path)); // Corrected usage
+        setState(() {
+          selectedImages.add(compressedFile); // Add as File
+        });
+      }
+    }
+  }
+
+  Widget buildSelectedImagesGrid() {
+    return selectedImages.isNotEmpty
+        ? SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: selectedImages.length,
+              itemBuilder: (context, index) {
+                var image = selectedImages[index];
+
+                return Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: image is File // Check if local file or URL
+                            ? Image.file(image,
+                                width: 80, height: 80, fit: BoxFit.cover)
+                            : Image.network(image,
+                                width: 80, height: 80, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedImages.removeAt(index);
+                          });
+                        },
+                        child: Icon(Icons.cancel, color: Colors.red),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          )
+        : Text("No images selected", style: TextStyle(color: Colors.grey));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -636,71 +579,48 @@ class _JobResumeState extends State<JobResume>
                     ),
                     Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: selectedTimings[0],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedTimings[0] = value!;
-                                      });
-                                    },
+                        GridView.builder(
+                          shrinkWrap:
+                              true, // Ensures it only takes necessary space
+                          physics:
+                              NeverScrollableScrollPhysics(), // Disables inner scrolling
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // 2 items per row
+                            childAspectRatio:
+                                3.5, // Adjusts item width & height ratio
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: 4, // Total options
+                          itemBuilder: (context, index) {
+                            List<String> timingOptions = [
+                              'Live-in',
+                              'Daily',
+                              'Hourly',
+                              'onetime'
+                            ];
+
+                            return Row(
+                              children: [
+                                Checkbox(
+                                  value: selectedTimings[index],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedTimings[index] = value!;
+                                    });
+                                  },
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    GlobalVariables.instance.xmlHandler
+                                        .getString(timingOptions[index]),
                                   ),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString('Live-in')),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: selectedTimings[1],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedTimings[1] = value!;
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString('Daily')),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: selectedTimings[2],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedTimings[2] = value!;
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: Text(GlobalVariables
-                                        .instance.xmlHandler
-                                        .getString('Hourly')),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                                ),
+                              ],
+                            );
+                          },
+                        )
                       ],
                     ),
                     Row(
@@ -725,11 +645,9 @@ class _JobResumeState extends State<JobResume>
                       height: 15.0,
                     ),
                     Visibility(
-                      visible:
-                          showOptionsDay, // Show the options only if showOptions is true
+                      visible: showOptionsDay,
                       child: Column(
                         children: [
-                          // const Text("Day(s)", textAlign: TextAlign.center),
                           DropDownMultiSelect(
                             validator: (val) {
                               if (selectedDaysValue.isEmpty) {
@@ -739,7 +657,6 @@ class _JobResumeState extends State<JobResume>
                               return '';
                             },
                             decoration: InputDecoration(
-                              // fillColor: Theme.of(context).colorScheme.onPrimary,
                               fillColor: Colors.amber,
                               focusColor:
                                   Theme.of(context).colorScheme.onPrimary,
@@ -791,8 +708,7 @@ class _JobResumeState extends State<JobResume>
                       ),
                     ),
                     Visibility(
-                      visible:
-                          showOptionsHour, // Show the options only if showOptions is true
+                      visible: showOptionsHour,
                       child: Column(
                         children: [
                           Row(
@@ -823,7 +739,6 @@ class _JobResumeState extends State<JobResume>
                               Text("Select All"),
                             ],
                           ),
-
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -831,8 +746,7 @@ class _JobResumeState extends State<JobResume>
                                 shrinkWrap: true,
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      4, // Adjust number of columns as needed
+                                  crossAxisCount: 4,
                                   crossAxisSpacing: 8.0,
                                   mainAxisSpacing: 8.0,
                                   childAspectRatio: 2.5,
@@ -872,12 +786,10 @@ class _JobResumeState extends State<JobResume>
                                   );
                                 },
                               ),
-                              // Display validation error if no time slot is selected
                               Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
-                                  validateTimeSlots() ??
-                                      '', // Show error message if invalid
+                                  validateTimeSlots() ?? '',
                                   style: TextStyle(
                                       color: Colors.red,
                                       fontSize: 12,
@@ -886,196 +798,6 @@ class _JobResumeState extends State<JobResume>
                               ),
                             ],
                           ),
-                          // Row(
-                          //   children: [
-                          //     Expanded(
-                          //       child: Container(
-                          //         padding: const EdgeInsets.symmetric(
-                          //             vertical: 2.0, horizontal: 30.0),
-                          //         decoration: BoxDecoration(
-                          //             color: const Color(0xFFedf0f8),
-                          //             borderRadius: BorderRadius.circular(30)),
-                          //         child: TextFormField(
-                          //           maxLines: maxlinevalueshift,
-                          //           controller: shiftcont,
-                          //           decoration: InputDecoration(
-                          //               border: InputBorder.none,
-                          //               hintText: 'shift',
-                          //               hintStyle: TextStyle(
-                          //                   color: Color(0xFFb2b7bf),
-                          //                   fontSize: 18.0)),
-                          //           readOnly: true,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //     Container(
-                          //         decoration: const BoxDecoration(
-                          //             color: Color.fromARGB(255, 37, 67, 133),
-                          //             shape: BoxShape.circle),
-                          //         child: IconButton(
-                          //             onPressed: () {
-                          //               timingcount += 1;
-                          //               showDialog(
-                          //                 context: context,
-                          //                 builder: (BuildContext context) {
-                          //                   return AlertDialog(
-                          //                     title: Text("Add Timing"),
-                          //                     content: Row(
-                          //                       mainAxisAlignment:
-                          //                           MainAxisAlignment
-                          //                               .spaceAround,
-                          //                       children: [
-                          //                         Expanded(
-                          //                           child: Container(
-                          //                             padding: const EdgeInsets
-                          //                                 .symmetric(
-                          //                                 vertical: 2.0,
-                          //                                 horizontal: 30.0),
-                          //                             decoration: BoxDecoration(
-                          //                                 color: const Color(
-                          //                                     0xFFedf0f8),
-                          //                                 borderRadius:
-                          //                                     BorderRadius
-                          //                                         .circular(
-                          //                                             30)),
-                          //                             child: TextFormField(
-                          //                               controller:
-                          //                                   fromTimeController,
-                          //                               decoration: InputDecoration(
-                          //                                   border: InputBorder
-                          //                                       .none,
-                          //                                   hintText: 'From',
-                          //                                   hintStyle: TextStyle(
-                          //                                       color: Color(
-                          //                                           0xFFb2b7bf),
-                          //                                       fontSize:
-                          //                                           18.0)),
-                          //                               readOnly: true,
-                          //                               onTap: () async {
-                          //                                 final TimeOfDay?
-                          //                                     time =
-                          //                                     await showTimePicker(
-                          //                                   context: context,
-                          //                                   initialTime:
-                          //                                       TimeOfDay.now(),
-                          //                                 );
-                          //                                 if (time != null) {
-                          //                                   setState(() {
-                          //                                     fromTimeController
-                          //                                             .text =
-                          //                                         time.format(
-                          //                                             context);
-                          //                                   });
-                          //                                 }
-                          //                               },
-                          //                             ),
-                          //                           ),
-                          //                         ),
-                          //                         Container(
-                          //                           padding:
-                          //                               const EdgeInsets.only(
-                          //                                   left: 10,
-                          //                                   right: 10),
-                          //                           child: const Text(
-                          //                             "-",
-                          //                             textAlign:
-                          //                                 TextAlign.center,
-                          //                           ),
-                          //                         ),
-                          //                         Expanded(
-                          //                           child: Container(
-                          //                             padding: const EdgeInsets
-                          //                                 .symmetric(
-                          //                                 vertical: 2.0,
-                          //                                 horizontal: 30.0),
-                          //                             decoration: BoxDecoration(
-                          //                                 color: const Color(
-                          //                                     0xFFedf0f8),
-                          //                                 borderRadius:
-                          //                                     BorderRadius
-                          //                                         .circular(
-                          //                                             30)),
-                          //                             child: TextFormField(
-                          //                               controller:
-                          //                                   toTimeController,
-                          //                               decoration: InputDecoration(
-                          //                                   border: InputBorder
-                          //                                       .none,
-                          //                                   hintText: 'To',
-                          //                                   hintStyle: TextStyle(
-                          //                                       color: Color(
-                          //                                           0xFFb2b7bf),
-                          //                                       fontSize:
-                          //                                           18.0)),
-                          //                               readOnly: true,
-                          //                               onTap: () async {
-                          //                                 final TimeOfDay?
-                          //                                     time =
-                          //                                     await showTimePicker(
-                          //                                   context: context,
-                          //                                   initialTime:
-                          //                                       TimeOfDay.now(),
-                          //                                 );
-                          //                                 if (time != null) {
-                          //                                   setState(() {
-                          //                                     toTimeController
-                          //                                             .text =
-                          //                                         time.format(
-                          //                                             context);
-                          //                                   });
-                          //                                 }
-                          //                               },
-                          //                             ),
-                          //                           ),
-                          //                         ),
-                          //                       ],
-                          //                     ),
-                          //                     actions: [
-                          //                       TextButton(
-                          //                         child: Text("Add"),
-                          //                         onPressed: () {
-                          //                           if (fromTimeController
-                          //                                   .text.isNotEmpty &&
-                          //                               toTimeController
-                          //                                   .text.isNotEmpty) {
-                          //                             setState(() {
-                          //                               maxlinevalueshift =
-                          //                                   maxlinevalueshift +
-                          //                                       1;
-                          //                               String data =
-                          //                                   "${fromTimeController.text} - ${toTimeController.text}";
-                          //                               timeEntries.add(data);
-                          //                               shiftcont.text =
-                          //                                   "${shiftcont.text}$timingcount. $data\n";
-                          //                               fromTimeController
-                          //                                   .clear();
-                          //                               toTimeController
-                          //                                   .clear();
-                          //                             });
-                          //                             Navigator.pop(context);
-                          //                             setState(() {});
-                          //                           } else {
-                          //                             // Optionally, show a validation error here
-                          //                           }
-                          //                         },
-                          //                       ),
-                          //                       TextButton(
-                          //                         child: Text("Cancel"),
-                          //                         onPressed: () {
-                          //                           Navigator.of(context).pop();
-                          //                         },
-                          //                       ),
-                          //                     ],
-                          //                   );
-                          //                 },
-                          //               );
-                          //             },
-                          //             icon: const Icon(
-                          //               Icons.add,
-                          //               color: Colors.white,
-                          //             ))),
-                          //   ],
-                          // ),
                           const SizedBox(
                             height: 15.0,
                           ),
@@ -1108,7 +830,6 @@ class _JobResumeState extends State<JobResume>
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Multi-select Dropdown
                             DropdownButtonFormField<String>(
                               hint: Text(selectedText),
                               validator: (value) {
@@ -1143,8 +864,7 @@ class _JobResumeState extends State<JobResume>
                                                   }
                                                 }
                                               });
-                                              this.setState(
-                                                  () {}); // Reflect changes in UI
+                                              this.setState(() {});
                                             },
                                           ),
                                           Expanded(child: Text(service)),
@@ -1154,28 +874,13 @@ class _JobResumeState extends State<JobResume>
                                   ),
                                 );
                               }).toList(),
-                              onChanged: (_) {}, // No direct onChanged needed
+                              onChanged: (_) {},
                               isExpanded: true,
                               decoration: InputDecoration(
                                 labelText: "Select Services",
                                 border: OutlineInputBorder(),
                               ),
                             ),
-
-                            // Display selected services with rate input and service name
-                            // if (GlobalVariables.instance.userrole == 2)
-                            //   Padding(
-                            //       padding:
-                            //           const EdgeInsets.symmetric(vertical: 5.0),
-                            //       child: Column(
-                            //           crossAxisAlignment:
-                            //               CrossAxisAlignment.start,
-                            //           children: [
-                            //             Text(selectedText,
-                            //                 style: TextStyle(
-                            //                     fontWeight: FontWeight.bold)),
-                            //           ])),
-
                             if (GlobalVariables.instance.userrole == 1)
                               ...selectedServices.entries
                                   .where((entry) => entry.value)
@@ -1194,7 +899,6 @@ class _JobResumeState extends State<JobResume>
                                               fontWeight: FontWeight.bold)),
                                       Row(
                                         children: [
-                                          // Display selected service
                                           SizedBox(width: 10),
                                           Text("Rate:"),
                                           SizedBox(width: 10),
@@ -1240,10 +944,10 @@ class _JobResumeState extends State<JobResume>
                                                       GlobalVariables
                                                           .instance.xmlHandler
                                                           .getString('perhour')
-                                                    ]; // Initialize with a second item if missing
+                                                    ];
                                                   } else {
                                                     selectedRates[service]![0] =
-                                                        value; // Update index 0
+                                                        value;
                                                   }
                                                 });
                                               },
@@ -1256,8 +960,7 @@ class _JobResumeState extends State<JobResume>
                                                     selectedRates[service]!
                                                             .length >
                                                         1
-                                                ? selectedRates[service]![
-                                                    1] // Use the stored value
+                                                ? selectedRates[service]![1]
                                                 : GlobalVariables
                                                     .instance.xmlHandler
                                                     .getString('perhour'),
@@ -1286,10 +989,10 @@ class _JobResumeState extends State<JobResume>
                                                 selectedRates[service] = [
                                                   "0",
                                                   newValue!
-                                                ]; // Initialize with a first item if missing
+                                                ];
                                               } else {
                                                 selectedRates[service]![1] =
-                                                    newValue!; // Update index 1
+                                                    newValue!;
                                               }
 
                                               setState(() {});
@@ -1305,176 +1008,7 @@ class _JobResumeState extends State<JobResume>
                           ],
                         );
                       },
-                    )
-
-                    // DropDownMultiSelect(
-                    //   validator: ($selectedCheckBoxValue) {
-                    //     if (selectedCheckBoxValue.isEmpty) {
-                    //       return GlobalVariables.instance.xmlHandler
-                    //           .getString('selectserv');
-                    //     } else {
-                    //       servicesValid = true;
-                    //       return '';
-                    //     }
-                    //   },
-                    //   decoration: InputDecoration(
-                    //     // fillColor: Theme.of(context).colorScheme.onPrimary,
-                    //     fillColor: Colors.amber,
-                    //     focusColor: Theme.of(context).colorScheme.onPrimary,
-                    //     border: const OutlineInputBorder(
-                    //       borderRadius: BorderRadius.all(Radius.circular(30)),
-                    //     ),
-                    //     enabledBorder: const OutlineInputBorder(
-                    //         borderRadius: BorderRadius.all(Radius.circular(30)),
-                    //         borderSide:
-                    //             BorderSide(color: Colors.grey, width: 1.5)),
-                    //     focusedBorder: const OutlineInputBorder(
-                    //         borderRadius: BorderRadius.all(Radius.circular(30)),
-                    //         borderSide: BorderSide(
-                    //           color: Colors.blue,
-                    //           width: 1.5,
-                    //         )),
-                    //     errorBorder: const OutlineInputBorder(
-                    //         borderRadius: BorderRadius.all(Radius.circular(30)),
-                    //         borderSide:
-                    //             BorderSide(color: Colors.red, width: 1.5)),
-                    //     focusedErrorBorder: const OutlineInputBorder(
-                    //         borderRadius: BorderRadius.all(Radius.circular(30)),
-                    //         borderSide:
-                    //             BorderSide(color: Colors.grey, width: 1.5)),
-                    //   ),
-                    //   options: variantsList,
-                    //   selectedValues: selectedCheckBoxValue,
-                    //   onChanged: (List<String> value) {
-                    //     value = selectedCheckBoxValue;
-                    //   },
-                    //   whenEmpty: GlobalVariables.instance.xmlHandler
-                    //       .getString('selectserv'),
-                    // ),
-                    // const SizedBox(
-                    //   height: 30.0,
-                    // ),
-                    // Column(
-                    //   children: [
-                    //     Text(
-                    //         GlobalVariables.instance.xmlHandler
-                    //             .getString('wage'),
-                    //         textAlign: TextAlign.center),
-                    //     Column(
-                    //       children: [
-                    //         Row(
-                    //           mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    //           children: [
-                    //             Expanded(
-                    //               flex: 1,
-                    //               child: Row(
-                    //                 children: [
-                    //                   Radio(
-                    //                       value: 1,
-                    //                       groupValue: _selectedWageValue,
-                    //                       onChanged: (value) {
-                    //                         setState(() {
-                    //                           _selectedWageValue = value!;
-                    //                           //toggleWage(1);
-                    //                         });
-                    //                       }),
-                    //                   Expanded(
-                    //                     child: Text(GlobalVariables
-                    //                         .instance.xmlHandler
-                    //                         .getString('Weekly')),
-                    //                   )
-                    //                 ],
-                    //               ),
-                    //             ),
-                    //             Expanded(
-                    //               flex: 1,
-                    //               child: Row(
-                    //                 children: [
-                    //                   Radio(
-                    //                       value: 2,
-                    //                       groupValue: _selectedWageValue,
-                    //                       onChanged: (value) {
-                    //                         setState(() {
-                    //                           _selectedWageValue = value!;
-                    //                           // toggleWage(2);
-                    //                         });
-                    //                       }),
-                    //                   Expanded(
-                    //                       child: Text(GlobalVariables
-                    //                           .instance.xmlHandler
-                    //                           .getString('Monthly')))
-                    //                 ],
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ],
-                    // ),
-                    // const SizedBox(
-                    //   height: 30.0,
-                    // ),
-                    // Column(
-                    //   children: [
-                    //     Text(
-                    //       GlobalVariables.instance.xmlHandler.getString('rate'),
-                    //       textAlign: TextAlign.start,
-                    //     ),
-                    //     Row(
-                    //       children: [
-                    //         Container(
-                    //             decoration: const BoxDecoration(
-                    //               color: Color.fromARGB(255, 37, 67, 133),
-                    //               borderRadius: BorderRadius.only(
-                    //                   bottomLeft: Radius.circular(30),
-                    //                   topLeft: Radius.circular(30)),
-                    //               // shape: BoxShape.circle
-                    //             ),
-                    //             child: const Padding(
-                    //               padding: EdgeInsets.all(13.0),
-                    //               child: Icon(
-                    //                 rupeeSymbol,
-                    //                 color: Colors.white,
-                    //               ),
-                    //             )),
-                    //         Expanded(
-                    //           child: Container(
-                    //             padding: const EdgeInsets.symmetric(
-                    //                 vertical: 2.0, horizontal: 30.0),
-                    //             decoration: const BoxDecoration(
-                    //                 color: Color(0xFFedf0f8),
-                    //                 borderRadius: BorderRadius.only(
-                    //                     bottomRight: Radius.circular(30),
-                    //                     topRight: Radius.circular(30))),
-                    //             child: TextFormField(
-                    //               validator: (value) {
-                    //                 if (value == null || value.isEmpty) {
-                    //                   return GlobalVariables.instance.xmlHandler
-                    //                       .getString('rate');
-                    //                 } else {
-                    //                   rateValid = true;
-                    //                   return null;
-                    //                 }
-                    //               },
-                    //               controller: ratecontroller,
-                    //               keyboardType: TextInputType.number,
-                    //               decoration: InputDecoration(
-                    //                   border: InputBorder.none,
-                    //                   hintText: GlobalVariables
-                    //                       .instance.xmlHandler
-                    //                       .getString('rate'),
-                    //                   hintStyle: TextStyle(
-                    //                       color: Color(0xFFb2b7bf),
-                    //                       fontSize: 18.0)),
-                    //             ),
-                    //           ),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ],
-                    // ),
-                    ,
+                    ),
                     const SizedBox(
                       height: 10.0,
                     ),
@@ -1494,7 +1028,6 @@ class _JobResumeState extends State<JobResume>
                                         onChanged: (value) {
                                           setState(() {
                                             _selectedNegoValue = value!;
-                                            //toggleWage(1);
                                           });
                                         }),
                                     Expanded(
@@ -1515,7 +1048,6 @@ class _JobResumeState extends State<JobResume>
                                         onChanged: (value) {
                                           setState(() {
                                             _selectedNegoValue = value!;
-                                            // toggleWage(2);
                                           });
                                         }),
                                     Expanded(
@@ -1529,73 +1061,51 @@ class _JobResumeState extends State<JobResume>
                           ),
                         ],
                       ),
-                    // const SizedBox(
-                    //   height: 10.0,
-                    // ),
                     Divider(
                       thickness: 3,
                     ),
                     const SizedBox(
                       height: 5.0,
                     ),
-                    // Column(
-                    //   children: [
-                    //     Text(
-                    //       GlobalVariables.instance.xmlHandler
-                    //           .getString('workhist'),
-                    //       textAlign: TextAlign.start,
-                    //     ),
-                    //     Row(
-                    //       children: [
-                    //         Expanded(
-                    //           child: Container(
-                    //             padding: const EdgeInsets.symmetric(
-                    //                 vertical: 2.0, horizontal: 30.0),
-                    //             decoration: BoxDecoration(
-                    //                 color: const Color(0xFFedf0f8),
-                    //                 borderRadius: BorderRadius.circular(30)),
-                    //             child: TextFormField(
-                    //               maxLines: maxlinevalue,
-                    //               controller: whcontroller,
-                    //               decoration: InputDecoration(
-                    //                   border: InputBorder.none,
-                    //                   hintText: GlobalVariables
-                    //                       .instance.xmlHandler
-                    //                       .getString('nowork'),
-                    //                   hintStyle: TextStyle(
-                    //                       color: Color(0xFFb2b7bf),
-                    //                       fontSize: 18.0)),
-                    //               readOnly: true,
-                    //             ),
-                    //           ),
-                    //         ),
-                    //         Container(
-                    //             decoration: const BoxDecoration(
-                    //                 color: Color.fromARGB(255, 37, 67, 133),
-                    //                 shape: BoxShape.circle),
-                    //             child: IconButton(
-                    //                 onPressed: addWH,
-                    //                 icon: const Icon(
-                    //                   Icons.add,
-                    //                   color: Colors.white,
-                    //                 ))),
-                    //       ],
-                    //     ),
-                    //   ],
-                    // ),
-                    // const SizedBox(
-                    //   height: 30.0,
-                    // ),
+                    if (GlobalVariables.instance.userrole == 2 &&
+                        [1, 2].contains(widget.kind))
+                      Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Upload photos of the house/rooms/garden/etc that requires servicing(Optional)",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[700]),
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+
+                          ElevatedButton.icon(
+                            onPressed: pickImages,
+                            icon: Icon(Icons.upload_file),
+                            label: Text("Select Images"),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10.0),
+
+                          // Preview Selected Images
+                          buildSelectedImagesGrid(),
+                          const SizedBox(height: 10.0),
+                        ],
+                      ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 2.0, horizontal: 30.0),
                       decoration: BoxDecoration(
                           color: const Color(0xFFedf0f8),
                           borderRadius: BorderRadius.circular(30)),
-                      // decoration: InputDecoration(
-                      //       labelText: "Select Services",
-                      //       border: OutlineInputBorder(),
-                      //     ),
                       child: TextFormField(
                         maxLines: 5,
                         controller: remrkcontroller,
@@ -1607,7 +1117,6 @@ class _JobResumeState extends State<JobResume>
                               fontSize: 18.0,
                             ),
                             alignLabelWithHint: true),
-                        // readOnly: true,
                       ),
                     ),
                     const SizedBox(
@@ -1625,6 +1134,7 @@ class _JobResumeState extends State<JobResume>
                             selectedDaysValue.isNotEmpty &&
                             validateTimeSlots() == null &&
                             validateSelectedTimings() == null) {
+                          print('all working');
                           addService();
                         } else {
                           print(
