@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ibitf_app/chatpage.dart';
-import 'package:ibitf_app/controller/chat_controller.dart';
-import 'package:ibitf_app/notifservice.dart';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -60,7 +57,6 @@ class _ProfilePageState extends State<ProfilePage> {
         .loadStrings(GlobalVariables.instance.selected)
         .then((val) {
       print(GlobalVariables.instance.selected);
-      setState(() {});
 
       usrname = GlobalVariables.instance.username;
     });
@@ -668,26 +664,32 @@ class _ProfilePageState extends State<ProfilePage> {
   // }
 
   Widget _buildServiceList(item) {
+    bool _isAnimating = false;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is ScrollEndNotification) {
+        if (notification is ScrollEndNotification && !_isAnimating) {
+          _isAnimating = true;
           if (_innerScrollController.offset >=
               _innerScrollController.position.maxScrollExtent) {
-            _outerScrollController.animateTo(
-              _outerScrollController.position.maxScrollExtent,
-              duration: Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-            );
+            _outerScrollController
+                .animateTo(
+                  _outerScrollController.position.maxScrollExtent,
+                  duration: Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                )
+                .then((_) => _isAnimating = false);
           } else if (_innerScrollController.offset <=
               _innerScrollController.position.minScrollExtent) {
-            _outerScrollController.animateTo(
-              _outerScrollController.position.minScrollExtent,
-              duration: Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-            );
+            _outerScrollController
+                .animateTo(
+                  _outerScrollController.position.minScrollExtent,
+                  duration: Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                )
+                .then((_) => _isAnimating = false);
           }
         }
-        return true;
+        return false;
       },
       child: SingleChildScrollView(
         controller: _innerScrollController,
@@ -703,6 +705,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 GlobalVariables.instance.userrole == 1
                     ? buildServiceSection("Services", item.get("services"))
                     : buildSection("Services", item.get("services")),
+                if (GlobalVariables.instance.userrole == 2 &&
+                    item.data().containsKey('imageurl') &&
+                    item.get('imageurl') != null)
+                  buildImageSection(item.get('imageurl'), context),
                 buildSection("Timing", item.get("timing")),
                 buildSection("Days Available", item.get("days")),
                 buildTextInfo("Negotiable", item.get("negotiable")),
@@ -731,7 +737,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         MaterialPageRoute(
                           builder: (context) => JobResume(2),
                         ),
-                      );
+                      ).then((_) {
+                        // This will be called when JobResume is popped
+                        setState(() {});
+                      });
                     },
                     child: Card(
                       color: Colors.blue,
@@ -977,7 +986,28 @@ class _ProfilePageState extends State<ProfilePage> {
   void _removeService(String docId, String kind) {
     FirebaseFirestore.instance.collection(kind).doc(docId).delete().then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Service removed successfully!")),
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 10),
+              Text(
+                  //GlobalVariables.instance.xmlHandler.getString('addedsucc')
+                  'Service Removed Successfully',
+                  style: TextStyle(fontSize: 16)),
+            ],
+          ),
+          backgroundColor: Colors.indigo,
+          behavior:
+              SnackBarBehavior.floating, // Floating snackbar for modern look
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          elevation: 6,
+          duration:
+              const Duration(seconds: 3), // How long to display the Snackbar
+        ),
       );
     }).catchError((error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1132,103 +1162,6 @@ class _ProfilePageState extends State<ProfilePage> {
           } else {
             final item = snapshot.data!.docs.first;
             return _buildServiceList(item);
-            // return GridView.builder(
-            //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            //     crossAxisCount: 1,
-            //     mainAxisSpacing: 1,
-            //   ),
-            //   shrinkWrap: true,
-            //   itemCount: snapshot.data!.docs.length,
-            //   itemBuilder: (context, index) {
-            //     final item = snapshot.data!.docs[index];
-            //     print(item.data());
-            //     return SingleChildScrollView(
-            //       child: Row(
-            //         mainAxisAlignment: MainAxisAlignment.start,
-            //         children: [
-            //           Expanded(
-            //             child: Card(
-            //               elevation:
-            //                   4, // Adds a slight shadow for a polished look
-            //               shape: RoundedRectangleBorder(
-            //                 borderRadius: BorderRadius.circular(
-            //                     12), // Smooth edges for the card
-            //               ),
-            //               child: Column(
-            //                 crossAxisAlignment: CrossAxisAlignment.start,
-            //                 children: [
-            //                   GestureDetector(
-            //                     onTap: () {
-            //                       showDialog(
-            //                         context: context,
-            //                         builder: (BuildContext context) {
-            //                           return AlertDialog(
-            //                             title: Text('Service Details'),
-            //                             content: _buildServiceList(item),
-            //                             actions: [
-            //                               TextButton(
-            //                                   onPressed: () {
-            //                                     Navigator.push(
-            //                                       context,
-            //                                       MaterialPageRoute(
-            //                                         builder: (context) =>
-            //                                             JobResume(2),
-            //                                       ),
-            //                                     ).whenComplete(() {
-            //                                       setState(() {});
-            //                                     });
-            //                                   },
-            //                                   child: Text('Edit')),
-            //                               TextButton(
-            //                                   onPressed: () {
-            //                                     _confirmDelete(context, item.id,
-            //                                         'services');
-            //                                   },
-            //                                   child: Text('Remove')),
-            //                               TextButton(
-            //                                 onPressed: () {
-            //                                   Navigator.of(context)
-            //                                       .pop(false); // Return false
-            //                                 },
-            //                                 child: const Text('Cancel'),
-            //                               ),
-            //                             ],
-            //                           );
-            //                         },
-            //                       );
-            //                     }, // Action when tapped
-            //                     child: Padding(
-            //                       padding: const EdgeInsets.all(
-            //                           16.0), // Adjust padding for better spacing
-            //                       child: Column(
-            //                         crossAxisAlignment:
-            //                             CrossAxisAlignment.start,
-            //                         children: [
-            //                           Center(
-            //                             child: Column(
-            //                               children: [
-            //                                 const Text('Posted on'),
-            //                                 Text(
-            //                                   DateFormat('dd-MMM-yyyy').format(
-            //                                       (item.get('timestamp'))
-            //                                           .toDate()),
-            //                                 ),
-            //                               ],
-            //                             ),
-            //                           ),
-            //                         ],
-            //                       ),
-            //                     ),
-            //                   ),
-            //                 ],
-            //               ),
-            //             ),
-            //           ),
-            //         ],
-            //       ),
-            //     );
-            //   },
-            // );
           }
         }
         return const SizedBox(); // Fallback in case of no data
@@ -2301,6 +2234,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   SizedBox(
                     height: 10,
                   ),
+
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),

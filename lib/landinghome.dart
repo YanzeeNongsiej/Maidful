@@ -963,7 +963,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                       buildSection("Days Available", servItem.get("days")),
                       buildTextInfo("Negotiable", servItem.get("negotiable")),
                       SizedBox(height: 10),
-                      //buildWorkHistory(servItem.get("work_history")),
+                      if (servItem.data().containsKey("work_history") &&
+                          servItem.get("work_history") is List &&
+                          servItem.get("work_history").isNotEmpty)
+                        buildWorkHistory(servItem.get("work_history")),
                     ],
                   ),
                 ),

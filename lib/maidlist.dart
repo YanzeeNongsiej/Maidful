@@ -427,10 +427,10 @@ class _MaidListState extends State<MaidList>
                                           // elevation: 10,
                                           child: ListTile(
                                             leading: CircleAvatar(
-                                              foregroundImage: NetworkImage(
-                                                  AuthMethods.user?.photoURL ??
-                                                      ''),
-                                            ),
+                                                // foregroundImage: NetworkImage(
+                                                //     AuthMethods.user?.photoURL ??
+                                                //         ''),
+                                                ),
                                             title: Text(item.get("name")),
                                             subtitle: Row(
                                               children: [

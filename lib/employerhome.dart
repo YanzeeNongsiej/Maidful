@@ -132,9 +132,9 @@ class _EmployerHomePageState extends State<EmployerHome>
         break;
       case 'Settings':
         Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => const Terms()));
+            .push(MaterialPageRoute(builder: (context) => Terms()));
         break;
-      case 'Contact':
+      case 'Contact Us':
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => HelpSupportPage()));
         break;

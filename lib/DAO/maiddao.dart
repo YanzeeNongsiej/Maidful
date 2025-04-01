@@ -35,7 +35,6 @@ class maidDao {
           services: List<String>.from(qss.get("services")),
           timing: List<String>.from(qss.get("timing")),
           userid: qss.get("userid"),
-          work_history: List<String>.from(qss.get("work_history")),
           ack: qss.get("ack"),
           imageUrl: List<String>.from(qss.get("imageurl")));
       job.add(jobprof);

@@ -211,17 +211,46 @@ class _LogInState extends State<LogIn> {
                 fontWeight: FontWeight.w500)),
       ),
       const SizedBox(
-        height: 40.0,
+        height: 20.0,
+      ),
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(GlobalVariables.instance.xmlHandler.getString('noac'),
+              style: const TextStyle(
+                  color: Color(0xFF8c8e98),
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w500)),
+          const SizedBox(
+            height: 5.0,
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const SignUp()));
+            },
+            child: Text(
+              GlobalVariables.instance.xmlHandler.getString('signup'),
+              style: const TextStyle(
+                  color: Color(0xFF273671),
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(
+        height: 30.0,
       ),
       Text(
         GlobalVariables.instance.xmlHandler.getString('signin'),
         style: const TextStyle(
             color: Color(0xFF273671),
-            fontSize: 22.0,
+            fontSize: 18.0,
             fontWeight: FontWeight.w500),
       ),
       const SizedBox(
-        height: 30.0,
+        height: 15.0,
       ),
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -261,35 +290,6 @@ class _LogInState extends State<LogIn> {
           ),
         ],
       ),
-      const SizedBox(
-        height: 40.0,
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(GlobalVariables.instance.xmlHandler.getString('noac'),
-              style: const TextStyle(
-                  color: Color(0xFF8c8e98),
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.w500)),
-          const SizedBox(
-            width: 5.0,
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const SignUp()));
-            },
-            child: Text(
-              GlobalVariables.instance.xmlHandler.getString('signup'),
-              style: const TextStyle(
-                  color: Color(0xFF273671),
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      )
     ]);
   }
 

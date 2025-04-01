@@ -25,8 +25,8 @@ class _SignUpState extends State<SignUp> {
         namecontroller.text != "" &&
         mailcontroller.text != "") {
       try {
-        // UserCredential userCredential = await FirebaseAuth.instance
-        // .createUserWithEmailAndPassword(email: email, password: password);
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
         final User? user = FirebaseAuth.instance.currentUser;
         Map<String, dynamic> uploadUser = {
           "userid": user?.uid,
@@ -38,13 +38,33 @@ class _SignUpState extends State<SignUp> {
           "dob": "2024-01-01",
           "language": "",
           "remarks": "",
+          "url":
+              "https://firebasestorage.googleapis.com/v0/b/authenticationapp-2f932.appspot.com/o/finalprofile.png?alt=media&token=f8c430f2-5a49-452e-a51c-3010b9db4211"
         };
-        await Usersdao().addUserDetails(uploadUser).whenComplete(
-            () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text(
-                  "Registered Successfully",
-                  style: TextStyle(fontSize: 20.0),
-                ))));
+        await Usersdao().addUserDetails(uploadUser).whenComplete(() {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.check_circle_outline, color: Colors.white),
+                  SizedBox(width: 10),
+                  Text('Registered successfully!',
+                      style: TextStyle(fontSize: 16)),
+                ],
+              ),
+              backgroundColor: Colors.indigo,
+              behavior: SnackBarBehavior
+                  .floating, // Floating snackbar for modern look
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              elevation: 6,
+              duration: const Duration(
+                  seconds: 3), // How long to display the Snackbar
+            ),
+          );
+        });
         try {
           await FirebaseAuth.instance
               .signInWithEmailAndPassword(email: email, password: password);

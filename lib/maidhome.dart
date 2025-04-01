@@ -132,8 +132,8 @@ class _MaidHomePageState extends State<MaidHome>
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: CircleAvatar(
-              foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
-            ),
+                // foregroundImage: NetworkImage(AuthMethods.user?.photoURL ?? ''),
+                ),
             onSelected: handleClick,
             itemBuilder: (BuildContext context) {
               return {'Logout', 'Settings'}.map((String choice) {
@@ -214,9 +214,9 @@ class _MaidHomePageState extends State<MaidHome>
                         final item = snapshot.data!.docs[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            foregroundImage:
-                                NetworkImage(AuthMethods.user?.photoURL ?? ''),
-                          ),
+                              // foregroundImage:
+                              //     NetworkImage(AuthMethods.user?.photoURL ?? ''),
+                              ),
                           title: Text(item.get("name")),
                           subtitle: Text(item.get("address")),
                           trailing: Row(

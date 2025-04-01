@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ibitf_app/terms.dart';
 import 'package:intl/intl.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -72,13 +73,17 @@ class _HomePageState extends State<Home>
       // } else if (_selectedRoleValue == 2) {
       GlobalVariables.instance.urole = _selectedRoleValue;
       Navigator.pop(context);
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => EmployerHome(
-                    uname: name,
-                    uid: user!.uid,
-                  )));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => Terms()))
+          .whenComplete(() {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EmployerHome(
+                      uname: name,
+                      uid: user!.uid,
+                    )));
+      });
+
       // }
     }
   }
@@ -184,9 +189,9 @@ class _HomePageState extends State<Home>
                     actions: <Widget>[
                       PopupMenuButton<String>(
                         icon: CircleAvatar(
-                          foregroundImage:
-                              NetworkImage(AuthMethods.user?.photoURL ?? ''),
-                        ),
+                            // foregroundImage:
+                            //     NetworkImage(AuthMethods.user?.photoURL ?? ''),
+                            ),
                         onSelected: handleClick,
                         itemBuilder: (BuildContext context) {
                           return {'Logout', 'Settings'}.map((String choice) {

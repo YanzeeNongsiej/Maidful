@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
+import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/model/jobProfile.dart';
 import 'package:ibitf_app/model/service.dart';
@@ -218,28 +219,67 @@ class _JobResumeState extends State<JobResume>
       if (GlobalVariables.instance.userrole == 1) {
         await maidDao()
             .addService(uploadService)
-            .whenComplete(() =>
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                  GlobalVariables.instance.xmlHandler.getString('addedsucc'),
-                  style: const TextStyle(fontSize: 20.0),
-                ))))
+            .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('addedsucc'),
+                            style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                    backgroundColor: Colors.indigo,
+                    behavior: SnackBarBehavior
+                        .floating, // Floating snackbar for modern look
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    elevation: 6,
+                    duration: const Duration(
+                        seconds: 3), // How long to display the Snackbar
+                  ),
+                ))
             .whenComplete(() {
           Navigator.pop(context);
           setState(() {});
         });
       } else {
         //upload images and add the urls to uploadService
-        List<String> imageUrls = await uploadImagesToFirebase(selectedImages);
+        List<String> imageUrls =
+            await uploadImagesToFirebase(context, selectedImages);
         uploadService["imageurl"] = imageUrls;
         await maidDao()
             .addJobProfile(uploadService)
-            .whenComplete(() =>
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                  GlobalVariables.instance.xmlHandler.getString('addedsucc'),
-                  style: const TextStyle(fontSize: 20.0),
-                ))))
+            .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('addedsucc'),
+                            style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                    backgroundColor: Colors.indigo,
+                    behavior: SnackBarBehavior
+                        .floating, // Floating snackbar for modern look
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    elevation: 6,
+                    duration: const Duration(
+                        seconds: 3), // How long to display the Snackbar
+                  ),
+                ))
             .whenComplete(() {
           Navigator.pop(context);
           setState(() {});
@@ -249,26 +289,69 @@ class _JobResumeState extends State<JobResume>
       if (GlobalVariables.instance.userrole == 1) {
         await maidDao()
             .updateServiceByUserId(user!.uid, uploadService)
-            .whenComplete(() =>
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                  GlobalVariables.instance.xmlHandler.getString('updatesucc'),
-                  style: const TextStyle(fontSize: 20.0),
-                ))))
+            .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('updatesucc'),
+                            style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                    backgroundColor: Colors.indigo,
+                    behavior: SnackBarBehavior
+                        .floating, // Floating snackbar for modern look
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    elevation: 6,
+                    duration: const Duration(
+                        seconds: 3), // How long to display the Snackbar
+                  ),
+                ))
             .whenComplete(() {
           Navigator.pop(context);
           setState(() {});
         });
       } else {
+        List<String> imageUrls =
+            await uploadImagesToFirebase(context, selectedImages);
+        uploadService["imageurl"] = imageUrls;
+
         await maidDao()
             .updateJobByUserId(user!.uid, uploadService)
-            .whenComplete(() =>
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                  GlobalVariables.instance.xmlHandler.getString('updatesucc'),
-                  style: const TextStyle(fontSize: 20.0),
-                ))))
+            .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text(
+                            GlobalVariables.instance.xmlHandler
+                                .getString('updatesucc'),
+                            style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                    backgroundColor: Colors.indigo,
+                    behavior: SnackBarBehavior
+                        .floating, // Floating snackbar for modern look
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    elevation: 6,
+                    duration: const Duration(
+                        seconds: 3), // How long to display the Snackbar
+                  ),
+                ))
             .whenComplete(() {
+          deleteUnusedImagesFromJobProfile(user.uid);
           Navigator.pop(context);
           setState(() {});
         });
@@ -280,12 +363,31 @@ class _JobResumeState extends State<JobResume>
       String ackid;
       ackid = await maidDao()
           .addAck(uploadService)
-          .whenComplete(
-              () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                    GlobalVariables.instance.xmlHandler.getString('addedsucc'),
-                    style: const TextStyle(fontSize: 20.0),
-                  ))))
+          .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('addedsucc'),
+                          style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                  backgroundColor: Colors.indigo,
+                  behavior: SnackBarBehavior
+                      .floating, // Floating snackbar for modern look
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  elevation: 6,
+                  duration: const Duration(
+                      seconds: 3), // How long to display the Snackbar
+                ),
+              ))
           .whenComplete(() => Navigator.pop(context));
 
       setState(() {});
@@ -300,37 +402,78 @@ class _JobResumeState extends State<JobResume>
     }
   }
 
-  Future<List<String>> uploadImagesToFirebase(List<dynamic> images) async {
+  Future<List<String>> uploadImagesToFirebase(
+      BuildContext context, List<dynamic> images) async {
     List<String> imageUrls = [];
+    String userID = FirebaseAuth.instance.currentUser!.uid;
 
-    if (images.isEmpty) return imageUrls; // Return empty list if no images
+    if (images.isEmpty) return imageUrls;
 
-    for (var image in images) {
-      try {
-        // If it's an existing URL (String), just add it to the list
-        if (image is String) {
-          imageUrls.add(image);
-          continue; // Skip processing, as it's already uploaded
+    // Show a stylish loading indicator with gradient and small size
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog during upload
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.teal, Colors.blueAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: CircularProgressIndicator(
+                strokeWidth: 4,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      for (var image in images) {
+        try {
+          if (image is String) {
+            imageUrls.add(image);
+            continue;
+          }
+
+          File compressedImage = await compressImage(image);
+
+          String name =
+              await getNameFromId(FirebaseAuth.instance.currentUser!.uid);
+          String fileName = "$name${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+          Reference storageRef = FirebaseStorage.instance
+              .ref()
+              .child("job_images/$userID/$fileName");
+
+          await storageRef.putFile(compressedImage);
+          String imageUrl = await storageRef.getDownloadURL();
+          imageUrls.add(imageUrl);
+        } catch (e) {
+          print("Error uploading image: $e");
         }
-
-        // Otherwise, it's a new File that needs compression & upload
-        File compressedImage = await compressImage(image);
-
-        // Generate a filename with user’s name
-        String name =
-            await getNameFromId(FirebaseAuth.instance.currentUser!.uid);
-        String fileName = "$name${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-        Reference storageRef =
-            FirebaseStorage.instance.ref().child("job_images/$fileName");
-
-        await storageRef.putFile(compressedImage);
-        String imageUrl = await storageRef.getDownloadURL();
-        imageUrls.add(imageUrl);
-      } catch (e) {
-        print("Error uploading image: $e");
       }
+    } finally {
+      Navigator.of(context).pop(); // Dismiss dialog after upload
     }
+
     return imageUrls;
   }
 

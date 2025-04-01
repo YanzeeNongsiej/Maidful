@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:ibitf_app/controller/chat_controller.dart';
@@ -604,4 +605,45 @@ void viewFullImage(BuildContext context, String imageUrl) {
       );
     },
   );
+}
+
+Future<void> deleteUnusedImagesFromJobProfile(String userId) async {
+  try {
+    CollectionReference jobProfiles =
+        FirebaseFirestore.instance.collection('jobprofile');
+
+    // Query Firestore to get the document where userid == userId
+    QuerySnapshot querySnapshot =
+        await jobProfiles.where('userid', isEqualTo: userId).get();
+
+    if (querySnapshot.docs.isEmpty) return; // Exit if no matching document
+
+    // Get the first matching document (assuming one profile per user)
+    DocumentSnapshot jobProfileDoc = querySnapshot.docs.first;
+
+    // Get the list of stored image URLs from Firestore
+    List<String> storedImageUrls =
+        List<String>.from(jobProfileDoc.get('imageurl') ?? []);
+    print('imageurl is $storedImageUrls');
+    // Get all image references from Firebase Storage
+    ListResult storageList =
+        await FirebaseStorage.instance.ref('job_images/$userId/').listAll();
+
+    // Loop through storage items and get the download URLs
+    for (var item in storageList.items) {
+      String storageImageUrl = await item.getDownloadURL();
+      print('Storage imageurl is $storageImageUrl');
+      // If the URL is NOT in Firestore's imageurl list, delete the image from Storage
+      if (!storedImageUrls.contains(storageImageUrl)) {
+        try {
+          await item.delete();
+          print("✅ Deleted unused image: $storageImageUrl");
+        } catch (e) {
+          print("⚠️ Error deleting image: $storageImageUrl - $e");
+        }
+      }
+    }
+  } catch (e) {
+    print("❌ Error fetching or deleting images: $e");
+  }
 }

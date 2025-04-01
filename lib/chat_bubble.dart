@@ -146,6 +146,35 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
+  Future<void> setWorkHistory(String userId, String newEntry) async {
+    try {
+      CollectionReference users =
+          FirebaseFirestore.instance.collection('users');
+
+      // Get the current work_history list
+      DocumentSnapshot userDoc = await users.doc(userId).get();
+
+      if (userDoc.exists) {
+        List<String> workHistory =
+            List<String>.from(userDoc.get('work_history') ?? []);
+
+        // Add new entry to the list
+        workHistory.add(newEntry);
+
+        // Update Firestore
+        await users.doc(userId).update({
+          'work_history': workHistory,
+        });
+
+        print('Work history updated successfully for user: $userId');
+      } else {
+        print('User not found');
+      }
+    } catch (e) {
+      print('Error updating work history: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.data['ackID'] != "") {
@@ -291,6 +320,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               setDate(ds.id, "end");
                               String name1 =
                                   await getNameFromId(ds.get('userid'));
+                              setWorkHistory(ds.get('receiverid'), name1);
+
                               String name2 =
                                   await getNameFromId(ds.get('receiverid'));
                               designOfRating(

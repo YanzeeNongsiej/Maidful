@@ -60,7 +60,7 @@ class _ModernAppBarState extends State<ModernAppBar> {
             itemBuilder: (context) => [
               _buildMenuItem("Logout", Icons.exit_to_app),
               _buildMenuItem("Settings", Icons.settings),
-              _buildMenuItem("Contact", Icons.contact_mail),
+              _buildMenuItem("Contact Us", Icons.contact_mail),
               _buildLanguageToggle(),
               _buildRoleToggle(),
             ],
