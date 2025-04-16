@@ -77,7 +77,7 @@ class AuthMethods {
       codeAutoRetrievalTimeout: (verificationId) {
         this.verificationId.value = verificationId;
       },
-      timeout: Duration(seconds: 45),
+      timeout: Duration(seconds: 3),
       verificationFailed: (e) {
         print("Error code:${e.code}; Message:${e.message}");
         if (e.code == 'invalid-phone-number') {

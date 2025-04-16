@@ -198,11 +198,12 @@ void designOfRating(String ratedUserId, String raterUserId) {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text("Rate Your Experience"),
+            title:
+                Text(GlobalVariables.instance.xmlHandler.getString('rating1')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Please rate your interaction with this user."),
+                Text(GlobalVariables.instance.xmlHandler.getString('rating2')),
                 SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -288,7 +289,8 @@ Future<void> submitRating(
       // ✅ Show success SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Rating submitted successfully!"),
+          content:
+              Text(GlobalVariables.instance.xmlHandler.getString('rating3')),
           backgroundColor: Colors.green,
         ),
       );
@@ -311,7 +313,7 @@ Future<void> submitRating(
     // ❌ Show error SnackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Error submitting rating. Please try again."),
+        content: Text(GlobalVariables.instance.xmlHandler.getString('rating4')),
         backgroundColor: Colors.red,
       ),
     );

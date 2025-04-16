@@ -19,7 +19,6 @@ import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
-import 'package:intl/intl.dart';
 
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -133,7 +132,8 @@ class _ChatBubbleState extends State<ChatBubble> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Translated Message'),
+          title:
+              Text(GlobalVariables.instance.xmlHandler.getString('translated')),
           content: Text(translatedText),
           actions: [
             TextButton(
@@ -279,7 +279,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                           onPressed: () => showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text("Completed Service"),
+                              title: Text(GlobalVariables.instance.xmlHandler
+                                  .getString('comserv')),
                               content: buildActiveServiceList(
                                   ds,
                                   "Completed",
@@ -293,7 +294,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               ],
                             ),
                           ),
-                          child: const Text("Go to Service"),
+                          child: Text(GlobalVariables.instance.xmlHandler
+                              .getString('gotoserv')),
                         ),
                       ],
                     ),
@@ -304,7 +306,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                         GestureDetector(
                           onTap: () => getAckDetail(ds),
                           child: Chip(
-                            label: const Text("View",
+                            label: Text(
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('view'),
                                 style: TextStyle(color: Colors.white)),
                             backgroundColor: Colors.blue,
                           ),
@@ -334,7 +338,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   ratedUserId: ds.get('receiverid'));
                             },
                             child: Chip(
-                              label: const Text("Agree",
+                              label: Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('agree'),
                                   style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.green,
                             ),
@@ -352,7 +358,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   '$name has rejected your completion request');
                             },
                             child: Chip(
-                              label: const Text("Reject",
+                              label: Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('reject'),
                                   style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.red,
                             ),
@@ -472,7 +480,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               ],
                             ),
                           ),
-                          child: const Text("Go to Service"),
+                          child: Text(GlobalVariables.instance.xmlHandler
+                              .getString('gotoserv')),
                         ),
                       ],
                     ),
@@ -501,10 +510,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                               notifyUser(
                                   widget.data['senderID'],
                                   'Acknowledgement Agreed',
-                                  '$name has agreed to be hired by you');
+                                  '$name ${GlobalVariables.instance.xmlHandler.getString('hasagreed')}');
                             },
                             child: Chip(
-                              label: const Text("Agree",
+                              label: Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('agree'),
                                   style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.green,
                             ),
@@ -518,10 +529,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                               notifyUser(
                                   widget.data['senderID'],
                                   'Acknowledgement Rejected',
-                                  '$name has rejected to be hired by you');
+                                  '$name ${GlobalVariables.instance.xmlHandler.getString('hasrejected')}');
                             },
                             child: Chip(
-                              label: const Text("Reject",
+                              label: Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('gotoserv'),
                                   style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.red,
                             ),

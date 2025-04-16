@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ibitf_app/faq.dart';
 import 'package:ibitf_app/notifservice.dart';
 import 'package:ibitf_app/privacy.dart';
+import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/terms.dart';
 
 class HelpSupportPage extends StatefulWidget {
@@ -46,10 +47,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
+                children: [
                   Icon(Icons.check_circle_outline, color: Colors.white),
                   SizedBox(width: 10),
-                  Text('Grievance submitted successfully!',
+                  Text(
+                      GlobalVariables.instance.xmlHandler
+                          .getString('grievsucc'),
                       style: TextStyle(fontSize: 16)),
                 ],
               ),
@@ -70,10 +73,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
+                children: [
                   Icon(Icons.error_outline, color: Colors.white),
                   SizedBox(width: 10),
-                  Text('Error submitting grievance. Please try again.',
+                  Text(
+                      GlobalVariables.instance.xmlHandler
+                          .getString('grieverror'),
                       style: TextStyle(fontSize: 16)),
                 ],
               ),
@@ -94,10 +99,11 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
-              children: const [
+              children: [
                 Icon(Icons.error_outline, color: Colors.white),
                 SizedBox(width: 10),
-                Text('Error submitting grievance. Please try again.',
+                Text(
+                    GlobalVariables.instance.xmlHandler.getString('grieverror'),
                     style: TextStyle(fontSize: 16)),
               ],
             ),
@@ -117,10 +123,10 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
-            children: const [
+            children: [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 10),
-              Text('Please enter your grievance',
+              Text(GlobalVariables.instance.xmlHandler.getString('grieventer'),
                   style: TextStyle(fontSize: 16)),
             ],
           ),

@@ -73,18 +73,10 @@ class _HomePageState extends State<Home>
       // } else if (_selectedRoleValue == 2) {
       GlobalVariables.instance.urole = _selectedRoleValue;
       Navigator.pop(context);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Terms()))
-          .whenComplete(() {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => EmployerHome(
-                      uname: name,
-                      uid: user!.uid,
-                    )));
-      });
-
-      // }
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Terms(uname: name, uid: user!.uid)));
     }
   }
 
@@ -124,6 +116,7 @@ class _HomePageState extends State<Home>
       role = "${qs.docs[0]["role"]}";
     } else {
       name = "Mary";
+      docid = '1';
       role = "No role";
     }
     return role;
@@ -216,10 +209,12 @@ class _HomePageState extends State<Home>
                               key: _formkey,
                               child: Column(
                                 children: [
-                                  const Row(
+                                  Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text("Finish Setting Up your profile",
+                                      Text(
+                                          GlobalVariables.instance.xmlHandler
+                                              .getString('finishset'),
                                           style: TextStyle(
                                               color: Color(0xFF8c8e98),
                                               fontSize: 18.0,
@@ -271,8 +266,10 @@ class _HomePageState extends State<Home>
                                                             value!; // Update _selectedValue when option 1 is selected
                                                       });
                                                     }),
-                                                const Expanded(
-                                                  child: Text('Employee(Maid)'),
+                                                Expanded(
+                                                  child: Text(GlobalVariables
+                                                      .instance.xmlHandler
+                                                      .getString('maiden')),
                                                 )
                                               ],
                                             ),
@@ -291,8 +288,10 @@ class _HomePageState extends State<Home>
                                                             value!; // Update _selectedValue when option 1 is selected
                                                       });
                                                     }),
-                                                const Expanded(
-                                                    child: Text('Employer'))
+                                                Expanded(
+                                                    child: Text(GlobalVariables
+                                                        .instance.xmlHandler
+                                                        .getString('employer')))
                                               ],
                                             ),
                                           ),
@@ -322,8 +321,10 @@ class _HomePageState extends State<Home>
                                                             value!; // Update _selectedValue when option 1 is selected
                                                       });
                                                     }),
-                                                const Expanded(
-                                                  child: Text('Male'),
+                                                Expanded(
+                                                  child: Text(GlobalVariables
+                                                      .instance.xmlHandler
+                                                      .getString('male')),
                                                 )
                                               ],
                                             ),
@@ -341,8 +342,10 @@ class _HomePageState extends State<Home>
                                                             value!; // Update _selectedValue when option 1 is selected
                                                       });
                                                     }),
-                                                const Expanded(
-                                                    child: Text('Female'))
+                                                Expanded(
+                                                    child: Text(GlobalVariables
+                                                        .instance.xmlHandler
+                                                        .getString('female')))
                                               ],
                                             ),
                                           ),
@@ -441,10 +444,12 @@ class _HomePageState extends State<Home>
                                   const SizedBox(
                                     height: 30.0,
                                   ),
-                                  const Row(
+                                  Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      Text("Language(s) known:",
+                                      Text(
+                                          GlobalVariables.instance.xmlHandler
+                                              .getString('lang'),
                                           style: TextStyle(
                                               color:
                                                   Color.fromARGB(255, 0, 0, 0),

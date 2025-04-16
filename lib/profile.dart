@@ -701,18 +701,32 @@ class _ProfilePageState extends State<ProfilePage> {
                     "Posted on",
                     DateFormat('dd MMM yyyy')
                         .format((item.get("timestamp") as Timestamp).toDate())),
-                buildScheduleSection("Schedule", item.get("schedule")),
+                buildScheduleSection(
+                    GlobalVariables.instance.xmlHandler.getString('sched'),
+                    item.get("schedule")),
                 GlobalVariables.instance.userrole == 1
-                    ? buildServiceSection("Services", item.get("services"))
-                    : buildSection("Services", item.get("services")),
+                    ? buildServiceSection(
+                        GlobalVariables.instance.xmlHandler.getString('serv'),
+                        item.get("services"))
+                    : buildSection(
+                        GlobalVariables.instance.xmlHandler.getString('serv'),
+                        item.get("services")),
                 if (GlobalVariables.instance.userrole == 2 &&
                     item.data().containsKey('imageurl') &&
                     item.get('imageurl') != null)
                   buildImageSection(item.get('imageurl'), context),
-                buildSection("Timing", item.get("timing")),
-                buildSection("Days Available", item.get("days")),
-                buildTextInfo("Negotiable", item.get("negotiable")),
-                buildLongText("Remarks", item.get("remarks")),
+                buildSection(
+                    GlobalVariables.instance.xmlHandler.getString('timing'),
+                    item.get("timing")),
+                buildSection(
+                    GlobalVariables.instance.xmlHandler.getString('day'),
+                    item.get("days")),
+                buildTextInfo(
+                    GlobalVariables.instance.xmlHandler.getString('nego'),
+                    item.get("negotiable")),
+                buildLongText(
+                    GlobalVariables.instance.xmlHandler.getString('rating1'),
+                    item.get("remarks")),
                 SizedBox(
                   height: 10,
                 )
@@ -1537,9 +1551,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         SizedBox(height: 8),
                         userDoc?['gender'] == 1
-                            ? Text("Gender: Male",
+                            ? Text(
+                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('male')}",
                                 style: TextStyle(color: Colors.white70))
-                            : Text("Gender: Female",
+                            : Text(
+                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('female')}",
                                 style: TextStyle(color: Colors.white70)),
                         SizedBox(height: 8),
                         Row(
@@ -1555,7 +1571,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("Languages known: ",
+                            Text(
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('lang'),
                                 style: const TextStyle(color: Colors.white70)),
                             Text("${userDoc?['language'].join(', ')}",
                                 style: TextStyle(color: Colors.white70)),

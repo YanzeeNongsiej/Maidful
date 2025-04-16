@@ -279,7 +279,8 @@ Widget buildServiceSection(String title, Map<String, dynamic> services) {
                             fontSize: 16,
                             color: Colors.black)),
                     SizedBox(height: 2),
-                    Text("Rate: ${entry.value[0]} ${entry.value[1]}",
+                    Text(
+                        "${GlobalVariables.instance.xmlHandler.getString('rate')} ${entry.value[0]} ${entry.value[1]}",
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -404,7 +405,7 @@ void completeService(BuildContext context, item) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text("Are you sure you want to complete the service?"),
+        title: Text(GlobalVariables.instance.xmlHandler.getString('yousure')),
         actions: <Widget>[
           TextButton(
             onPressed: () {

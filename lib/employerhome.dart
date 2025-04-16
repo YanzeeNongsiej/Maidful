@@ -365,7 +365,8 @@ class _FABState extends State<FAB> {
                               MaterialPageRoute(
                                   builder: (context) => JobResume(1))),
                           heroTag: null,
-                          label: const Text("Post a Service (Maids)"),
+                          label: Text(GlobalVariables.instance.xmlHandler
+                              .getString('postaserv')),
                           icon: const Icon(Icons.person_add_rounded),
                         ),
                       const SizedBox(height: 16.0),
@@ -376,7 +377,8 @@ class _FABState extends State<FAB> {
                               MaterialPageRoute(
                                   builder: (context) => JobResume(1))),
                           heroTag: null,
-                          label: const Text("Post a Job Profile"),
+                          label: Text(GlobalVariables.instance.xmlHandler
+                              .getString('postajob')),
                           icon: const Icon(Icons.add_card_sharp),
                         ),
                     ],

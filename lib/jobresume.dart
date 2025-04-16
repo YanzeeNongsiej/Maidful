@@ -1043,7 +1043,9 @@ class _JobResumeState extends State<JobResume>
                                       Row(
                                         children: [
                                           SizedBox(width: 10),
-                                          Text("Rate:"),
+                                          Text(GlobalVariables
+                                              .instance.xmlHandler
+                                              .getString('rate')),
                                           SizedBox(width: 10),
                                           Expanded(
                                             child: TextFormField(

@@ -159,30 +159,39 @@ class _LandingHomePageState extends State<LandingHomePage> {
                                 return [
                                   PopupMenuItem(
                                     value: "Address",
-                                    child: Text("Search by Address"),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('sbyadd')),
                                     onTap: () {
                                       setState(() {
-                                        searchText = "Search by Address...";
+                                        searchText =
+                                            "${GlobalVariables.instance.xmlHandler.getString('sbyadd')}...";
                                         searchCriteria = 1;
                                       });
                                     },
                                   ),
                                   PopupMenuItem(
                                     value: "Name",
-                                    child: Text("Search by Name"),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('sbyname')),
                                     onTap: () {
                                       setState(() {
-                                        searchText = "Search by Name...";
+                                        searchText =
+                                            "${GlobalVariables.instance.xmlHandler.getString('sbyname')}...";
                                         searchCriteria = 2;
                                       });
                                     },
                                   ),
                                   PopupMenuItem(
                                     value: "Service",
-                                    child: Text("Search by Service"),
+                                    child: Text(GlobalVariables
+                                        .instance.xmlHandler
+                                        .getString('sbyserv')),
                                     onTap: () {
                                       setState(() {
-                                        searchText = "Search by Service...";
+                                        searchText =
+                                            "${GlobalVariables.instance.xmlHandler.getString('sbyserv')}...";
                                         searchCriteria = 3;
                                       });
                                     },
@@ -339,7 +348,7 @@ class _LandingHomePageState extends State<LandingHomePage> {
               return doc[searchBy]
                   .toString()
                   .toLowerCase()
-                  .startsWith(searchVal.toLowerCase());
+                  .contains(searchVal.toLowerCase());
             }).toList();
             // Add filtered docs to the result listM
             filteredRes.addAll(userDocs);
@@ -382,15 +391,21 @@ class _LandingHomePageState extends State<LandingHomePage> {
         List<String> usrServices = [];
         List<QueryDocumentSnapshot> userDocs = s.docs.where((doc) {
           bool flg = false;
-          List<dynamic> size = doc[searchBy];
+          List<dynamic> size;
+          if (GlobalVariables.instance.userrole == 1) {
+            size = doc[searchBy];
+          } else {
+            size = doc[searchBy].keys.toList();
+          }
           for (int j = 0; j < size.length; j++) {
             flg = false;
-            if (doc[searchBy][j]
+
+            if (size[j]
                 .toString()
                 .toLowerCase()
                 .trim()
-                .startsWith(searchVal.toLowerCase().trim())) {
-              usrServices.add(doc[searchBy][j]);
+                .contains(searchVal.toLowerCase().trim())) {
+              usrServices.add(size[j]);
               flg = true;
               break;
             }
@@ -915,6 +930,169 @@ class _NestedTabBarState extends State<NestedTabBar>
     );
   }
 
+  Widget showWorkHistory(String id) {
+    return FutureBuilder<QuerySnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('acknowledgements')
+          .where('receiverid', isEqualTo: id)
+          .where('status', isEqualTo: 5)
+          // .orderBy('start', descending: true)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'No work history yet.',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey),
+            ),
+          );
+        }
+
+        final workHistoryDocs = snapshot.data!.docs;
+        final userIds =
+            workHistoryDocs.map((doc) => doc['userid'] as String).toSet();
+
+        return FutureBuilder<Map<String, String>>(
+          future: _getUsernamesMap(userIds),
+          builder: (context, nameSnapshot) {
+            if (!nameSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final namesMap = nameSnapshot.data!;
+            final dateFormat = DateFormat('dd MMM yyyy');
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      GlobalVariables.instance.xmlHandler.getString('workhist'),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    ...workHistoryDocs.asMap().entries.map((entry) {
+                      final index = entry.key + 1;
+                      final data = entry.value.data() as Map<String, dynamic>;
+                      final userId = data['userid'];
+                      final start =
+                          (data['period']['start'] as Timestamp).toDate();
+                      final end = (data['period']['end'] as Timestamp).toDate();
+                      final services =
+                          List<String>.from(data['services'] ?? []);
+                      final employerName = namesMap[userId] ?? 'Unknown';
+
+                      return Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$index. ${GlobalVariables.instance.xmlHandler.getString('employedby')} $employerName',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blueAccent.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.date_range,
+                                      size: 16, color: Colors.grey),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${GlobalVariables.instance.xmlHandler.getString('start')}: ${dateFormat.format(start)}',
+                                    style:
+                                        const TextStyle(color: Colors.black54),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.event,
+                                      size: 16, color: Colors.grey),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${GlobalVariables.instance.xmlHandler.getString('start')}: ${dateFormat.format(end)}',
+                                    style:
+                                        const TextStyle(color: Colors.black54),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('serv'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blueAccent.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8.0,
+                                runSpacing: 6.0,
+                                children: services.map((service) {
+                                  return Chip(
+                                    label: Text(service),
+                                    backgroundColor: Colors.indigo[50],
+                                    labelStyle: TextStyle(
+                                      color: Colors.blueAccent.shade700,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+// Helper: Gets usernames for a list of userIds
+  Future<Map<String, String>> _getUsernamesMap(Set<String> userIds) async {
+    Map<String, String> nameMap = {};
+    for (String userId in userIds) {
+      final name = await getNameFromId(userId);
+      nameMap[userId] = name;
+    }
+    return nameMap;
+  }
+
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
@@ -963,10 +1141,11 @@ class _NestedTabBarState extends State<NestedTabBar>
                       buildSection("Days Available", servItem.get("days")),
                       buildTextInfo("Negotiable", servItem.get("negotiable")),
                       SizedBox(height: 10),
-                      if (servItem.data().containsKey("work_history") &&
-                          servItem.get("work_history") is List &&
-                          servItem.get("work_history").isNotEmpty)
-                        buildWorkHistory(servItem.get("work_history")),
+                      // showWorkHistory(item.get('userid')),
+                      // if (servItem.data().containsKey("work_history") &&
+                      //     servItem.get("work_history") is List &&
+                      //     servItem.get("work_history").isNotEmpty)
+                      //   buildWorkHistory(servItem.get("work_history")),
                     ],
                   ),
                 ),
@@ -981,166 +1160,159 @@ class _NestedTabBarState extends State<NestedTabBar>
                           padding: const EdgeInsets.all(5.0),
                           child: GestureDetector(
                             onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return Dialog(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(20)),
-                                    backgroundColor: Colors.transparent,
-                                    child: Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        // Refined Background Card
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 20, vertical: 30),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            color: Colors.white.withOpacity(
-                                                0.9), // More solid background
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withOpacity(0.1),
-                                                blurRadius: 15,
-                                                spreadRadius: 2,
-                                              ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Scaffold(
+                                    appBar: PreferredSize(
+                                      preferredSize: const Size.fromHeight(60),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Colors.teal,
+                                              Colors.blueAccent
                                             ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              // Profile Image with a Soft Glow Effect
-                                              Hero(
-                                                tag:
-                                                    'profile-${item.get('userid')}',
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.grey
-                                                            .withOpacity(
-                                                                0.9), // Inner glow
-                                                        blurRadius: 15,
-                                                        spreadRadius: 0.1,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: CircleAvatar(
-                                                    radius: 50,
-                                                    backgroundColor:
-                                                        Colors.grey[200],
-                                                    foregroundImage: item
-                                                                .get('url') ==
-                                                            null
-                                                        ? AssetImage(
-                                                                "assets/profile.png")
-                                                            as ImageProvider<
-                                                                Object>
-                                                        : NetworkImage(
-                                                            item.get('url')),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 16),
-
-                                              // Name
-                                              Text(
-                                                item.get('name'),
-                                                style: TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors
-                                                      .blueAccent.shade700,
-                                                ),
-                                              ),
-
-                                              const SizedBox(height: 8),
-
-                                              // Address
-                                              _buildIconText(
-                                                  Icons.house_outlined,
-                                                  item.get('address')),
-
-                                              // Gender
-                                              _buildIconText(
-                                                  Icons.group_rounded,
-                                                  item.get('gender') == 1
-                                                      ? 'Female'
-                                                      : 'Male'),
-
-                                              // Date of Birth
-                                              _buildIconText(Icons.date_range,
-                                                  item.get('dob')),
-
-                                              // Languages Spoken
-                                              _buildIconText(
-                                                Icons.abc,
-                                                item
-                                                    .get('language')
-                                                    .toString()
-                                                    .replaceAll('[', '')
-                                                    .replaceAll(']', ''),
-                                              ),
-
-                                              // 🌟 Average Rating Section 🌟
-                                              if (item
-                                                      .data()
-                                                      .containsKey('rating') &&
-                                                  item.get('rating') is Map)
-                                                _buildAverageRating(
-                                                    item.get('rating')),
-
-                                              // Show Skills (Only for certain users)
-                                              if (GlobalVariables
-                                                      .instance.userrole ==
-                                                  2)
-                                                showSkills(item.get('userid')),
-                                            ],
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.2),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: AppBar(
+                                          backgroundColor: Colors.transparent,
+                                          elevation: 0,
+                                          title: const Text(
+                                            'Profile',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                          centerTitle: true,
+                                          leading: IconButton(
+                                            icon: const Icon(
+                                                Icons
+                                                    .arrow_back_ios_new_rounded,
+                                                color: Colors.white),
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
                                           ),
                                         ),
-
-                                        // Close Button with a Floating Effect
-                                        Positioned(
-                                          top: -10,
-                                          right: -10,
-                                          child: GestureDetector(
-                                            onTap: () =>
-                                                Navigator.of(context).pop(),
+                                      ),
+                                    ),
+                                    body: SingleChildScrollView(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 30),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          // Profile Image with Glow
+                                          Hero(
+                                            tag:
+                                                'profile-${item.get('userid')}',
                                             child: Container(
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: Colors.redAccent,
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.red
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 6,
-                                                    spreadRadius: 1,
-                                                  )
+                                                    color: Colors.grey
+                                                        .withOpacity(0.9),
+                                                    blurRadius: 15,
+                                                    spreadRadius: 0.1,
+                                                  ),
                                                 ],
                                               ),
-                                              padding: const EdgeInsets.all(5),
-                                              child: const Icon(
-                                                  Icons.close_rounded,
-                                                  color: Colors.white,
-                                                  size: 24),
+                                              child: CircleAvatar(
+                                                radius: 70,
+                                                backgroundColor:
+                                                    Colors.grey[200],
+                                                foregroundImage: item
+                                                            .get('url') ==
+                                                        null
+                                                    ? const AssetImage(
+                                                            "assets/profile.png")
+                                                        as ImageProvider<Object>
+                                                    : NetworkImage(
+                                                        item.get('url')),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
+                                          const SizedBox(height: 16),
 
-// Utility function for icons & text
+                                          // Name
+                                          Text(
+                                            item.get('name'),
+                                            style: TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blueAccent.shade700,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+
+                                          // Address
+                                          _buildIconText(Icons.house_outlined,
+                                              item.get('address')),
+
+                                          // Gender
+                                          _buildIconText(
+                                            Icons.group_rounded,
+                                            item.get('gender') == 1
+                                                ? 'Female'
+                                                : 'Male',
+                                          ),
+
+                                          // Date of Birth
+                                          _buildIconText(Icons.date_range,
+                                              item.get('dob')),
+
+                                          // Languages
+                                          _buildIconText(
+                                            Icons.abc,
+                                            item
+                                                .get('language')
+                                                .toString()
+                                                .replaceAll('[', '')
+                                                .replaceAll(']', ''),
+                                          ),
+
+                                          // Rating
+                                          if (item
+                                                  .data()
+                                                  .containsKey('rating') &&
+                                              item.get('rating') is Map)
+                                            _buildAverageRating(
+                                                item.get('rating')),
+
+                                          // Skills (for maids)
+                                          if (GlobalVariables
+                                                  .instance.userrole ==
+                                              2)
+                                            showSkills(item.get('userid')),
+
+                                          // Work history
+                                          if (GlobalVariables
+                                                  .instance.userrole ==
+                                              2)
+                                            showWorkHistory(item.get('userid')),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
                             },
                             child: const Row(
                               children: [

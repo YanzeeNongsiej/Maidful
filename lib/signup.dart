@@ -3,6 +3,7 @@ import 'package:ibitf_app/login.dart';
 import 'package:ibitf_app/DAO/usersDao.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -45,10 +46,10 @@ class _SignUpState extends State<SignUp> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
+                children: [
                   Icon(Icons.check_circle_outline, color: Colors.white),
                   SizedBox(width: 10),
-                  Text('Registered successfully!',
+                  Text(GlobalVariables.instance.xmlHandler.getString('regsuck'),
                       style: TextStyle(fontSize: 16)),
                 ],
               ),
