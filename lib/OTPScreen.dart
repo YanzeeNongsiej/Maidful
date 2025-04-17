@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,19 +6,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ibitf_app/home.dart';
 import 'package:ibitf_app/signup.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-Future<void> requestSmsPermission() async {
-  final status = await Permission.sms.status;
-  if (!status.isGranted) {
-    final result = await Permission.sms.request();
-    if (result.isGranted) {
-      debugPrint("✅ SMS permission granted.");
-    } else {
-      debugPrint("❌ SMS permission denied.");
-      // Optionally show dialog explaining why it's needed
-    }
-  }
-}
 
 class OTPVerificationScreen extends StatefulWidget {
   final String phone;
@@ -56,6 +42,20 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     startTimer();
   }
 
+  // Request SMS Permission
+  Future<void> requestSmsPermission() async {
+    final status = await Permission.sms.status;
+    if (!status.isGranted) {
+      final result = await Permission.sms.request();
+      if (result.isGranted) {
+        debugPrint("✅ SMS permission granted.");
+      } else {
+        debugPrint("❌ SMS permission denied.");
+        // Optionally show dialog explaining why it's needed
+      }
+    }
+  }
+
   void startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (secondsRemaining > 0) {
@@ -66,6 +66,87 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         timer.cancel();
       }
     });
+  }
+
+  // Function to check OTP request limit
+  Future<bool> canSendOTP(String phone) async {
+    try {
+      final otpRequestRef = FirebaseFirestore.instance
+          .collection('otp_requests')
+          .doc('current_month');
+      final snapshot = await otpRequestRef.get();
+
+      if (!snapshot.exists) {
+        // If no document exists for the current month, create one with request_count set to 0
+        await otpRequestRef.set({
+          'request_count': 0,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final requestCount = snapshot.data()?['request_count'] ?? 0;
+
+      if (requestCount >= 9999) {
+        // OTP request limit reached
+        Fluttertoast.showToast(
+          msg: "OTP request limit reached for this month.",
+          toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 5, // For web/iOS
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        return false;
+      } else {
+        // Increment OTP request count
+        await otpRequestRef.update({
+          'request_count': FieldValue.increment(1),
+        });
+        return true;
+      }
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "Error checking OTP request: $e",
+        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5, // For web/iOS
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return false;
+    }
+  }
+
+  // Send OTP if limit not exceeded
+  void sendOTP() async {
+    if (await canSendOTP(widget.phone)) {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: "+91${widget.phone}",
+        forceResendingToken: _resendToken,
+        verificationCompleted: (_) {},
+        verificationFailed: (e) {
+          Fluttertoast.showToast(
+            msg: "Error: ${e.message}",
+            toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 5, // For web/iOS
+            backgroundColor: Colors.black87,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        },
+        codeSent: (verificationId, resendToken) {
+          setState(() {
+            _verificationId = verificationId; // Update the local variable
+            _resendToken = resendToken; // Update the local variable
+          });
+        },
+        codeAutoRetrievalTimeout: (_) {},
+        timeout: const Duration(seconds: 60),
+      );
+    }
   }
 
   Future<void> postLoginRoute(String phone) async {
@@ -85,14 +166,23 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         // User doesn't exist, go to Signup
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const SignUp()),
+          MaterialPageRoute(builder: (_) => SignUp(phone: phone)),
         );
       }
     } catch (e) {
-      Fluttertoast.showToast(msg: "Error checking user: $e");
+      Fluttertoast.showToast(
+        msg: "Error checking user: $e",
+        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5, // For web/iOS
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
   }
 
+  // Verify OTP
   void verifyOTP() async {
     String smsCode = otpController.text.trim();
 
@@ -108,8 +198,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
       await FirebaseAuth.instance.signInWithCredential(credential);
       await postLoginRoute(widget.phone);
+      // Proceed with user login logic
     } on FirebaseAuthException catch (e) {
-      Fluttertoast.showToast(msg: "Invalid OTP: ${e.message}");
+      Fluttertoast.showToast(
+        msg: "Invalid OTP: ${e.message}",
+        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5, // For web/iOS
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     } finally {
       setState(() => isLoading = false);
     }
@@ -126,8 +225,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       forceResendingToken: _resendToken, // Use the local variable here
       verificationCompleted: (_) {},
       verificationFailed: (e) {
-        Fluttertoast.showToast(msg: "Error: ${e.message}");
-        print(e);
+        Fluttertoast.showToast(
+          msg: "Error: ${e.message}",
+          toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 5, // For web/iOS
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       },
       codeSent: (verificationId, resendToken) {
         setState(() {

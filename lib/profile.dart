@@ -1552,10 +1552,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(height: 8),
                         userDoc?['gender'] == 1
                             ? Text(
-                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('male')}",
+                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('female')}",
                                 style: TextStyle(color: Colors.white70))
                             : Text(
-                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('female')}",
+                                "Gender: ${GlobalVariables.instance.xmlHandler.getString('male')}",
                                 style: TextStyle(color: Colors.white70)),
                         SizedBox(height: 8),
                         Row(

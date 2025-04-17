@@ -125,24 +125,62 @@ class _LogInState extends State<LogIn> {
         // User doesn't exist, go to Signup
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const SignUp()),
+          MaterialPageRoute(
+              builder: (_) => SignUp(
+                    phone: phone,
+                  )),
         );
       }
     } catch (e) {
-      Fluttertoast.showToast(msg: "Error checking user: $e");
+      Navigator.of(context).pop();
+      Fluttertoast.showToast(
+        msg: "Error checking user: $e",
+        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5, // For web/iOS
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
+  }
+
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing when tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text("Sending OTP..."),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> userLogin() async {
     String phone = phnocontroller.text.trim();
 
     if (phone.isEmpty) {
-      Fluttertoast.showToast(msg: "Enter phone number");
+      Fluttertoast.showToast(
+        msg: "Enter phone number",
+        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5, // For web/iOS
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
     }
 
     String fullPhone = "+91$phone"; // assuming India
-
+    showLoadingDialog(context);
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: fullPhone,
       timeout: const Duration(seconds: 60),
@@ -152,7 +190,16 @@ class _LogInState extends State<LogIn> {
         await postLoginRoute(phone);
       },
       verificationFailed: (FirebaseAuthException e) {
-        Fluttertoast.showToast(msg: "Verification failed: ${e.message}");
+        Navigator.of(context).pop();
+        Fluttertoast.showToast(
+          msg: "Verification failed: ${e.message}",
+          toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 5, // For web/iOS
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       },
       codeSent: (String verificationId, int? resendToken) {
         Navigator.push(
@@ -173,100 +220,119 @@ class _LogInState extends State<LogIn> {
   Widget restOfIt() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30.0),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-        child: Container(
-          padding: const EdgeInsets.all(25.0),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
-          ),
-          child: Form(
-            key: _formkey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ToggleButtons(
-                  isSelected: _iss,
-                  onPressed: (int index) {
-                    setState(() {
-                      _iss[0] = index == 0;
-                      _iss[1] = index == 1;
-                      GlobalVariables.instance.selected = lang[index];
-                      GlobalVariables.instance.xmlHandler
-                          .loadStrings(GlobalVariables.instance.selected);
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  selectedColor: Colors.white,
-                  fillColor: Colors.blueAccent,
-                  color: Colors.white,
-                  borderColor: Colors.white70,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text("English"),
+      child: Column(
+        children: [
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+            child: Container(
+              padding: const EdgeInsets.all(25.0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: Form(
+                key: _formkey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ToggleButtons(
+                      isSelected: _iss,
+                      onPressed: (int index) {
+                        setState(() {
+                          _iss[0] = index == 0;
+                          _iss[1] = index == 1;
+                          GlobalVariables.instance.selected = lang[index];
+                          GlobalVariables.instance.xmlHandler
+                              .loadStrings(GlobalVariables.instance.selected);
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      selectedColor: Colors.white,
+                      fillColor: Colors.blueAccent,
+                      color: Colors.white,
+                      borderColor: Colors.white70,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text("English"),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text("Khasi"),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text("Khasi"),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-                TextFormField(
-                  controller: phnocontroller,
-                  validator: (value) => (value == null || value.isEmpty)
-                      ? 'Please Enter Phone Number'
-                      : null,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: "Ph. No.",
-                    hintStyle: TextStyle(color: Colors.white70),
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white70),
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white70),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                GestureDetector(
-                  onTap: () {
-                    if (_formkey.currentState!.validate()) {
-                      setState(() {
-                        phno = phnocontroller.text;
-                        email = mailcontroller.text;
-                        password = passwordcontroller.text;
-                      });
-                      userLogin();
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14.0),
-                    decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Sign In",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+                    const SizedBox(height: 25),
+                    TextFormField(
+                      controller: phnocontroller,
+                      validator: (value) => (value == null || value.isEmpty)
+                          ? 'Please Enter Phone Number'
+                          : null,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: "Ph. No.",
+                        hintStyle: TextStyle(color: Colors.white70),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 30),
+                    GestureDetector(
+                      onTap: () {
+                        if (_formkey.currentState!.validate()) {
+                          setState(() {
+                            phno = phnocontroller.text;
+                            // email = mailcontroller.text;
+                            // password = passwordcontroller.text;
+                          });
+                          userLogin();
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Sign In",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          SizedBox(
+            height: 25,
+          ),
+          Opacity(
+            opacity: 0.2, // semi-transparent
+            child: Center(
+              child: Image.asset(
+                "assets/maidful__1_-removebg-preview.png",
+                height: MediaQuery.of(context).size.height * 0.2,
+                width:
+                    MediaQuery.of(context).size.width * 0.5, // adjust as needed
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -302,7 +368,7 @@ class _LogInState extends State<LogIn> {
                             height: 250,
                             fit: BoxFit.cover,
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 40),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: restOfIt(),

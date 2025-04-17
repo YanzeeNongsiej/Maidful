@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/employerhome.dart';
+import 'package:ibitf_app/home.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:styled_text/styled_text.dart';
 
@@ -52,14 +53,16 @@ class _MyTerms extends State<Terms> {
         ),
       );
     } else {
-      Navigator.pop(context);
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => EmployerHome(
-                    uname: widget.uname,
-                    uid: widget.uid,
-                  )));
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const Home()));
+      // Navigator.pop(context);
+      // Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //         builder: (context) => EmployerHome(
+      //               uname: widget.uname,
+      //               uid: widget.uid,
+      //             )));
     }
   }
 

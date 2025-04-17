@@ -22,6 +22,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.playIntegrity,
+    // webProvider is optional; use only if you're building for web
+    // webProvider: ReCaptchaV3Provider('your-site-key'),
+  );
   // await FirebaseAppCheck.instance.activate(
   //   androidProvider: AndroidProvider.debug,
   //   appleProvider: AppleProvider.debug,

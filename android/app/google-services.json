@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "445183691218-5tb60c0k75sufcqeqq5381ee3cu1hvgq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ibitf_app",
+            "certificate_hash": "92e134a31e01f191db036972f21a1faa9d81a0ce"
+          }
+        },
+        {
           "client_id": "445183691218-o57spdt75sffch6dilcp9dpkrfjfiiid.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

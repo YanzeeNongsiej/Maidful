@@ -108,13 +108,18 @@ class _HomePageState extends State<Home>
 
   getRole() async {
     String role;
-    print(user);
-    QuerySnapshot qs = await Usersdao().getUserDetails(user?.uid as String);
+    print('userid is${user!.uid}');
+    print('user is${user}');
+
+    QuerySnapshot qs = await Usersdao().getUserDetails(user!.uid);
     if (qs.docs.isNotEmpty) {
       name = "${qs.docs[0]["name"]}";
+      print('name is ${name}');
       docid = qs.docs[0].id;
       role = "${qs.docs[0]["role"]}";
+      print('role is ${role}');
     } else {
+      print('qs is ${qs}');
       name = "Mary";
       docid = '1';
       role = "No role";
