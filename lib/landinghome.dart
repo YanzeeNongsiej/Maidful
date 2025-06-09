@@ -1037,7 +1037,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                       size: 16, color: Colors.grey),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '${GlobalVariables.instance.xmlHandler.getString('start')}: ${dateFormat.format(end)}',
+                                    '${GlobalVariables.instance.xmlHandler.getString('end')}: ${dateFormat.format(end)}',
                                     style:
                                         const TextStyle(color: Colors.black54),
                                   ),
@@ -1093,6 +1093,14 @@ class _NestedTabBarState extends State<NestedTabBar>
     return nameMap;
   }
 
+  List<String> getDays(all) {
+    List<String> res = [];
+    for (var i in all) {
+      res.add(GlobalVariables.instance.xmlHandler.getString(i));
+    }
+    return res;
+  }
+
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
@@ -1120,26 +1128,48 @@ class _NestedTabBarState extends State<NestedTabBar>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      buildTextInfo("Name", item.get("name")),
-                      buildTextInfo("Address", item.get("address")),
                       buildTextInfo(
-                        "Posted on",
+                          GlobalVariables.instance.xmlHandler.getString('nam'),
+                          item.get("name")),
+                      buildTextInfo(
+                          GlobalVariables.instance.xmlHandler.getString('addr'),
+                          item.get("address")),
+                      buildTextInfo(
+                        GlobalVariables.instance.xmlHandler
+                            .getString('postedon'),
                         DateFormat('dd MMM yyyy').format(
                             (servItem.get("timestamp") as Timestamp).toDate()),
                       ),
                       buildScheduleSection(
-                          "Schedule", servItem.get("schedule")),
+                          GlobalVariables.instance.xmlHandler
+                              .getString('sched'),
+                          servItem.get("schedule")),
                       GlobalVariables.instance.userrole == 2
                           ? buildServiceSection(
-                              "Services", servItem.get("services"))
-                          : buildSection("Services", servItem.get("services")),
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('serv'),
+                              servItem.get("services"))
+                          : buildSection(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('serv'),
+                              servItem.get("services")),
                       if (GlobalVariables.instance.userrole == 1 &&
                           servItem.get('imageurl') != null &&
                           (servItem.get('imageurl') as List).isNotEmpty)
                         buildImageSection(servItem.get('imageurl'), context),
-                      buildSection("Timing", servItem.get("timing")),
-                      buildSection("Days Available", servItem.get("days")),
-                      buildTextInfo("Negotiable", servItem.get("negotiable")),
+                      buildSection(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('timing'),
+                          servItem.get("timing")),
+                      buildSection(
+                          GlobalVariables.instance.xmlHandler.getString('day'),
+                          getDays(servItem.get("days"))),
+                      buildTextInfo(
+                          GlobalVariables.instance.xmlHandler.getString('nego'),
+                          GlobalVariables.instance.xmlHandler.getString(servItem
+                              .get("negotiable")
+                              .toString()
+                              .toLowerCase())),
                       SizedBox(height: 10),
                       // showWorkHistory(item.get('userid')),
                       // if (servItem.data().containsKey("work_history") &&
@@ -1873,8 +1903,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                         ),
                         child: Text(
                           GlobalVariables.instance.userrole == 1
-                              ? 'Available Jobs'
-                              : 'Available Maids',
+                              ? GlobalVariables.instance.xmlHandler
+                                  .getString('availjob')
+                              : GlobalVariables.instance.xmlHandler
+                                  .getString('availmaid'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

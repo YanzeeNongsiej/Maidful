@@ -64,8 +64,8 @@
 <string name="postserv">Post Ka Kam</string>
 <string name="setting">Kane kadei ka settings page</string>
 <string name="click"> ban pynkylla ia kine harum</string>
-<string name="skills">Ki jait kam ba phi tbit</string>
-<string name="noskills">Ym pat add ki kam ba tbit</string>
+<string name="skills">Ki jait kam ba phi tbit(Skills)</string>
+<string name="noskills">Ym pat don skills</string>
 <string name="assessment">Pynshisha</string>
 <string name="confirmassess">Phin hap ban pynshisha ia kane ka kam ba phi tbit da kaba jubab katto katne ki jingkylli hapoh ka por bala ai.
 
@@ -85,7 +85,7 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="nowork">Ym pat don ki kam barim</string>
 <string name="noserv">Ym pat don ki kam</string>
 <string name="servoff">Ki Kam ba Trei:</string>
-<string name="servreq">Ki Kam ba Donkam:</string>
+<string name="servreq">Ki Kam ba Donkam Nongtrei:</string>
 <string name="nego"> Lah ban Pan Dor</string>
 <string name="nonnego"> Ym Lah ban Pan Dor</string>
 <string name="read"> Nga lah dep pule iaki terms and conditions</string>
@@ -124,5 +124,24 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="employedby">Lah dep trei ha iing jong i </string>
 <string name="start">Sdang</string>
 <string name="end">Kut</string>
-<string name=""></string>
+<string name="availjob">Ki Kam ba lait</string>
+<string name="availmaid">Ki Nongtrei ba lait</string>
+<string name="postedon">Lah Post haka:</string>
+<string name="remark">Jingtip Kham Bniah:</string>
+<string name="starton">Sdang Naduh:</string>
+<string name="completeon">Kut Haduh:</string>
+<string name="selserv">Jied ka kam</string>
+<string name="chooseview">Jied kumno phi kwah ban peit ia ka dor </string>
+<string name="thischart">Kane ka chart ka pyni ia ki dor ba shisha ba la tyrwa da ki nongtrei-iing na ka bynta ka kam</string>
+<string name="charged">bala buh dor</string>
+<string name="eachbar">Kawei pa kawei ka jingthew ka pyni ia ka dor jong u nongpynbiang. Kane ka iarap ia phi ban sngewthuh ia kaei kaba kiwei ki shim bad kaei ka dor kaba hok ka lah ban long.
+</string>
+<string name="pricedist">Ka Jingpyni iaki Dor</string>
+<string name="maiden2">Nongtrei-iing</string>
+<string name="transpricing">Ka Jingbuh Dor Kaba Shai</string>
+<string name="ackagreed">La ai iaka Jingmynjur</string>
+<string name="ackreject">La kyntait iaka Jingmynjur</string>
+<string name="acksent">La send iaka Jingmynjur</string>
+<string name="ackreceived">La ioh iaka Jingmynjur</string>
+<string name="servactive">Ka kam ka dang iaid</string>
 </strings>

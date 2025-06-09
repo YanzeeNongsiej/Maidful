@@ -108,42 +108,42 @@ class _LogInState extends State<LogIn> {
   //     }
   //   }
   // }
-  Future<void> postLoginRoute(String phone) async {
-    try {
-      final userRef = FirebaseFirestore.instance.collection('users');
-      final result =
-          await userRef.where('phone', isEqualTo: phone).limit(1).get();
+  // Future<void> postLoginRoute(String phone) async {
+  //   try {
+  //     final userRef = FirebaseFirestore.instance.collection('users');
+  //     final result =
+  //         await userRef.where('phone', isEqualTo: phone).limit(1).get();
 
-      if (result.docs.isNotEmpty) {
-        // User exists, go to Home
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const Home()),
-          (route) => false,
-        );
-      } else {
-        // User doesn't exist, go to Signup
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (_) => SignUp(
-                    phone: phone,
-                  )),
-        );
-      }
-    } catch (e) {
-      Navigator.of(context).pop();
-      Fluttertoast.showToast(
-        msg: "Error checking user: $e",
-        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 5, // For web/iOS
-        backgroundColor: Colors.black87,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    }
-  }
+  //     if (result.docs.isNotEmpty) {
+  //       // User exists, go to Home
+  //       Navigator.pushAndRemoveUntil(
+  //         context,
+  //         MaterialPageRoute(builder: (_) => const Home()),
+  //         (route) => false,
+  //       );
+  //     } else {
+  //       // User doesn't exist, go to Signup
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(
+  //             builder: (_) => SignUp(
+  //                   phone: phone,
+  //                 )),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     Navigator.of(context).pop();
+  //     Fluttertoast.showToast(
+  //       msg: "Error checking user: $e",
+  //       toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
+  //       gravity: ToastGravity.BOTTOM,
+  //       timeInSecForIosWeb: 5, // For web/iOS
+  //       backgroundColor: Colors.black87,
+  //       textColor: Colors.white,
+  //       fontSize: 16.0,
+  //     );
+  //   }
+  // }
 
   void showLoadingDialog(BuildContext context) {
     showDialog(
@@ -163,6 +163,55 @@ class _LogInState extends State<LogIn> {
     );
   }
 
+  Future<bool> canSendOTP(String phone) async {
+    try {
+      final now = DateTime.now();
+      final monthId =
+          '${now.year}_${now.month.toString().padLeft(2, '0')}'; // e.g., "2025_04"
+
+      final otpRequestRef =
+          FirebaseFirestore.instance.collection('otp_requests').doc(monthId);
+
+      final snapshot = await otpRequestRef.get();
+
+      if (!snapshot.exists) {
+        // First request of the month
+        await otpRequestRef.set({
+          'request_count': 1,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        return true;
+      }
+
+      final requestCount = snapshot.data()?['request_count'] ?? 0;
+
+      if (requestCount >= 9999) {
+        Fluttertoast.showToast(
+          msg: "OTP request limit reached for this month",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+        );
+        return false;
+      } else {
+        await otpRequestRef.update({
+          'request_count': FieldValue.increment(1),
+        });
+        return true;
+      }
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "Error checking OTP request: $e",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+      );
+      return false;
+    }
+  }
+
   Future<void> userLogin() async {
     String phone = phnocontroller.text.trim();
 
@@ -180,6 +229,9 @@ class _LogInState extends State<LogIn> {
     }
 
     String fullPhone = "+91$phone"; // assuming India
+    if (!await canSendOTP(phone)) {
+      return;
+    }
     showLoadingDialog(context);
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: fullPhone,
@@ -187,10 +239,12 @@ class _LogInState extends State<LogIn> {
       verificationCompleted: (PhoneAuthCredential credential) async {
         // Auto-verification works on Android
         await FirebaseAuth.instance.signInWithCredential(credential);
-        await postLoginRoute(phone);
+        //await postLoginRoute(phone);
       },
       verificationFailed: (FirebaseAuthException e) {
         Navigator.of(context).pop();
+        print(e);
+        print('hehe ${e.stackTrace} hihi ${e.message}');
         Fluttertoast.showToast(
           msg: "Verification failed: ${e.message}",
           toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
@@ -202,7 +256,7 @@ class _LogInState extends State<LogIn> {
         );
       },
       codeSent: (String verificationId, int? resendToken) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => OTPVerificationScreen(
@@ -310,6 +364,15 @@ class _LogInState extends State<LogIn> {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "This verification is protected by Google reCAPTCHA.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],

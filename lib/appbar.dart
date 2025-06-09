@@ -59,10 +59,11 @@ class _ModernAppBarState extends State<ModernAppBar> {
             onSelected: widget.handleClick,
             itemBuilder: (context) => [
               _buildMenuItem("Logout", Icons.exit_to_app),
-              _buildMenuItem("Settings", Icons.settings),
+              _buildMenuItem("Pricing", Icons.currency_rupee),
+              // _buildMenuItem("Settings", Icons.settings),
               _buildMenuItem("Contact Us", Icons.contact_mail),
               _buildLanguageToggle(),
-              _buildRoleToggle(),
+              // _buildRoleToggle(),
             ],
           ),
         ),

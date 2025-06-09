@@ -1,3 +1,4 @@
+// ✅ OTPScreen.dart (Refactored for smoother UX and better efficiency)
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ibitf_app/home.dart';
 import 'package:ibitf_app/signup.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String phone;
@@ -28,8 +28,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   bool isLoading = false;
   int secondsRemaining = 60;
   Timer? _timer;
-
-  // Local variables to hold the verificationId and resendToken
   late String _verificationId;
   late int? _resendToken;
 
@@ -38,217 +36,169 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     super.initState();
     _verificationId = widget.verificationId;
     _resendToken = widget.resendToken;
-    requestSmsPermission();
-    startTimer();
+
+    _startTimer();
   }
 
-  // Request SMS Permission
-  Future<void> requestSmsPermission() async {
-    final status = await Permission.sms.status;
-    if (!status.isGranted) {
-      final result = await Permission.sms.request();
-      if (result.isGranted) {
-        debugPrint("✅ SMS permission granted.");
-      } else {
-        debugPrint("❌ SMS permission denied.");
-        // Optionally show dialog explaining why it's needed
-      }
-    }
-  }
-
-  void startTimer() {
+  void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (secondsRemaining > 0) {
-        setState(() {
-          secondsRemaining--;
-        });
+        setState(() => secondsRemaining--);
       } else {
         timer.cancel();
       }
     });
   }
 
-  // Function to check OTP request limit
-  Future<bool> canSendOTP(String phone) async {
-    try {
-      final otpRequestRef = FirebaseFirestore.instance
-          .collection('otp_requests')
-          .doc('current_month');
-      final snapshot = await otpRequestRef.get();
+  Future<Map<String, String>?> promptUserForEmailPassword(
+      BuildContext context) async {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
 
-      if (!snapshot.exists) {
-        // If no document exists for the current month, create one with request_count set to 0
-        await otpRequestRef.set({
-          'request_count': 0,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
-
-      final requestCount = snapshot.data()?['request_count'] ?? 0;
-
-      if (requestCount >= 9999) {
-        // OTP request limit reached
-        Fluttertoast.showToast(
-          msg: "OTP request limit reached for this month.",
-          toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 5, // For web/iOS
-          backgroundColor: Colors.black87,
-          textColor: Colors.white,
-          fontSize: 16.0,
+    return showDialog<Map<String, String>?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Enter Email and Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: "Email"),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: "Password"),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null), // Cancel
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final email = emailController.text.trim();
+                final password = passwordController.text.trim();
+                if (email.isEmpty || password.isEmpty) {
+                  // Show error or disable button until filled
+                  return;
+                }
+                Navigator.pop(context, {'email': email, 'password': password});
+              },
+              child: Text("Submit"),
+            ),
+          ],
         );
-        return false;
-      } else {
-        // Increment OTP request count
-        await otpRequestRef.update({
-          'request_count': FieldValue.increment(1),
-        });
-        return true;
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Error checking OTP request: $e",
-        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 5, // For web/iOS
-        backgroundColor: Colors.black87,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-      return false;
-    }
+      },
+    );
   }
 
-  // Send OTP if limit not exceeded
-  void sendOTP() async {
-    if (await canSendOTP(widget.phone)) {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: "+91${widget.phone}",
-        forceResendingToken: _resendToken,
-        verificationCompleted: (_) {},
-        verificationFailed: (e) {
-          Fluttertoast.showToast(
-            msg: "Error: ${e.message}",
-            toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 5, // For web/iOS
-            backgroundColor: Colors.black87,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-        },
-        codeSent: (verificationId, resendToken) {
-          setState(() {
-            _verificationId = verificationId; // Update the local variable
-            _resendToken = resendToken; // Update the local variable
-          });
-        },
-        codeAutoRetrievalTimeout: (_) {},
-        timeout: const Duration(seconds: 60),
-      );
-    }
-  }
-
-  Future<void> postLoginRoute(String phone) async {
+  Future<void> _postLoginRoute(String phone, dynamic credential) async {
     try {
-      final userRef = FirebaseFirestore.instance.collection('users');
-      final result =
-          await userRef.where('phone', isEqualTo: phone).limit(1).get();
+      final result = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phone', isEqualTo: phone)
+          .limit(1)
+          .get();
 
       if (result.docs.isNotEmpty) {
-        // User exists, go to Home
+        // final emailPassword = await promptUserForEmailPassword(context);
+        // final email = emailPassword!['email']!;
+        // final password = emailPassword['password']!;
+        // UserCredential emailCredential = await FirebaseAuth.instance
+        //     .signInWithEmailAndPassword(email: email, password: password);
+        // await emailCredential.user?.linkWithCredential(credential);
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const Home()),
           (route) => false,
         );
       } else {
-        // User doesn't exist, go to Signup
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => SignUp(phone: phone)),
         );
       }
     } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Error checking user: $e",
-        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 5, // For web/iOS
-        backgroundColor: Colors.black87,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
+      _showToast("Error checking user: $e");
     }
   }
 
-  // Verify OTP
-  void verifyOTP() async {
-    String smsCode = otpController.text.trim();
-
-    if (smsCode.isEmpty) return;
+  Future<void> _verifyOTP() async {
+    final smsCode = otpController.text.trim();
+    if (smsCode.isEmpty) {
+      _showToast("Please enter the OTP.");
+      return;
+    }
 
     setState(() => isLoading = true);
 
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId, // Use the local variable here
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
         smsCode: smsCode,
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      await postLoginRoute(widget.phone);
-      // Proceed with user login logic
+
+      await _postLoginRoute(widget.phone, credential);
     } on FirebaseAuthException catch (e) {
-      Fluttertoast.showToast(
-        msg: "Invalid OTP: ${e.message}",
-        toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 5, // For web/iOS
-        backgroundColor: Colors.black87,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
+      _showToast("Invalid OTP: ${e.message}");
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  void resendOTP() async {
+  Future<void> _resendOTP() async {
+    if (secondsRemaining > 0) return;
+
     setState(() {
       secondsRemaining = 60;
-      startTimer();
+      _startTimer();
     });
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: "+91${widget.phone}",
-      forceResendingToken: _resendToken, // Use the local variable here
-      verificationCompleted: (_) {},
-      verificationFailed: (e) {
-        Fluttertoast.showToast(
-          msg: "Error: ${e.message}",
-          toastLength: Toast.LENGTH_LONG, // Or Toast.LENGTH_SHORT
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 5, // For web/iOS
-          backgroundColor: Colors.black87,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-      },
-      codeSent: (verificationId, resendToken) {
-        setState(() {
-          _verificationId = verificationId; // Update the local variable
-          _resendToken = resendToken; // Update the local variable
-        });
-      },
-      codeAutoRetrievalTimeout: (_) {},
-      timeout: const Duration(seconds: 60),
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: "+91${widget.phone}",
+        forceResendingToken: _resendToken,
+        verificationCompleted: (_) {},
+        verificationFailed: (e) =>
+            _showToast("Verification failed: ${e.message}"),
+        codeSent: (verificationId, resendToken) {
+          setState(() {
+            _verificationId = verificationId;
+            _resendToken = resendToken;
+          });
+          _showToast("OTP resent successfully.");
+        },
+        codeAutoRetrievalTimeout: (_) {},
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      _showToast("Error resending OTP: $e");
+    }
+  }
+
+  void _showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+      fontSize: 16.0,
     );
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    otpController.dispose();
     super.dispose();
   }
 
@@ -276,7 +226,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
-                      onPressed: verifyOTP,
+                      onPressed: _verifyOTP,
                       child: const Text("Verify"),
                     ),
               const SizedBox(height: 10),
@@ -287,7 +237,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               ),
               if (secondsRemaining == 0)
                 TextButton(
-                  onPressed: resendOTP,
+                  onPressed: _resendOTP,
                   child: const Text("Resend OTP"),
                 ),
             ],

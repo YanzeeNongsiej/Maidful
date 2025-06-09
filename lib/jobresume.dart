@@ -41,8 +41,8 @@ class _JobResumeState extends State<JobResume>
   List<String> timeEntries = [];
 
   final ratecontroller = TextEditingController();
-  static const IconData rupeeSymbol =
-      IconData(0x20B9, fontFamily: 'MaterialIcons');
+  // static const IconData rupeeSymbol =
+  //     IconData(0x20B9, fontFamily: 'MaterialIcons');
   bool dayValid = false,
       timeFromValid = false,
       timeToValid = false,
@@ -1056,7 +1056,8 @@ class _JobResumeState extends State<JobResume>
                                               keyboardType:
                                                   TextInputType.number,
                                               decoration: InputDecoration(
-                                                icon: Icon(rupeeSymbol),
+                                                icon:
+                                                    Icon(Icons.currency_rupee),
                                                 border: OutlineInputBorder(),
                                                 contentPadding:
                                                     EdgeInsets.symmetric(

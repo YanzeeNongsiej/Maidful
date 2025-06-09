@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import "package:googleapis_auth/auth_io.dart";
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:ibitf_app/singleton.dart';
+import 'package:ibitf_app/upipayment.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -294,7 +295,9 @@ Future<void> submitRating(
           backgroundColor: Colors.green,
         ),
       );
-
+      if (GlobalVariables.instance.userrole == 2) {
+        showPaymentModePrompt(context);
+      }
       print("Rating submitted: $rating by $raterUserId for $ratedUserId");
     } else {
       print("User not found with userid: $ratedUserId");
@@ -318,4 +321,44 @@ Future<void> submitRating(
       ),
     );
   }
+}
+
+void showPaymentModePrompt(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Choose Payment Method",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.money, color: Colors.green),
+              title: Text("Cash"),
+              onTap: () {
+                Navigator.pop(context); // close bottom sheet
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.account_balance_wallet, color: Colors.blue),
+              title: Text("UPI (BHIM / GPay)"),
+              onTap: () {
+                Navigator.pop(context); // close bottom sheet
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UpiPaymentPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

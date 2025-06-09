@@ -97,7 +97,7 @@ Do you want to take the assessment now? </string>
 <string name="perhour">per hour</string>
 <string name="permonth">per month</string>
 <string name="hiringdet">Hiring Details</string>
-<string name="onetime">One Time</string>
+<string name="onetime">One-Time</string>
 <string name="translated">Translated Message</string>
 <string name="grievsucc">Grievance submitted successfully!</string>
 <string name="grieverror">Error submitting grievance. Please try again.</string>
@@ -124,5 +124,24 @@ Do you want to take the assessment now? </string>
 <string name="employedby">Employed By </string>
 <string name="start">Start</string>
 <string name="end">End</string>
-<string name=""></string>
+<string name="availjob">Available Jobs</string>
+<string name="availmaid">Available Maids</string>
+<string name="postedon">Posted on: </string>
+<string name="remark">Remarks: </string>
+<string name="starton">Started On:</string>
+<string name="completeon">Completed On:</string>
+<string name="selserv">Select a service</string>
+<string name="chooseview">Choose how you want to view the pricing</string>
+<string name="thischart">This chart shows real prices offered by maids for</string>
+<string name="charged">charged</string>
+<string name="eachbar">Each bar represents a maid's rate. This helps you understand what others are charging and what a fair price might be.</string>
+<string name="pricedist">Price Distribution</string>
+<string name="maiden2">Maid(s)</string>
+<string name="transpricing">Transparent Pricing</string>
+<string name="ackagreed">Acknowledgement Agreed</string>
+<string name="ackreject">Acknowledgement Rejected</string>
+<string name="acksent">Acknowledgement Request Sent</string>
+<string name="ackreceived">Acknowledgement Request Received</string>
+<string name="servactive">Service is Active</string>
+<string name='completeserv'>Complete Service</string>
 </strings>

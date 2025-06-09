@@ -48,6 +48,12 @@
 @import flutter_image_compress_common;
 #endif
 
+#if __has_include(<flutter_upi_india/UpiPayPlugin.h>)
+#import <flutter_upi_india/UpiPayPlugin.h>
+#else
+@import flutter_upi_india;
+#endif
+
 #if __has_include(<fluttertoast/FluttertoastPlugin.h>)
 #import <fluttertoast/FluttertoastPlugin.h>
 #else
@@ -84,12 +90,6 @@
 @import shared_preferences_foundation;
 #endif
 
-#if __has_include(<sms_autofill/SmsAutoFillPlugin.h>)
-#import <sms_autofill/SmsAutoFillPlugin.h>
-#else
-@import sms_autofill;
-#endif
-
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
@@ -100,13 +100,13 @@
   [FLTFirebaseMessagingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseMessagingPlugin"]];
   [FLTFirebaseStoragePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseStoragePlugin"]];
   [ImageCompressPlugin registerWithRegistrar:[registry registrarForPlugin:@"ImageCompressPlugin"]];
+  [UpiPayPlugin registerWithRegistrar:[registry registrarForPlugin:@"UpiPayPlugin"]];
   [FluttertoastPlugin registerWithRegistrar:[registry registrarForPlugin:@"FluttertoastPlugin"]];
   [FLTGoogleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleSignInPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];
   [PermissionHandlerPlugin registerWithRegistrar:[registry registrarForPlugin:@"PermissionHandlerPlugin"]];
   [SharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"SharedPreferencesPlugin"]];
-  [SmsAutoFillPlugin registerWithRegistrar:[registry registrarForPlugin:@"SmsAutoFillPlugin"]];
 }
 
 @end

@@ -56,6 +56,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin flutter_plugin_android_lifecycle, io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new com.trident.flutter_upi_india.UpiPayPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin flutter_upi_india, com.trident.flutter_upi_india.UpiPayPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new io.github.ponnamkarthik.toast.fluttertoast.FlutterToastPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin fluttertoast, io.github.ponnamkarthik.toast.fluttertoast.FlutterToastPlugin", e);
@@ -86,9 +91,9 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin shared_preferences_android, io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin", e);
     }
     try {
-      flutterEngine.getPlugins().add(new com.jaumard.smsautofill.SmsAutoFillPlugin());
+      flutterEngine.getPlugins().add(new com.az.upi_india.UpiIndiaPlugin());
     } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin sms_autofill, com.jaumard.smsautofill.SmsAutoFillPlugin", e);
+      Log.e(TAG, "Error registering plugin upi_india, com.az.upi_india.UpiIndiaPlugin", e);
     }
   }
 }

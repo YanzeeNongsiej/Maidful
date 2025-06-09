@@ -74,7 +74,7 @@ class _MyTerms extends State<Terms> {
           'Terms and Conditions',
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.1,
           ),

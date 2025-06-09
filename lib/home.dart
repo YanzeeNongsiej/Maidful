@@ -149,8 +149,8 @@ class _HomePageState extends State<Home>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final item = snapshot.data!;
-              if (item == 'admin') {
-                return const AdminHome();
+              if (item == '100') {
+                return const AdminPage();
               } else if (item == "2") {
                 GlobalVariables.instance.urole = 2;
                 return EmployerHome(

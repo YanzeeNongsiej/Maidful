@@ -16,7 +16,7 @@ class ChatController extends ChangeNotifier {
       readMsg) async {
     //get current user info
     final String currentUserID = user!.uid;
-    final String currentUserEmail = user!.email as String;
+    final String currentUserPhone = user!.phoneNumber as String;
     final timestamp = FieldValue.serverTimestamp();
 
     //create new message
@@ -25,7 +25,7 @@ class ChatController extends ChangeNotifier {
     if (ackid == "") {
       chat = Chat(
           senderID: currentUserID,
-          senderEmail: currentUserEmail,
+          senderPhone: currentUserPhone,
           message: message,
           receiverID: receiverID,
           timestamp: timestamp,
@@ -36,7 +36,7 @@ class ChatController extends ChangeNotifier {
     } else {
       chat = Chat(
           senderID: currentUserID,
-          senderEmail: currentUserEmail,
+          senderPhone: currentUserPhone,
           message: message,
           receiverID: receiverID,
           timestamp: timestamp,

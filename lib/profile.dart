@@ -698,7 +698,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Column(
               children: [
                 buildTextInfo(
-                    "Posted on",
+                    GlobalVariables.instance.xmlHandler.getString('postedon'),
                     DateFormat('dd MMM yyyy')
                         .format((item.get("timestamp") as Timestamp).toDate())),
                 buildScheduleSection(
@@ -723,9 +723,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     item.get("days")),
                 buildTextInfo(
                     GlobalVariables.instance.xmlHandler.getString('nego'),
-                    item.get("negotiable")),
+                    GlobalVariables.instance.xmlHandler.getString(
+                        item.get("negotiable").toString().toLowerCase())),
                 buildLongText(
-                    GlobalVariables.instance.xmlHandler.getString('rating1'),
+                    GlobalVariables.instance.xmlHandler.getString('remarks'),
                     item.get("remarks")),
                 SizedBox(
                   height: 10,
@@ -1759,7 +1760,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                       _languageController,
                                                   decoration: InputDecoration(
                                                     labelText:
-                                                        'Add a new language',
+                                                        'Add language/kyntien',
                                                     border:
                                                         OutlineInputBorder(),
                                                   ),

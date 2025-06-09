@@ -10,7 +10,13 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:intl/intl.dart';
 
 Widget buildScheduleSection(String title, List<dynamic> schedule) {
-  List<String> scheduleTypes = ["Live-in", "Daily", "Hourly", "One-Time"];
+  List<String> scheduleTypes = [
+    GlobalVariables.instance.xmlHandler.getString('Live-in'),
+    GlobalVariables.instance.xmlHandler.getString('Daily'),
+    GlobalVariables.instance.xmlHandler.getString('Hourly'),
+    GlobalVariables.instance.xmlHandler.getString('onetime')
+  ];
+  //List<String> scheduleTypes = ["Live-in", "Daily", "Hourly", "One-Time"];
   List<String> activeSchedules = [];
 
   for (int i = 0; i < schedule.length; i++) {
@@ -336,7 +342,7 @@ Widget buildActiveServiceList(item, what, context, userID) {
           Column(
             children: [
               buildTextInfo(
-                "Started on",
+                GlobalVariables.instance.xmlHandler.getString('starton'),
                 item.data().containsKey("period") &&
                         item["period"].containsKey("start")
                     ? DateFormat('dd MMM yyyy').format(
@@ -345,7 +351,7 @@ Widget buildActiveServiceList(item, what, context, userID) {
                     : "Not available",
               ),
               buildTextInfo(
-                "Completed on",
+                GlobalVariables.instance.xmlHandler.getString('completeon'),
                 item.data().containsKey("period") &&
                         item["period"].containsKey("end")
                     ? DateFormat('dd MMM yyyy').format(
@@ -355,11 +361,17 @@ Widget buildActiveServiceList(item, what, context, userID) {
               ),
             ],
           ),
-        buildScheduleSection("Schedule", item.get("schedule")),
-        buildSection("Services", item.get("services")),
-        buildSection("Timing", item.get("timing")),
-        buildSection("Days Available", item.get("days")),
-        buildLongText("Remarks", item.get("remarks")),
+        buildScheduleSection(
+            GlobalVariables.instance.xmlHandler.getString('sched'),
+            item.get("schedule")),
+        buildSection(GlobalVariables.instance.xmlHandler.getString('serv'),
+            item.get("services")),
+        buildSection(GlobalVariables.instance.xmlHandler.getString('timing'),
+            item.get("timing")),
+        buildSection(GlobalVariables.instance.xmlHandler.getString('day'),
+            item.get("days")),
+        buildLongText(GlobalVariables.instance.xmlHandler.getString('remark'),
+            item.get("remarks")),
         if (GlobalVariables.instance.userrole == 2 &&
             [2, 6].contains(item.get('status')))
           Row(
@@ -409,14 +421,30 @@ void completeService(BuildContext context, item) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close the first dialog
-            },
-            child: Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
               Navigator.of(context).pop();
-
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text('Completion request sent successfully!',
+                          style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                  backgroundColor: Colors.indigo,
+                  behavior: SnackBarBehavior
+                      .floating, // Floating snackbar for modern look
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  elevation: 6,
+                  duration: const Duration(
+                      seconds: 3), // How long to display the Snackbar
+                ),
+              );
               showCompleteDoneDialog(context, item); // Show the rating dialog
               // Navigator.push(
               //   context,
@@ -424,7 +452,13 @@ void completeService(BuildContext context, item) {
               //       builder: (context) => CompletionRequestWidget()),
               // );
             },
-            child: Text("Yes"),
+            child: Text(GlobalVariables.instance.xmlHandler.getString('yes')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the first dialog
+            },
+            child: Text(GlobalVariables.instance.xmlHandler.getString('no')),
           ),
         ],
       );

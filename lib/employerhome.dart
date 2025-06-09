@@ -13,6 +13,7 @@ import 'package:ibitf_app/singleton.dart';
 import 'package:ibitf_app/terms.dart';
 import 'package:ibitf_app/contact.dart';
 import 'package:ibitf_app/profile.dart';
+import 'package:ibitf_app/pricing.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -130,9 +131,9 @@ class _EmployerHomePageState extends State<EmployerHome>
               MaterialPageRoute(builder: (context) => const LogIn()));
         }
         break;
-      case 'Settings':
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => Terms()));
+      case 'Pricing':
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => ServicePricingInsights()));
         break;
       case 'Contact Us':
         Navigator.of(context)

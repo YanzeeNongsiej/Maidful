@@ -64,9 +64,12 @@ dependencies:
   path_provider: ^2.1.5
   lottie: ^3.2.0
   firebase_app_check: ^0.3.2+5
+  flutter_animate: ^4.1.1
   permission_handler: ^11.0.1
-  sms_autofill: ^2.3.0
   glassmorphism: ^3.0.0
+  fl_chart: ^0.63.0
+  flutter_upi_india: ^0.0.6
+  upi_india: ^3.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -19,6 +19,7 @@ import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
+import 'package:ibitf_app/upipayment.dart';
 
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -175,6 +176,46 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
+  void showPaymentModePrompt(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Choose Payment Method",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 16),
+              ListTile(
+                leading: Icon(Icons.money, color: Colors.green),
+                title: Text("Cash"),
+                onTap: () {
+                  Navigator.pop(context); // close bottom sheet
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.account_balance_wallet, color: Colors.blue),
+                title: Text("UPI (BHIM / GPay)"),
+                onTap: () {
+                  Navigator.pop(context); // close bottom sheet
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UpiPaymentPage()),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.data['ackID'] != "") {
@@ -308,7 +349,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                           child: Chip(
                             label: Text(
                                 GlobalVariables.instance.xmlHandler
-                                    .getString('view'),
+                                    .getString('gotoserv'),
                                 style: TextStyle(color: Colors.white)),
                             backgroundColor: Colors.blue,
                           ),
@@ -328,6 +369,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
                               String name2 =
                                   await getNameFromId(ds.get('receiverid'));
+                              // showPaymentModePrompt(context);
                               designOfRating(
                                   ds.get('userid'), ds.get('receiverid'));
 
@@ -394,19 +436,25 @@ class _ChatBubbleState extends State<ChatBubble> {
             String displayText = '';
             if (widget.isCurrentUser) {
               if (isAgreed) {
-                displayText = "Acknowledgement Agreed";
+                displayText =
+                    GlobalVariables.instance.xmlHandler.getString('ackagreed');
               } else if (isRejected) {
-                displayText = "Acknowledgement Rejected";
+                displayText =
+                    GlobalVariables.instance.xmlHandler.getString('ackreject');
               } else if (ds.get('status') == 1) {
-                displayText = "Acknowledgement Request Sent";
+                displayText =
+                    GlobalVariables.instance.xmlHandler.getString('acksent');
               } else {}
             } else {
               if (isAgreed) {
-                displayText = "Acknowledgement Agreed";
+                displayText =
+                    GlobalVariables.instance.xmlHandler.getString('ackagreed');
               } else if (isRejected) {
-                displayText = "Acknowledgement Rejected";
+                displayText =
+                    GlobalVariables.instance.xmlHandler.getString('ackreject');
               } else if (ds.get('status') == 1) {
-                displayText = "Acknowledgement Request Received";
+                displayText = GlobalVariables.instance.xmlHandler
+                    .getString('ackreceived');
               } else {}
             }
             return Container(
@@ -458,8 +506,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Service is active",
+                        Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('servactive'),
                           style: TextStyle(fontStyle: FontStyle.italic),
                         ),
                         ElevatedButton(
@@ -483,6 +532,26 @@ class _ChatBubbleState extends State<ChatBubble> {
                           child: Text(GlobalVariables.instance.xmlHandler
                               .getString('gotoserv')),
                         ),
+                        if (GlobalVariables.instance.userrole == 2)
+                          GestureDetector(
+                            onTap: () {
+                              completeService(context, ds);
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.done_outline_rounded,
+                                  color: Colors.white,
+                                ),
+                                Text(
+                                  GlobalVariables.instance.xmlHandler
+                                      .getString('completeserv'),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
 
@@ -494,7 +563,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                         GestureDetector(
                           onTap: () => getAckDetail(ds),
                           child: Chip(
-                            label: const Text("View",
+                            label: Text(
+                                GlobalVariables.instance.xmlHandler
+                                    .getString('gotoserv'),
                                 style: TextStyle(color: Colors.white)),
                             backgroundColor: Colors.blue,
                           ),
@@ -534,7 +605,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                             child: Chip(
                               label: Text(
                                   GlobalVariables.instance.xmlHandler
-                                      .getString('gotoserv'),
+                                      .getString('reject'),
                                   style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.red,
                             ),
@@ -601,14 +672,25 @@ class _ChatBubbleState extends State<ChatBubble> {
       builder: (context) {
         return AlertDialog(
             scrollable: true,
-            title: Text("Service Details"),
+            title: Text(
+                GlobalVariables.instance.xmlHandler.getString('servdetails')),
             content: Column(
               children: [
-                buildScheduleSection("Schedule", ds.get("schedule")),
-                buildSection("Services", ds.get("services")),
-                buildSection("Timing", ds.get("timing")),
-                buildSection("Days Available", ds.get("days")),
-                buildLongText("Remarks", ds.get("remarks")),
+                buildScheduleSection(
+                    GlobalVariables.instance.xmlHandler.getString('sched'),
+                    ds.get("schedule")),
+                buildSection(
+                    GlobalVariables.instance.xmlHandler.getString('serv'),
+                    ds.get("services")),
+                buildSection(
+                    GlobalVariables.instance.xmlHandler.getString('timing'),
+                    ds.get("timing")),
+                buildSection(
+                    GlobalVariables.instance.xmlHandler.getString('day'),
+                    ds.get("days")),
+                buildLongText(
+                    GlobalVariables.instance.xmlHandler.getString('remark'),
+                    ds.get("remarks")),
                 SizedBox(
                   height: 10,
                 )
