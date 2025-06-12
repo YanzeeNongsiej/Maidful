@@ -2,13 +2,8 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ibitf_app/DAO/usersDao.dart';
 import 'package:ibitf_app/OTPScreen.dart';
 
-import 'package:ibitf_app/forgot_password.dart';
-import 'package:ibitf_app/home.dart';
-import 'package:ibitf_app/service/auth.dart';
-import 'package:ibitf_app/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ibitf_app/singleton.dart';

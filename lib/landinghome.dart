@@ -1072,7 +1072,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

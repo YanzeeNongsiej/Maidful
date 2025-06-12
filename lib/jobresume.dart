@@ -21,7 +21,7 @@ import 'package:path_provider/path_provider.dart';
 class JobResume extends StatefulWidget {
   final int kind;
   final String? receiverID;
-  JobResume(this.kind, {this.receiverID, Key? key}) : super(key: key);
+  const JobResume(this.kind, {this.receiverID, super.key});
 
   @override
   _JobResumeState createState() => _JobResumeState();
@@ -624,7 +624,7 @@ class _JobResumeState extends State<JobResume>
 
   Future<void> pickImages() async {
     final ImagePicker picker = ImagePicker();
-    final List<XFile>? pickedFiles = await picker.pickMultiImage();
+    final List<XFile> pickedFiles = await picker.pickMultiImage();
 
     if (pickedFiles != null) {
       for (XFile file in pickedFiles) {
@@ -1150,7 +1150,7 @@ class _JobResumeState extends State<JobResume>
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
                           ],
                         );
                       },

@@ -144,4 +144,5 @@ Do you want to take the assessment now? </string>
 <string name="ackreceived">Acknowledgement Request Received</string>
 <string name="servactive">Service is Active</string>
 <string name='completeserv'>Complete Service</string>
+<string name='servcomplete'>Service is completed</string>
 </strings>

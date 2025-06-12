@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Chat {
   final String senderID;
   final String senderPhone;

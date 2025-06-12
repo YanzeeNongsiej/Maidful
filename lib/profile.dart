@@ -664,11 +664,11 @@ class _ProfilePageState extends State<ProfilePage> {
   // }
 
   Widget _buildServiceList(item) {
-    bool _isAnimating = false;
+    bool isAnimating = false;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is ScrollEndNotification && !_isAnimating) {
-          _isAnimating = true;
+        if (notification is ScrollEndNotification && !isAnimating) {
+          isAnimating = true;
           if (_innerScrollController.offset >=
               _innerScrollController.position.maxScrollExtent) {
             _outerScrollController
@@ -677,7 +677,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   duration: Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
                 )
-                .then((_) => _isAnimating = false);
+                .then((_) => isAnimating = false);
           } else if (_innerScrollController.offset <=
               _innerScrollController.position.minScrollExtent) {
             _outerScrollController
@@ -686,7 +686,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   duration: Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
                 )
-                .then((_) => _isAnimating = false);
+                .then((_) => isAnimating = false);
           }
         }
         return false;
@@ -2309,8 +2309,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 unselectedLabelColor: Colors
                                     .white, // White text for unselected tabs
                                 indicatorSize: TabBarIndicatorSize.tab,
-                                overlayColor: MaterialStateProperty.all(
-                                    Colors.transparent),
+                                overlayColor:
+                                    WidgetStateProperty.all(Colors.transparent),
                                 tabs: [
                                   GlobalVariables.instance.userrole == 1
                                       ? _tabItem(GlobalVariables

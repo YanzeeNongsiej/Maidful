@@ -5,7 +5,8 @@ class ModernAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String? profileImageUrl;
   final Function(String) handleClick;
 
-  ModernAppBar({
+  const ModernAppBar({
+    super.key,
     required this.profileImageUrl,
     required this.handleClick,
   });
@@ -18,8 +19,8 @@ class ModernAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _ModernAppBarState extends State<ModernAppBar> {
-  List<bool> _languageSelection = [true, false]; // Default: English
-  List<bool> _roleSelection = [true, false]; // Default: Maid
+  final List<bool> _languageSelection = [true, false]; // Default: English
+  final List<bool> _roleSelection = [true, false]; // Default: Maid
 
   @override
   Widget build(BuildContext context) {

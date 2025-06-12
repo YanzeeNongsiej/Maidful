@@ -70,6 +70,7 @@ dependencies:
   fl_chart: ^0.63.0
   flutter_upi_india: ^0.0.6
   upi_india: ^3.0.1
+  mobile_scanner: ^3.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

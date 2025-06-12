@@ -315,7 +315,7 @@ class FAB extends StatefulWidget {
 }
 
 class _FABState extends State<FAB> {
-  bool _isServicePresent = false;
+  final bool _isServicePresent = false;
   bool showOptions = false;
   void toggleOptions() {
     setState(() {

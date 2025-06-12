@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:upi_india/upi_india.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class UpiPaymentPage extends StatefulWidget {
+  const UpiPaymentPage({super.key});
+
   @override
   _UpiPaymentPageState createState() => _UpiPaymentPageState();
 }
@@ -11,7 +15,7 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
   final UpiIndia _upiIndia = UpiIndia();
   final TextEditingController _upiIdController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-
+  bool showScanner = false;
   String paymentStatus = '';
 
   @override
@@ -41,24 +45,47 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
 
     setState(() => paymentStatus = 'Processing...');
 
-    UpiResponse response = await _upiIndia.startTransaction(
-      app: app,
-      receiverUpiId: upiId,
-      receiverName: 'Service Provider',
-      transactionRefId: 'TID${DateTime.now().millisecondsSinceEpoch}',
-      transactionNote: 'Service Payment',
-      amount: amount,
-    );
+    try {
+      final UpiResponse response = await _upiIndia
+          .startTransaction(
+        app: app,
+        receiverUpiId: upiId,
+        receiverName: 'Service Provider',
+        transactionRefId: 'TID${DateTime.now().millisecondsSinceEpoch}',
+        transactionNote: 'Service Payment',
+        amount: amount,
+      )
+          .catchError((error) {
+        // Handle platform exceptions
+        if (error is PlatformException) {
+          return UpiResponse("status=failure&txnid=null&txnref=null");
+        }
+        return UpiResponse("status=failure&txnid=null&txnref=null");
+      });
 
-    setState(() {
-      paymentStatus = "Status: ${response.status ?? 'Unknown'}\n"
-          "TxnId: ${response.transactionId ?? 'N/A'}";
-    });
+      // Safely handle the response
+      final status = response.status?.toLowerCase() ?? "unknown";
+      final txnId = response.transactionId ?? "N/A";
 
-    // Optional: Navigate after success
-    if (response.status?.toLowerCase() == 'success') {
-      // TODO: Ask for rating or navigate
-      Navigator.pop(context);
+      setState(() {
+        paymentStatus = "Status: $status\nTxnId: $txnId";
+      });
+
+      if (status == 'success') {
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Transaction status: ${status.toUpperCase()}")),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        paymentStatus = "Payment cancelled or failed: ${e.toString()}";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Payment failed: ${e.toString()}")),
+      );
     }
   }
 
@@ -70,14 +97,58 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            TextField(
-              controller: _upiIdController,
-              decoration: InputDecoration(
-                labelText: 'Receiver UPI ID',
-                hintText: 'e.g. someone@okaxis',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Enter UPI ID or Scan QR",
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Switch(
+                  value: showScanner,
+                  onChanged: (val) {
+                    setState(() {
+                      showScanner = val;
+                    });
+                  },
+                )
+              ],
             ),
+            SizedBox(height: 12),
+            showScanner
+                ? Container(
+                    height: 250,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: MobileScanner(onDetect: (capture) {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      if (barcodes.isEmpty) return;
+
+                      final String? code = barcodes.first.rawValue;
+                      if (code != null && code.contains("upi://pay")) {
+                        Uri uri = Uri.parse(code);
+                        String? upiId = uri.queryParameters['pa'];
+                        if (upiId != null && upiId.isNotEmpty) {
+                          setState(() {
+                            _upiIdController.text = upiId;
+                            showScanner = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("UPI ID detected: $upiId")),
+                          );
+                        }
+                      }
+                    }),
+                  )
+                : TextField(
+                    controller: _upiIdController,
+                    decoration: InputDecoration(
+                      labelText: 'Receiver UPI ID',
+                      hintText: 'e.g. someone@okaxis',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
             SizedBox(height: 16),
             TextField(
               controller: _amountController,

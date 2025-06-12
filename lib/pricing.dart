@@ -6,6 +6,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:ibitf_app/singleton.dart';
 
 class ServicePricingInsights extends StatefulWidget {
+  const ServicePricingInsights({super.key});
+
   @override
   _ServicePricingInsightsState createState() => _ServicePricingInsightsState();
 }
@@ -286,8 +288,7 @@ class _ServicePricingInsightsState extends State<ServicePricingInsights> {
 class GlassmorphicContainer extends StatelessWidget {
   final Widget child;
 
-  const GlassmorphicContainer({Key? key, required this.child})
-      : super(key: key);
+  const GlassmorphicContainer({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CompletionRequestWidget extends StatefulWidget {
+  const CompletionRequestWidget({super.key});
+
   @override
   _CompletionRequestWidgetState createState() =>
       _CompletionRequestWidgetState();

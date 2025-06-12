@@ -79,7 +79,7 @@ class _ChatListPageState extends State<ChatListPage> {
                     if (msg == "@ck") {
                       lastMsg = "You:Acknowledgement Sent";
                     } else {
-                      lastMsg = "You:${msg}";
+                      lastMsg = "You:$msg";
                     }
                   } else {
                     if (msg == "@ck") {

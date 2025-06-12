@@ -143,5 +143,8 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="ackreject">La kyntait iaka Jingmynjur</string>
 <string name="acksent">La send iaka Jingmynjur</string>
 <string name="ackreceived">La ioh iaka Jingmynjur</string>
-<string name="servactive">Ka kam ka dang iaid</string>
+<string name="servactive">Ka Kam ka dang iaid</string>
+<string name='completeserv'>Pyndep iaka Kam</string>
+<string name='servcomplete'>Ka Kam lah Pyndep</string>
+<string name="compsent">La send iaka jingpyndep!</string>
 </strings>

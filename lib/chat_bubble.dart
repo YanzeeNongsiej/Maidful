@@ -19,7 +19,6 @@ import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/notifservice.dart';
 
 import 'package:ibitf_app/singleton.dart';
-import 'package:ibitf_app/upipayment.dart';
 
 class ChatBubble extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -176,46 +175,6 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
-  void showPaymentModePrompt(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Choose Payment Method",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 16),
-              ListTile(
-                leading: Icon(Icons.money, color: Colors.green),
-                title: Text("Cash"),
-                onTap: () {
-                  Navigator.pop(context); // close bottom sheet
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.account_balance_wallet, color: Colors.blue),
-                title: Text("UPI (BHIM / GPay)"),
-                onTap: () {
-                  Navigator.pop(context); // close bottom sheet
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => UpiPaymentPage()),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.data['ackID'] != "") {
@@ -312,8 +271,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Service is Completed",
+                        Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('servcomplete'),
                           style: TextStyle(fontStyle: FontStyle.italic),
                         ),
                         ElevatedButton(
@@ -487,6 +447,17 @@ class _ChatBubbleState extends State<ChatBubble> {
                             fontWeight: FontWeight.bold,
                             color: Colors.white),
                       ),
+                      Flexible(
+                        child: Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('servactive'),
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                          softWrap:
+                              true, // Allows text to wrap to multiple lines
+                          maxLines:
+                              2, // Limit to 2 lines to prevent excessive height
+                        ),
+                      ),
                       Icon(
                         isAgreed
                             ? Icons.check_circle
@@ -506,50 +477,66 @@ class _ChatBubbleState extends State<ChatBubble> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          GlobalVariables.instance.xmlHandler
-                              .getString('servactive'),
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text("Active Service"),
-                              content: buildActiveServiceList(
-                                  ds,
-                                  "Active",
-                                  context,
-                                  FirebaseAuth.instance.currentUser!.uid),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text("Close"),
-                                ),
-                              ],
+                        Flexible(
+                          fit: FlexFit
+                              .loose, // Allows button to shrink if needed
+                          child: ElevatedButton(
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Active Service"),
+                                content: buildActiveServiceList(
+                                    ds,
+                                    "Active",
+                                    context,
+                                    FirebaseAuth.instance.currentUser!.uid),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Close"),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            child: Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('gotoserv'),
+                              softWrap: true, // Allows text to wrap
+                              maxLines: 2, // Limit to 2 lines
                             ),
                           ),
-                          child: Text(GlobalVariables.instance.xmlHandler
-                              .getString('gotoserv')),
                         ),
+                        // const SizedBox(width: 8),
                         if (GlobalVariables.instance.userrole == 2)
-                          GestureDetector(
-                            onTap: () {
-                              completeService(context, ds);
-                            },
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.done_outline_rounded,
-                                  color: Colors.white,
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () => completeService(context, ds),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor,
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                Text(
-                                  GlobalVariables.instance.xmlHandler
-                                      .getString('completeserv'),
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 15),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(width: 15),
+                                    Icon(Icons.done_outline_rounded,
+                                        color: Colors.white),
+                                    SizedBox(width: 15),
+                                    Flexible(
+                                      child: Text(
+                                        GlobalVariables.instance.xmlHandler
+                                            .getString('completeserv'),
+                                        softWrap: true,
+                                        maxLines: 2,
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                       ],

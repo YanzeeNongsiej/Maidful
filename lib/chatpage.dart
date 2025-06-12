@@ -5,7 +5,6 @@ import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/jobresume.dart';
 import 'package:intl/intl.dart'; // For formatting timestamps
 import 'package:ibitf_app/controller/chat_controller.dart';
-import 'package:ibitf_app/hiremaid.dart';
 import 'package:ibitf_app/singleton.dart';
 
 class ChatPage extends StatefulWidget {
@@ -55,6 +54,18 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     return true;
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -156,13 +167,7 @@ class _ChatPageState extends State<ChatPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            print('heyyyyy');
-            _scrollController
-                .jumpTo(_scrollController.position.maxScrollExtent);
-          }
-        });
+
         List<Widget> messageWidgets = [];
         String? lastDisplayedDate;
 
@@ -199,17 +204,14 @@ class _ChatPageState extends State<ChatPage> {
           messageWidgets.add(_buildMessageItem(doc));
         }
 
+        // ✅ Add this AFTER building all messageWidgets:
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
         return ListView(
           controller: _scrollController,
           padding: const EdgeInsets.all(10),
           children: messageWidgets,
         );
-        // return ListView(
-        //   controller: _scrollController,
-        //   padding: const EdgeInsets.all(10),
-        //   children:
-        //       snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
-        // );
       },
     );
   }
@@ -281,6 +283,7 @@ class _ChatPageState extends State<ChatPage> {
       await chatcontroller.sendMessage(
           widget.receiverID, _messageController.text, "", false);
       _messageController.clear();
+      _scrollToBottom();
     }
   }
 }

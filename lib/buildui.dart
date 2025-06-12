@@ -421,14 +421,15 @@ void completeService(BuildContext context, item) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Row(
                     children: [
                       Icon(Icons.check_circle_outline, color: Colors.white),
                       SizedBox(width: 10),
-                      Text('Completion request sent successfully!',
+                      Text(
+                          GlobalVariables.instance.xmlHandler
+                              .getString('compsent'),
                           style: TextStyle(fontSize: 16)),
                     ],
                   ),
@@ -489,7 +490,7 @@ void showCompleteDoneDialog(context, item) async {
         builder: (context, setState) {
           return AlertDialog(
             title: Text(
-              "Completion Request Sent!",
+              "",
               style: TextStyle(
                 fontSize: 18, // Slightly larger font for prominence
                 fontWeight: FontWeight.bold, // Bold text for emphasis
@@ -507,6 +508,7 @@ void showCompleteDoneDialog(context, item) async {
             actions: <Widget>[
               TextButton(
                 onPressed: () {
+                  Navigator.of(context).pop();
                   Navigator.of(context).pop();
                   //status=3 means the completion request has been sent
 
