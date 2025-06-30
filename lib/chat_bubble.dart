@@ -332,7 +332,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               // showPaymentModePrompt(context);
                               designOfRating(
                                   ds.get('userid'), ds.get('receiverid'));
-
+                              notifyUser(ds.get('userid'), "Service Complete",
+                                  "Maid has agreed to complete the service");
                               notifyUser(
                                   ds.get('userid'),
                                   "Rate Your Experience",

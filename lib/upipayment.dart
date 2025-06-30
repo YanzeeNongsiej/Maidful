@@ -100,7 +100,7 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Enter UPI ID or Scan QR",
+                Text("Enter UPI ID or Scan QR Code",
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Switch(

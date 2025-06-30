@@ -145,4 +145,6 @@ Do you want to take the assessment now? </string>
 <string name="servactive">Service is Active</string>
 <string name='completeserv'>Complete Service</string>
 <string name='servcomplete'>Service is completed</string>
-</strings>
+<string name="compsent">Completion Request Sent!</string>
+<string name="servcomp">Total Services Completed:</string>
+</strings> 

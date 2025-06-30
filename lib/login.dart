@@ -16,6 +16,7 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
+  bool _isLoading = false;
   String email = "", password = "", phno = "";
   GlobalVariables gv = GlobalVariables();
   TextEditingController mailcontroller = TextEditingController();
@@ -335,11 +336,14 @@ class _LogInState extends State<LogIn> {
                       onTap: () {
                         if (_formkey.currentState!.validate()) {
                           setState(() {
+                            _isLoading = true;
                             phno = phnocontroller.text;
-                            // email = mailcontroller.text;
-                            // password = passwordcontroller.text;
                           });
-                          userLogin();
+                          userLogin().whenComplete(() {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          });
                         }
                       },
                       child: Container(
@@ -349,15 +353,24 @@ class _LogInState extends State<LogIn> {
                           color: Colors.blueAccent,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Center(
-                          child: Text(
-                            "Sign In",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  "Sign In",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ),
                     ),

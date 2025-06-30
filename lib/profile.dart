@@ -272,6 +272,7 @@ class _ProfilePageState extends State<ProfilePage> {
             doc[GlobalVariables.instance.selected]
           ]; // Get skill ID and English name
         }).toList();
+
         if (mounted) {
           setState(() {
             myskills = querySnapshot.docs.map((doc) => doc.id).toList();
@@ -1031,7 +1032,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Widget showAssess() {
+  Widget showAssess(String skillName) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -1051,7 +1052,7 @@ class _ProfilePageState extends State<ProfilePage> {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: Text(
-                      '${GlobalVariables.instance.xmlHandler.getString('assfor')} ${skillsWithNames.firstWhere((s) => s[0] == skill)[1]}'),
+                      '${GlobalVariables.instance.xmlHandler.getString('assfor')} $skillName}'),
                   content: Text(GlobalVariables.instance.xmlHandler
                       .getString('confirmassess')),
                   actions: [
@@ -1069,9 +1070,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         Navigator.of(context).pop();
                         Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => Assessment(
-                                skillsWithNames
-                                    .firstWhere((s) => s[0] == skill)[1],
+                            builder: (context) => Assessment(skillName,
                                 onComplete:
                                     updateParentState))); // Close the dialog
                       },
@@ -1120,7 +1119,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           SizedBox(height: 4),
           percentage == 0
-              ? showAssess()
+              ? showAssess(skillName)
               : Column(
                   children: [
                     AnimatedContainer(

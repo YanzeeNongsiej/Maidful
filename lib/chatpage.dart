@@ -161,13 +161,14 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageList() {
     String senderID = FirebaseAuth.instance.currentUser!.uid;
     return StreamBuilder(
+      
       stream: chatcontroller.getMessages(widget.receiverID, senderID),
       builder: (context, snapshot) {
         if (snapshot.hasError) return const Text("Error");
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
         List<Widget> messageWidgets = [];
         String? lastDisplayedDate;
 
@@ -204,14 +205,17 @@ class _ChatPageState extends State<ChatPage> {
           messageWidgets.add(_buildMessageItem(doc));
         }
 
-        // ✅ Add this AFTER building all messageWidgets:
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-
         return ListView(
           controller: _scrollController,
           padding: const EdgeInsets.all(10),
           children: messageWidgets,
         );
+        // return ListView(
+        //   controller: _scrollController,
+        //   padding: const EdgeInsets.all(10),
+        //   children:
+        //       snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+        // );
       },
     );
   }
