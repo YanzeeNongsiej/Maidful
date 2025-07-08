@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +12,7 @@ import 'package:ibitf_app/buildui.dart';
 import 'package:ibitf_app/singleton.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -536,6 +537,50 @@ class _NestedTabBarState extends State<NestedTabBar>
     });
   }
 
+  Future<bool> _checkDocumentVerification(String userId) async {
+    try {
+      DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
+          .collection('documents')
+          .doc(userId)
+          .get();
+      return docSnapshot.exists && docSnapshot.get('verified') == true;
+    } catch (e) {
+      print('Error checking document verification for $userId: $e');
+      return false; // Assume not verified on error
+    }
+  }
+
+// Add this function within the `_NestedTabBarState` class
+  void _showVerificationOverlay(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Row(
+            children: [
+              Icon(Icons.verified_user, color: Colors.blueAccent),
+              SizedBox(width: 10),
+              Text('Verification Details',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text(
+            'This person has been verified using a valid ID (e.g., EPIC, PAN, Aadhaar) and their documents have been reviewed.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('OK', style: TextStyle(color: Colors.blueAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget showSkills(thisid) {
     return FutureBuilder<void>(
       future: fetchSkills(thisid),
@@ -948,138 +993,6 @@ class _NestedTabBarState extends State<NestedTabBar>
     return res;
   }
 
-  Widget buildTextInfo(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.blueAccent.shade700),
-            ),
-            TextSpan(
-              text: value,
-              style: TextStyle(fontSize: 16, color: Colors.black87),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildServiceSection(String label, Map<String, dynamic> services) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.blueAccent.shade700),
-          ),
-          ...services.entries.map((entry) {
-            return Padding(
-              padding: const EdgeInsets.only(left: 8.0, top: 4.0),
-              child: Text(
-                '${(GlobalVariables.instance.xmlHandler.getString(entry.key) == '' ? entry.key : GlobalVariables.instance.xmlHandler.getString(entry.key))}: \$${entry.value}',
-                style: TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget buildSection(String label, List<dynamic> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.blueAccent.shade700),
-          ),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: items.map((item) {
-              return Chip(
-                label: Text(
-                  (GlobalVariables.instance.xmlHandler.getString(item) == ''
-                          ? item
-                          : GlobalVariables.instance.xmlHandler.getString(item))
-                      .capitalize(),
-                  style: TextStyle(fontSize: 14),
-                ),
-                backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                labelStyle: TextStyle(color: Colors.blueAccent.shade700),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildImageSection(List<dynamic> imageUrls, BuildContext context) {
-    if (imageUrls.isEmpty) return SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          GlobalVariables.instance.xmlHandler.getString('images'),
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.blueAccent.shade700),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 100, // Fixed height for image scroll view
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: imageUrls.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    imageUrls[index],
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 100,
-                        height: 100,
-                        color: Colors.grey[200],
-                        child: Icon(Icons.broken_image, color: Colors.grey),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
@@ -1167,136 +1080,628 @@ class _NestedTabBarState extends State<NestedTabBar>
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => Scaffold(
-                                    appBar: PreferredSize(
-                                      preferredSize: const Size.fromHeight(60),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Colors.teal,
-                                              Colors.blueAccent
+                                      appBar: PreferredSize(
+                                        preferredSize:
+                                            const Size.fromHeight(60),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Colors.teal,
+                                                Colors.blueAccent
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius:
+                                                const BorderRadius.only(
+                                              bottomLeft: Radius.circular(20),
+                                              bottomRight: Radius.circular(20),
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 4),
+                                              ),
                                             ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
                                           ),
-                                          borderRadius: const BorderRadius.only(
-                                            bottomLeft: Radius.circular(20),
-                                            bottomRight: Radius.circular(20),
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.2),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
+                                          child: AppBar(
+                                            backgroundColor: Colors.transparent,
+                                            elevation: 0,
+                                            title: const Text(
+                                              'Profile',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 1.2,
+                                              ),
                                             ),
-                                          ],
-                                        ),
-                                        child: AppBar(
-                                          backgroundColor: Colors.transparent,
-                                          elevation: 0,
-                                          title: const Text(
-                                            'Profile',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.2,
+                                            centerTitle: true,
+                                            leading: IconButton(
+                                              icon: const Icon(
+                                                  Icons
+                                                      .arrow_back_ios_new_rounded,
+                                                  color: Colors.white),
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
                                             ),
-                                          ),
-                                          centerTitle: true,
-                                          leading: IconButton(
-                                            icon: const Icon(
-                                                Icons
-                                                    .arrow_back_ios_new_rounded,
-                                                color: Colors.white),
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    body: SingleChildScrollView(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 30),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Hero(
-                                            tag:
-                                                'profile-${item.get('userid')}',
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.9),
-                                                    blurRadius: 15,
-                                                    spreadRadius: 0.1,
+                                      // This code snippet contains adjustments for the profile display within the getServiceDetail() method.
+// It is intended to be integrated into your existing landinghome.dart file.
+
+// Locate the `getServiceDetail` function in your landinghome.dart file.
+// Inside the `onTap` for the "Profile" button, replace the current `Scaffold` body
+// with the following updated code.
+
+// ... (existing code before Scaffold body)
+
+                                      body: Container(
+                                        // Added Container for background image
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image:
+                                                AssetImage("assets/bgmaid.png"),
+                                            fit: BoxFit.fill,
+                                            colorFilter: ColorFilter.mode(
+                                              Colors.black.withOpacity(
+                                                  0.3), // 50% transparency
+                                              BlendMode
+                                                  .dstATop, // Applies the color filter to the destination alpha
+                                            ),
+                                          ),
+                                        ),
+                                        child: SingleChildScrollView(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical:
+                                                  25), // Increased vertical padding
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              SizedBox(
+                                                height: 220,
+                                              ),
+                                              // Profile Picture and User Name Section
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment
+                                                    .center, // Center the row content
+                                                children: [
+                                                  GestureDetector(
+                                                    // Allows tapping for magnification
+                                                    onTap: () {
+                                                      // Show magnified image in a dialog
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return Dialog(
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            insetPadding:
+                                                                EdgeInsets.all(
+                                                                    10),
+                                                            child: Hero(
+                                                              tag:
+                                                                  'profile-${item.get('userid')}',
+                                                              child: Container(
+                                                                width: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width *
+                                                                    0.8, // Magnified size
+                                                                height: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width *
+                                                                    0.8,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                  image:
+                                                                      DecorationImage(
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    image: item.get('url') ==
+                                                                            null
+                                                                        ? const AssetImage("assets/profile.png")
+                                                                            as ImageProvider<
+                                                                                Object>
+                                                                        : NetworkImage(
+                                                                            item.get('url')),
+                                                                  ),
+                                                                  boxShadow: [
+                                                                    BoxShadow(
+                                                                      color: Colors
+                                                                          .black
+                                                                          .withOpacity(
+                                                                              0.5),
+                                                                      blurRadius:
+                                                                          25,
+                                                                      spreadRadius:
+                                                                          5,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    child: Hero(
+                                                      tag:
+                                                          'profile-${item.get('userid')}',
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Colors.grey
+                                                                  .withOpacity(
+                                                                      0.6), // Stronger shadow
+                                                              blurRadius:
+                                                                  20, // Increased blur
+                                                              spreadRadius:
+                                                                  2, // Slightly more spread
+                                                              offset: Offset(0,
+                                                                  8), // Offset for depth
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: CircleAvatar(
+                                                          radius:
+                                                              35, // Smaller radius for inline display
+                                                          backgroundColor:
+                                                              Colors.grey[100],
+                                                          foregroundImage: item
+                                                                      .get(
+                                                                          'url') ==
+                                                                  null
+                                                              ? const AssetImage(
+                                                                      "assets/profile.png")
+                                                                  as ImageProvider<
+                                                                      Object>
+                                                              : NetworkImage(
+                                                                  item.get(
+                                                                      'url')),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                      width:
+                                                          16), // Space between pic and name
+                                                  Expanded(
+                                                    // Allows name to take remaining horizontal space
+                                                    child: Column(
+                                                      // Wrap name and verified status in a Column
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          item.get('name'),
+                                                          style: TextStyle(
+                                                            fontSize:
+                                                                24, // Larger font size
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors
+                                                                .black87, // Darker blue for prominence
+                                                            letterSpacing:
+                                                                0.8, // Slight letter spacing
+                                                          ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis, // Handles long names gracefully
+                                                        ),
+                                                        // --- START: Verified Indicator for Full Profile ---
+                                                        FutureBuilder<bool>(
+                                                          future:
+                                                              _checkDocumentVerification(
+                                                                  item.get(
+                                                                      'userid')),
+                                                          builder: (context,
+                                                              verifiedSnapshot) {
+                                                            if (verifiedSnapshot
+                                                                    .connectionState ==
+                                                                ConnectionState
+                                                                    .waiting) {
+                                                              return SizedBox
+                                                                  .shrink(); // Or a small loading indicator
+                                                            }
+                                                            if (verifiedSnapshot
+                                                                    .hasData &&
+                                                                verifiedSnapshot
+                                                                        .data ==
+                                                                    true) {
+                                                              return GestureDetector(
+                                                                onTap: () =>
+                                                                    _showVerificationOverlay(
+                                                                        context),
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          top:
+                                                                              2.0),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Icon(
+                                                                          Icons
+                                                                              .verified,
+                                                                          color: Colors
+                                                                              .blue,
+                                                                          size:
+                                                                              18),
+                                                                      SizedBox(
+                                                                          width:
+                                                                              6),
+                                                                      Text(
+                                                                        'Verified',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontStyle:
+                                                                              FontStyle.italic,
+                                                                          color:
+                                                                              Colors.blue,
+                                                                          fontSize:
+                                                                              14,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                            return SizedBox
+                                                                .shrink(); // No verification status or not verified
+                                                          },
+                                                        ),
+                                                        // --- END: Verified Indicator for Full Profile ---
+                                                      ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-                                              child: CircleAvatar(
-                                                radius: 70,
-                                                backgroundColor:
-                                                    Colors.grey[200],
-                                                foregroundImage: item
-                                                            .get('url') ==
-                                                        null
-                                                    ? const AssetImage(
-                                                            "assets/profile.png")
-                                                        as ImageProvider<Object>
-                                                    : NetworkImage(
-                                                        item.get('url')),
+                                              const SizedBox(
+                                                  height:
+                                                      12), // Adjust spacing after the row
+
+                                              Divider(
+                                                height: 30,
+                                                thickness: 1.5,
+                                                indent: 20,
+                                                endIndent: 20,
+                                                color: Colors.blueAccent
+                                                    .withOpacity(0.3),
                                               ),
-                                            ),
+
+                                              // Contact Information Section
+                                              Card(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10),
+                                                elevation: 6,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                color: Colors
+                                                    .transparent, // Make card transparent for glassmorphism
+                                                child: ClipRRect(
+                                                  // Clip content to rounded corners
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  child: BackdropFilter(
+                                                    filter: ImageFilter.blur(
+                                                        sigmaX: 10,
+                                                        sigmaY:
+                                                            10), // Apply blur
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(
+                                                                0.15), // Translucent background
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(15),
+                                                        border: Border.all(
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                    0.2)), // Subtle border
+                                                      ),
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              GlobalVariables
+                                                                      .instance
+                                                                      .xmlHandler
+                                                                      .getString(
+                                                                          'contact_info') ??
+                                                                  'Contact Information', // Assuming you have this string in XML
+                                                              style: TextStyle(
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .blueAccent
+                                                                    .shade700,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                                height: 10),
+                                                            _buildIconText(
+                                                                Icons
+                                                                    .house_outlined,
+                                                                item.get(
+                                                                    'address')),
+                                                            _buildIconText(
+                                                              Icons
+                                                                  .person_outline, // Changed icon for gender
+                                                              item.get('gender') ==
+                                                                      1
+                                                                  ? 'Female'
+                                                                  : 'Male',
+                                                            ),
+                                                            _buildIconText(
+                                                                Icons
+                                                                    .calendar_today_outlined, // Changed icon for DOB
+                                                                item.get(
+                                                                    'dob')),
+                                                            _buildIconText(
+                                                              Icons
+                                                                  .language_outlined, // Changed icon for language
+                                                              item
+                                                                  .get(
+                                                                      'language')
+                                                                  .toString()
+                                                                  .replaceAll(
+                                                                      '[', '')
+                                                                  .replaceAll(
+                                                                      ']', ''),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Average Rating Section
+                                              if (item
+                                                      .data()
+                                                      .containsKey('rating') &&
+                                                  item.get('rating') is Map)
+                                                Card(
+                                                  margin: const EdgeInsets
+                                                      .symmetric(vertical: 10),
+                                                  elevation: 6,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                  ),
+                                                  color: Colors
+                                                      .transparent, // Make card transparent for glassmorphism
+                                                  child: ClipRRect(
+                                                    // Clip content to rounded corners
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                    child: BackdropFilter(
+                                                      filter: ImageFilter.blur(
+                                                          sigmaX: 10,
+                                                          sigmaY:
+                                                              10), // Apply blur
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(
+                                                                  0.15), // Translucent background
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(15),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                      0.2)), // Subtle border
+                                                        ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16.0),
+                                                          child:
+                                                              _buildAverageRating(
+                                                                  item.get(
+                                                                      'rating')),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+
+                                              // Skills Section (for userrole == 2)
+                                              if (GlobalVariables
+                                                      .instance.userrole ==
+                                                  2)
+                                                Card(
+                                                  margin: const EdgeInsets
+                                                      .symmetric(vertical: 10),
+                                                  elevation: 6,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                  ),
+                                                  color: Colors
+                                                      .transparent, // Make card transparent for glassmorphism
+                                                  child: ClipRRect(
+                                                    // Clip content to rounded corners
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                    child: BackdropFilter(
+                                                      filter: ImageFilter.blur(
+                                                          sigmaX: 10,
+                                                          sigmaY:
+                                                              10), // Apply blur
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(
+                                                                  0.15), // Translucent background
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(15),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                      0.2)), // Subtle border
+                                                        ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16.0),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                GlobalVariables
+                                                                        .instance
+                                                                        .xmlHandler
+                                                                        .getString(
+                                                                            'skills') ??
+                                                                    'Skills',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 18,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .blueAccent
+                                                                      .shade700,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 10),
+                                                              showSkills(
+                                                                  item.get(
+                                                                      'userid')),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+
+                                              // Work History Section (for userrole == 2)
+                                              if (GlobalVariables
+                                                      .instance.userrole ==
+                                                  2)
+                                                Card(
+                                                  margin: const EdgeInsets
+                                                      .symmetric(vertical: 10),
+                                                  elevation: 6,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                  ),
+                                                  color: Colors
+                                                      .transparent, // Make card transparent for glassmorphism
+                                                  child: ClipRRect(
+                                                    // Clip content to rounded corners
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                    child: BackdropFilter(
+                                                      filter: ImageFilter.blur(
+                                                          sigmaX: 10,
+                                                          sigmaY:
+                                                              10), // Apply blur
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(
+                                                                  0.15), // Translucent background
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(15),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                      0.2)), // Subtle border
+                                                        ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16.0),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                GlobalVariables
+                                                                        .instance
+                                                                        .xmlHandler
+                                                                        .getString(
+                                                                            'workhist') ??
+                                                                    'Work History',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 18,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .blueAccent
+                                                                      .shade700,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 10),
+                                                              showWorkHistory(
+                                                                  item.get(
+                                                                      'userid')),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            item.get('name'),
-                                            style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.blueAccent.shade700,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          _buildIconText(Icons.house_outlined,
-                                              item.get('address')),
-                                          _buildIconText(
-                                            Icons.group_rounded,
-                                            item.get('gender') == 1
-                                                ? 'Female'
-                                                : 'Male',
-                                          ),
-                                          _buildIconText(Icons.date_range,
-                                              item.get('dob')),
-                                          _buildIconText(
-                                            Icons.abc,
-                                            item
-                                                .get('language')
-                                                .toString()
-                                                .replaceAll('[', '')
-                                                .replaceAll(']', ''),
-                                          ),
-                                          if (item
-                                                  .data()
-                                                  .containsKey('rating') &&
-                                              item.get('rating') is Map)
-                                            _buildAverageRating(
-                                                item.get('rating')),
-                                          if (GlobalVariables
-                                                  .instance.userrole ==
-                                              2)
-                                            showSkills(item.get('userid')),
-                                          if (GlobalVariables
-                                                  .instance.userrole ==
-                                              2)
-                                            showWorkHistory(item.get('userid')),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                        ),
+                                      )),
                                 ),
                               );
                             },
@@ -1586,6 +1991,73 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                             ),
                                                           ),
                                                         ),
+                                                        // --- START: Verified Indicator for User Cards ---
+                                                        FutureBuilder<bool>(
+                                                          future:
+                                                              _checkDocumentVerification(
+                                                                  item.get(
+                                                                      'userid')),
+                                                          builder: (context,
+                                                              verifiedSnapshot) {
+                                                            if (verifiedSnapshot
+                                                                    .connectionState ==
+                                                                ConnectionState
+                                                                    .waiting) {
+                                                              return SizedBox
+                                                                  .shrink(); // Or a small loading indicator
+                                                            }
+                                                            if (verifiedSnapshot
+                                                                    .hasData &&
+                                                                verifiedSnapshot
+                                                                        .data ==
+                                                                    true) {
+                                                              return GestureDetector(
+                                                                onTap: () =>
+                                                                    _showVerificationOverlay(
+                                                                        context),
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          top:
+                                                                              2.0),
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    children: [
+                                                                      Icon(
+                                                                          Icons
+                                                                              .verified,
+                                                                          color: Colors
+                                                                              .blue,
+                                                                          size:
+                                                                              16),
+                                                                      SizedBox(
+                                                                          width:
+                                                                              4),
+                                                                      Text(
+                                                                        'Verified',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontStyle:
+                                                                              FontStyle.italic,
+                                                                          color:
+                                                                              Colors.blue,
+                                                                          fontSize:
+                                                                              12,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                            return SizedBox
+                                                                .shrink(); // No verification status or not verified
+                                                          },
+                                                        ),
+                                                        // --- END: Verified Indicator for User Cards ---
                                                         Row(
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
@@ -1650,7 +2122,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                               1
                                                           ? servitem
                                                               .get("services")
-                                                              .take(2)
+                                                              .take(1)
                                                               .map<Widget>(
                                                                   (service) =>
                                                                       Padding(
@@ -1659,18 +2131,20 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                             vertical:
                                                                                 2),
                                                                         child:
+                                                                            Row(
+                                                                          children: [
                                                                             Text(
-                                                                          "• " +
-                                                                              (GlobalVariables.instance.xmlHandler.getString(service) == '' ? service : GlobalVariables.instance.xmlHandler.getString(service)),
-                                                                          style:
-                                                                              TextStyle(fontSize: 12),
+                                                                              "• " + (GlobalVariables.instance.xmlHandler.getString(service) == '' ? service : GlobalVariables.instance.xmlHandler.getString(service)),
+                                                                              style: TextStyle(fontSize: 12),
+                                                                            ),
+                                                                          ],
                                                                         ),
                                                                       ))
                                                               .toList()
                                                           : servitem
                                                               .get("services")
                                                               .keys
-                                                              .take(2)
+                                                              .take(1)
                                                               .map<Widget>(
                                                                   (service) =>
                                                                       Padding(
