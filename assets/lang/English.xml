@@ -147,4 +147,9 @@ Do you want to take the assessment now? </string>
 <string name='servcomplete'>Service is completed</string>
 <string name="compsent">Completion Request Sent!</string>
 <string name="servcomp">Total Services Completed:</string>
+<string name="upimg">Uploaded Images</string>
+<string name="welcdash">Welcome to your Dashboard!</string>
+<string name="dashdet">Here you can:\n• Browse and filter service providers\n• Chat with potential hires\n• Manage your profile\n• Post job requirements</string>
+<string name=""></string>
+<string name=""></string>
 </strings> 

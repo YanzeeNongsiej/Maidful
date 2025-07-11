@@ -457,9 +457,7 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        setState(() {
-          userDocId = snapshot.docs.first.id;
-        });
+        userDocId = snapshot.docs.first.id;
       }
     }
   }
@@ -641,7 +639,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
-                childAspectRatio: 2.5,
+                childAspectRatio: 2.0,
               ),
               itemCount: myskills.length,
               itemBuilder: (context, index) {
@@ -804,7 +802,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      _confirmDelete(context, item.id, 'jobprofile');
+                      _confirmDelete(
+                          context,
+                          item.id,
+                          GlobalVariables.instance.userrole == 1
+                              ? 'services'
+                              : 'jobprofile');
                     },
                     child: Card(
                       color: Colors.red[400],
@@ -955,7 +958,7 @@ class _ProfilePageState extends State<ProfilePage> {
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Expanded(
             child: Align(
@@ -975,7 +978,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     AnimatedContainer(
                       duration: Duration(seconds: 5),
                       width: double.infinity,
-                      height: 5,
+                      height: 4,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.teal,

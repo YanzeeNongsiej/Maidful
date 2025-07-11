@@ -58,7 +58,8 @@ class _LandingHomePageState extends State<LandingHomePage> {
 
   // Search related states
   SearchController _searchController = SearchController();
-  String searchText = "Search by Address...";
+  String searchText =
+      "${GlobalVariables.instance.xmlHandler.getString('sbyadd')}...";
   final NotificationService _notificationService = NotificationService();
   @override
   void initState() {
@@ -74,13 +75,13 @@ class _LandingHomePageState extends State<LandingHomePage> {
   }
 
   Future<void> _checkFirstTime() async {
-    // Check if user is new for onboarding
     final prefs = await SharedPreferences.getInstance();
-    final isFirstTime = prefs.getBool('first_time_landing') ??
-        true; // Use a different key for LandingHomePage
+    final isFirstTime = prefs.getBool('first_time_landing') ?? true;
     if (isFirstTime) {
       setState(() => _showOnboarding = true);
       await prefs.setBool('first_time_landing', false);
+    } else {
+      setState(() => _showOnboarding = false);
     }
   }
 
@@ -111,8 +112,8 @@ class _LandingHomePageState extends State<LandingHomePage> {
                 color: Colors.blue,
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Welcome to Your Dashboard!',
+              Text(
+                GlobalVariables.instance.xmlHandler.getString('welcdash'),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -120,8 +121,10 @@ class _LandingHomePageState extends State<LandingHomePage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Here you can:\n• Browse and filter service providers\n• Chat with potential hires\n• Manage your profile\n• Post job requirements', // This text should probably be adjusted based on the role using LandingHomePage
+              Text(
+                GlobalVariables.instance.xmlHandler.getString('dashdet').replaceAll(
+                    r'\n',
+                    '\n'), // This text should probably be adjusted based on the role using LandingHomePage
                 style: TextStyle(fontSize: 16),
                 textAlign: TextAlign.center,
               ),
@@ -160,22 +163,11 @@ class _LandingHomePageState extends State<LandingHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome back!',
+                      "${GlobalVariables.instance.xmlHandler.getString('welc')} !",
                       style: TextStyle(
                         fontSize: 18, // Slightly larger for impact
                         fontWeight: FontWeight.w800, // Make it bolder
                         color: Colors.white.withOpacity(0.9),
-                        letterSpacing:
-                            1, // Increase letter spacing for a modern, airy feel
-                        shadows: [
-                          // Add a subtle text shadow
-                          Shadow(
-                            offset: Offset(2.0, 2.0),
-                            blurRadius: 4.0,
-                            color: Colors.black.withOpacity(
-                                0.4), // Darker shadow for definition
-                          ),
-                        ],
                       ),
                     ),
                     Text(
@@ -1816,16 +1808,27 @@ class _NestedTabBarState extends State<NestedTabBar>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return AnimatedBuilder(
-        animation: GlobalVariables.instance,
-        builder: (context, child) {
-          return Column(
-            children: [
-              Container(
-                height: MediaQuery.of(context).size.height / 1.465,
+      animation: GlobalVariables.instance,
+      builder: (context, child) {
+        return LayoutBuilder(
+          // Use LayoutBuilder to get the available space for NestedTabBar
+          builder: (BuildContext context, BoxConstraints constraints) {
+            // Estimate the height of the header. You might need to adjust this value
+            // based on the actual height of your Padding and Text widgets.
+            final double headerApproxHeight = 80.0;
+
+            // Calculate the height the TabBarView can take, ensuring it's not negative.
+            // constraints.maxHeight gives the maximum height available to NestedTabBar from its parent.
+            final double availableHeightForTabBarView =
+                constraints.maxHeight - headerApproxHeight;
+
+            return SingleChildScrollView(
+              // Makes the entire content scrollable
+              child: Container(
+                // The gradient container, which now wraps all content and defines the scrollable area's background
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(10),
@@ -1845,8 +1848,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                   ],
                 ),
                 child: Column(
+                  // The Column holds both the header and the TabBarView
                   children: [
                     Padding(
+                      // Your header section
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: TweenAnimationBuilder(
                         tween: Tween<double>(begin: 0, end: 1),
@@ -1865,25 +1870,27 @@ class _NestedTabBarState extends State<NestedTabBar>
                               : GlobalVariables.instance.xmlHandler
                                   .getString('availmaid'),
                           style: TextStyle(
-                            fontSize: 20, // Slightly larger for impact
-                            fontWeight: FontWeight.w800, // Make it bolder
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
-                            letterSpacing:
-                                1.2, // Increase letter spacing for a modern, airy feel
+                            letterSpacing: 1.2,
                             shadows: [
-                              // Add a subtle text shadow
                               Shadow(
                                 offset: Offset(2.0, 2.0),
                                 blurRadius: 4.0,
-                                color: Colors.black.withOpacity(
-                                    0.4), // Darker shadow for definition
+                                color: Colors.black.withOpacity(0.4),
                               ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    Expanded(
+                    // Provide a fixed height to TabBarView when it's inside a SingleChildScrollView
+                    // This is crucial because TabBarView can't be Expanded in an unbounded Column.
+                    SizedBox(
+                      height: availableHeightForTabBarView > 0
+                          ? availableHeightForTabBarView
+                          : 0,
                       child: TabBarView(
                         controller: _nestedTabController,
                         children: <Widget>[
@@ -2004,7 +2011,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                                 ConnectionState
                                                                     .waiting) {
                                                               return SizedBox
-                                                                  .shrink(); // Or a small loading indicator
+                                                                  .shrink();
                                                             }
                                                             if (verifiedSnapshot
                                                                     .hasData &&
@@ -2054,7 +2061,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                               );
                                                             }
                                                             return SizedBox
-                                                                .shrink(); // No verification status or not verified
+                                                                .shrink();
                                                           },
                                                         ),
                                                         // --- END: Verified Indicator for User Cards ---
@@ -2222,8 +2229,10 @@ class _NestedTabBarState extends State<NestedTabBar>
                   ],
                 ),
               ),
-            ],
-          );
-        });
+            );
+          },
+        );
+      },
+    );
   }
 }

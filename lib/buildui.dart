@@ -593,7 +593,7 @@ Widget buildImageSection(List<dynamic> imageUrls, context) {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          "Uploaded Images",
+          GlobalVariables.instance.xmlHandler.getString('upimg'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
