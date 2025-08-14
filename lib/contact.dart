@@ -161,7 +161,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             ),
           ),
         ),
-        title: const Text("Help & Support"),
+        title: Text(GlobalVariables.instance.xmlHandler.getString('helpnsup')),
         centerTitle: true,
         elevation: 0,
       ),
@@ -180,8 +180,9 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Submit a Grievance",
+                    Text(
+                      GlobalVariables.instance.xmlHandler
+                          .getString('submitgri'),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -190,7 +191,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "If you have encountered any issues or need support, please describe your problem in detail. Our team will review and address your grievance promptly.",
+                      GlobalVariables.instance.xmlHandler.getString('ifu'),
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 20),
@@ -198,7 +199,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                       controller: _grievanceController,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        hintText: "Describe your issue here...",
+                        hintText: GlobalVariables.instance.xmlHandler
+                            .getString('descis'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -216,8 +218,9 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                       ),
                       child: _isSubmitting
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "Submit Grievance",
+                          : Text(
+                              GlobalVariables.instance.xmlHandler
+                                  .getString('subgri'),
                               style: TextStyle(color: Colors.indigo),
                             ),
                     ),
@@ -246,7 +249,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     ListTile(
                       leading:
                           const Icon(Icons.help_outline, color: Colors.indigo),
-                      title: const Text("FAQs"),
+                      title: Text(GlobalVariables.instance.xmlHandler
+                          .getString('faqs')),
                       onTap: () {
                         // Navigate to FAQs page
                         Navigator.of(context).push(MaterialPageRoute(
@@ -256,7 +260,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     ListTile(
                       leading:
                           const Icon(Icons.book_outlined, color: Colors.indigo),
-                      title: const Text("Terms & Conditions"),
+                      title: Text(GlobalVariables.instance.xmlHandler
+                          .getString('terms')),
                       onTap: () {
                         // Navigate to Terms & Conditions
                         Navigator.of(context).push(MaterialPageRoute(

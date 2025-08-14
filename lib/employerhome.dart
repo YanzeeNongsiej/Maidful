@@ -14,6 +14,8 @@ import 'package:ibitf_app/terms.dart';
 import 'package:ibitf_app/contact.dart';
 import 'package:ibitf_app/profile.dart';
 import 'package:ibitf_app/pricing.dart';
+import 'package:ibitf_app/razorpay_payment.dart';
+import 'package:ibitf_app/wallet.dart';
 
 class EmployerHome extends StatefulWidget {
   final String? uname;
@@ -138,6 +140,10 @@ class _EmployerHomePageState extends State<EmployerHome>
       case 'Contact Us':
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => HelpSupportPage()));
+        break;
+      case 'Wallet':
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => WalletPage()));
         break;
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class FAQsPage extends StatelessWidget {
   const FAQsPage({super.key});
@@ -17,8 +18,8 @@ class FAQsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Frequently Asked Questions",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('freq'),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -27,24 +28,24 @@ class FAQsPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             buildFAQItem(
-              "How do I submit a grievance?",
-              "You can submit a grievance by navigating to the Help & Support section and filling out the grievance form. Provide as many details as possible to help us address your issue quickly.",
+              GlobalVariables.instance.xmlHandler.getString('howgriev'),
+              GlobalVariables.instance.xmlHandler.getString('anshowgriev'),
             ),
             buildFAQItem(
-              "Who can use this app?",
-              "This app is designed for both homeowners and maids. Homeowners can find and hire maids, and maids can manage their job applications and profiles.",
+              GlobalVariables.instance.xmlHandler.getString('whocan'),
+              GlobalVariables.instance.xmlHandler.getString('answhocan'),
             ),
             buildFAQItem(
-              "How is my data protected?",
-              "We take your privacy seriously and implement industry-standard security measures to protect your information. Please review our Privacy Policy for more details.",
+              GlobalVariables.instance.xmlHandler.getString('dataprot'),
+              GlobalVariables.instance.xmlHandler.getString('ansdataprot'),
             ),
             buildFAQItem(
-              "Can I update or delete my account?",
-              "Yes, you can update your profile details or delete your account in the Profile section of the app.",
+              GlobalVariables.instance.xmlHandler.getString('caniup'),
+              GlobalVariables.instance.xmlHandler.getString('anscaniup'),
             ),
             buildFAQItem(
-              "How do I contact customer support?",
-              "If you need assistance, you can submit a grievance or review our Privacy Policy and Terms & Conditions. Our support team will address your concerns as quickly as possible.",
+              GlobalVariables.instance.xmlHandler.getString('howcust'),
+              GlobalVariables.instance.xmlHandler.getString('anshowcust'),
             ),
             const SizedBox(height: 30),
             ElevatedButton(

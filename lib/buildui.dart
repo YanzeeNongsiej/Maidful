@@ -497,7 +497,7 @@ void completeService(BuildContext context, item) {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close confirmation dialog
+              // Close confirmation dialog
               showCompleteDoneDialog(
                   context, item); // Proceed to show completion sent dialog
             },

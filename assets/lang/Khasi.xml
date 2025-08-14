@@ -134,8 +134,7 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="chooseview">Jied kumno phi kwah ban peit ia ka dor </string>
 <string name="thischart">Kane ka chart ka pyni ia ki dor ba shisha ba la tyrwa da ki nongtrei-iing na ka bynta ka kam</string>
 <string name="charged">bala buh dor</string>
-<string name="eachbar">Kawei pa kawei ka jingthew ka pyni ia ka dor jong u nongpynbiang. Kane ka iarap ia phi ban sngewthuh ia kaei kaba kiwei ki shim bad kaei ka dor kaba hok ka lah ban long.
-</string>
+<string name="eachbar">Kawei pa kawei ka jingthew ka pyni ia ka dor jong u nongpynbiang. Kane ka iarap ia phi ban sngewthuh ia kaei kaba kiwei ki shim bad kaei ka dor kaba hok ka lah ban long.</string>
 <string name="pricedist">Ka Jingpyni iaki Dor</string>
 <string name="maiden2">Nongtrei-iing</string>
 <string name="transpricing">Ka Jingbuh Dor Kaba Shai</string>
@@ -151,6 +150,45 @@ Phi kwah ban jubab ia ki jingkylli mynta?</string>
 <string name="upimg"> Ki Dur bala Upload</string>
 <string name="welcdash">Peit kane ka Dashboard!</string>
 <string name="dashdet">Hangne ​​phi lah ban:\n• Peit bad wad ia ki kam bad ki nongtreikam\n• Ia kren bad ki nongtrei lane bad ki trai-iing \n• Shna ia ka profile jong phi\n• Pynbna lane Post ia ki kam ba phi trei lane ki jingdonkam nongtrei</string>
+<string name="helpnsup">Jingiarap bad Jingkyrshan</string>
+<string name="submitgri">Thoh ka jingshem jong phi</string>
+<string name="ifu">Lada phi la iakynduh ia kino kino ki jingeh ne donkam jingkyrshan, sngewbha batai bniah ia ka jingeh jong phi. Ka kynhun jong ngi kan bishar bniah bad pynbeit kloi ia ka jingeh jong phi.</string>
+<string name="descis">Batai ia ka jingeh jong phi hangne...</string>
+<string name="subgri">Pyndep ban submit</string>
+<string name="faqs">Ki Jingkylli</string>
+<string name="terms">Ki kyndon bad jingpynbeit</string>
+<string name="howdoi">Kumno ban submit ka jingshem jingeh jong phi?</string>
+<string name="gotit">Biang!</string>
+<string name="howgriev">Kumno ngan pynpaw ia ki jingeh ba nga shem?</string>
+<string name="anshowgriev">
+Phi lah ban submit iaka jingeh jong phi da kaba leit sha ka bynta Help & Support bad pyndap ia ka phorm. Ai katba lah ki jingtip ba bniah ban iarap ia ngi ban pynbeit kloi ia ka jingeh jong phi.</string>
+<string name="whocan">Mano ba lah ban pyndonkam ia kane ka app?</string>
+<string name="answhocan">Ia kane ka app la shna na ka bynta ki trai iing bad ki nongtrei. Ki trai iing ki lah ban wad bad thung ia ki nongtrei, bad ki nongtrei ki lah ban pyniaid ia ki aplikeshon kam bad ki profile jong ki.</string>
+<string name="dataprot">Kumno la iada ia ki data jong ngi?</string>
+<string name="ansdataprot">Ngi shim khia bha ïa ka jinglong kyrpang jong phi bad pyntreikam ïa ki lad jingïada ban ïada ïa ki data jong phi. Sngewbha peit bniah ia ka Policy jong ngi na ka bynta ki jingtip ba kham bniah.</string>
+<string name="caniup">Hato ngi lah ban update ne delete ia ka account jong ngi?</string>
+<string name="anscaniup">Hooid, phi lah ban pynthymmai ia ki jingtip jong phi lane pyndam ia ka account jong phi ha ka bynta Profile jong ka app.</string>
+<string name="howcust">Kumno ban iakren bad customer support?</string>
+<string name="anshowcust">Lada phi donkam jingiarap, phi lah ban submit iaka jingeh jong phi lane bishar bniah ia ka Policy bad ki kyndon jong ngi. Ka kynhun kyrshan jong ngi kan pynbeit kloi katba lah ia ki jingeh jong phi.</string>
+<string name="atmaid">Ha Maidful, ngi khein kor ia ka jinglong kyrpang jong phi bad ngi shimkhia ban iada ia ki jingtip ba kyrpang jong phi. Kane ka Privacy Policy ka batai kumno ngi lum, pyndonkam bad ïada ïa ki jingtip bad data jong phi.</string>
+<string name="infocol">1. Ki data ba ngi lum .</string>
+<string name="ansinfocol">Ngi lah ban lum ïa ki jingtip ba kyrpang kum ka kyrteng jong phi, ki jingtip ba lah ban ïakynduh, bad kino kino ki jingujor kiba phi ai. Ngi lum ruh ia ki data kiba iadei bad ka jingpyndonkam ia ki app ban pynbha ia ki jingshakri jong ngi.</string>
+<string name="infohow">2. Kumno ngi pyndonkam ia ki jingtip jong phi .</string>
+<string name="ansinfohow">Ngi pyndonkam ia ki jingtip jong phi ban: 
+1. Pyntreikam bad jubab ia ki jingeh jong phi.
+2. Pynbha ia ka jingtreikam jong ka app bad ka jingsngewthuh jong ki nongpyndonkam. 
+3. Pyntip ia ki jingpynbna ne jingpynbna kiba kongsan.</string>
+<string name="datashar">3. Ka jingsam ia ki data</string>
+<string name="ansdatashar">Ngim die ne sam ïa ki jingtip ba kyrpang jong phi sha kiwei pat ki briew, lait noh tang haba donkam da ka aiñ lane haba donkam ban ai ïa ki jingiarap iaphi (e.g., ka technical support).</string>
+<string name="secur">4. Ka Jingshngain(Security)</string>
+<string name="anssecur">Ngi pyntreikam ïa ki lad jingïada  ban ïada ïa ki data jong phi na ka jingrung khlem jingbit, jingduh, lane jingpyndonkam bakla.</string>
+<string name="urright">5. Ka Hok jong phi.</string>
+<string name="ansurright">Ka don ka hok ban ïoh, pynthymmai ne pyndam ïa ki jingtip ba kyrpang jong phi. Sngewbha ban pyntip lane contact ia ngi lada phi don kino kino ki jingkylli ne jingkyrpad ha kaba iadei bad ki data jong phi.</string>
+<string name="changepol">6. Ki jingkylla ha kane ka Policy .</string>
+<string name="anschangepol">Ngi lah ban pynthymmai ia kane ka Privacy Policy na ka por sha ka por. Ngi kyntu ïa phi ban peit bniah ïa ka man ka por khnang ban tip kumno ngi ïada ïa ki data jong phi.</string>
+<string name="contus">7. Contact iangi</string>
+<string name="anscontus">Lada phi don kino kino ki jingkylli shaphang kane ka Privacy Policy lane kumno la pyntreikam ïa ki data jong phi, sngewbha pyntip ïa ngi ïa ki jingeh jong phi ha ka Help & Support.</string>
+<string name=""></string>
 <string name=""></string>
 <string name=""></string>
 </strings>

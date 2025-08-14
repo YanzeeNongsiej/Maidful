@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ibitf_app/singleton.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -17,78 +18,78 @@ class PrivacyPolicyPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "At Maidful, we value your privacy and are committed to protecting your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('atmaid'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "1. Information We Collect",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('infocol'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "We may collect personal information such as your name, contact details, and any grievances you submit. We also collect data related to app usage to improve our services.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('ansinfocol'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "2. How We Use Your Information",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('infohow'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "We use your information to: \n 1. Process and respond to your grievances.\n2. Improve app functionality and user experience. \n3. Communicate important updates or announcements.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('ansinfohow'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "3. Data Sharing",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('datashar'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "We do not sell or share your personal data with third parties, except when required by law or when necessary to provide our services (e.g., technical support).",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('ansdatashar'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "4. Security",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('secur'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "We implement industry-standard security measures to protect your data from unauthorized access, loss, or misuse.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('anssecur'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "5. Your Rights",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('urright'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "You have the right to access, update, or delete your personal information. Please contact us if you have any questions or requests regarding your data.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('ansurright'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "6. Changes to This Policy",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('changepol'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "We may update this Privacy Policy from time to time. We encourage you to review it periodically to stay informed about how we protect your information.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('anschangepol'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "7. Contact Us",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('contus'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "If you have any questions about this Privacy Policy or how your data is handled, please let your know your grievances in the Help & Support page.",
+            Text(
+              GlobalVariables.instance.xmlHandler.getString('anscontus'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 30),

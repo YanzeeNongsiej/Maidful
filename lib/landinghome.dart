@@ -131,7 +131,8 @@ class _LandingHomePageState extends State<LandingHomePage> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => setState(() => _showOnboarding = false),
-                child: const Text('Got it!'),
+                child: Text(
+                    GlobalVariables.instance.xmlHandler.getString('gotit')),
               ),
             ],
           ),
@@ -531,11 +532,13 @@ class _NestedTabBarState extends State<NestedTabBar>
 
   Future<bool> _checkDocumentVerification(String userId) async {
     try {
+      print("Fetching document for userId: $userId");
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
           .collection('documents')
           .doc(userId)
           .get();
-      return docSnapshot.exists && docSnapshot.get('verified') == true;
+
+      return docSnapshot.exists && docSnapshot.get('verified') == 1;
     } catch (e) {
       print('Error checking document verification for $userId: $e');
       return false; // Assume not verified on error
@@ -1479,8 +1482,8 @@ class _NestedTabBarState extends State<NestedTabBar>
                                               // Average Rating Section
                                               if (item
                                                       .data()
-                                                      .containsKey('rating') &&
-                                                  item.get('rating') is Map)
+                                                      .containsKey('ratings') &&
+                                                  item.get('ratings') is Map)
                                                 Card(
                                                   margin: const EdgeInsets
                                                       .symmetric(vertical: 10),
@@ -1524,7 +1527,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                                                           child:
                                                               _buildAverageRating(
                                                                   item.get(
-                                                                      'rating')),
+                                                                      'ratings')),
                                                         ),
                                                       ),
                                                     ),
@@ -1772,9 +1775,64 @@ class _NestedTabBarState extends State<NestedTabBar>
   }
 
   Widget _buildAverageRating(Map<String, dynamic> ratings) {
-    if (ratings.isEmpty) return SizedBox();
+    if (ratings.isEmpty) return const SizedBox(); // Use const for SizedBox
+    print('ratings $ratings');
 
-    List<int> ratingValues = ratings.values.map((r) => r as int).toList();
+    List<int> ratingValues = [];
+    List<Widget> reviewWidgets = []; // To store individual review display
+
+    ratings.forEach((raterUserId, reviewData) {
+      if (reviewData is Map<String, dynamic>) {
+        int? rating = reviewData['rating'];
+        String? review = reviewData['review'];
+        Timestamp? timestamp = reviewData['timestamp'];
+
+        if (rating != null) {
+          ratingValues.add(rating);
+        }
+
+        if (review != null && review.isNotEmpty) {
+          reviewWidgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Optionally display raterUserId if needed, might need to fetch user's name
+                  // Text('From: $raterUserId', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        index < rating! ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    review,
+                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                  ),
+                  if (timestamp != null)
+                    Text(
+                      _formatTimestamp(
+                          timestamp), // Format timestamp for display
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  const Divider(
+                      height: 10, thickness: 0.5), // Separator for reviews
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    });
+
+    if (ratingValues.isEmpty) return const SizedBox();
+
     double avgRating =
         ratingValues.reduce((a, b) => a + b) / ratingValues.length;
     int serviceCount = ratingValues.length;
@@ -1784,12 +1842,12 @@ class _NestedTabBarState extends State<NestedTabBar>
       children: [
         Row(
           children: [
-            Icon(Icons.star_border_purple500, color: Colors.blueAccent),
-            SizedBox(width: 5),
+            const Icon(Icons.star_border_purple500, color: Colors.blueAccent),
+            const SizedBox(width: 5),
             Text("Average Rating: ${avgRating.toStringAsFixed(2)}"),
           ],
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Row(
           children: List.generate(
             5,
@@ -1799,12 +1857,30 @@ class _NestedTabBarState extends State<NestedTabBar>
             ),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
-            "${GlobalVariables.instance.xmlHandler.getString('servcomp')} $serviceCount",
-            style: TextStyle(color: Colors.grey[700])),
+          "${GlobalVariables.instance.xmlHandler.getString('servcomp')} $serviceCount",
+          style: TextStyle(color: Colors.grey[700]),
+        ),
+        const SizedBox(height: 20), // Spacer before reviews section
+        if (reviewWidgets.isNotEmpty) ...[
+          Text(
+            "Customer Reviews:",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          // Display all collected review widgets
+          ...reviewWidgets,
+        ],
       ],
     );
+  }
+
+// Helper function to format timestamp (optional, but good for display)
+  String _formatTimestamp(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate();
+    // You can customize the date format as needed
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 
   @override

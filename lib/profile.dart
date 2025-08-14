@@ -27,6 +27,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  bool _isProfilePicUploading = false;
+  double _uploadProgress = 0.0;
   final _outerScrollController = ScrollController();
   final _innerScrollController = ScrollController();
   String? _downloadUrl;
@@ -354,23 +356,33 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(statusIcon, color: statusColor, size: 18),
-              SizedBox(width: 5),
-              Text(
-                'Document Status: $statusText',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: statusColor,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.bold,
+          Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: 8, vertical: 4), // space inside
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8), // rounded corners
+            ),
+            child: Row(
+              mainAxisSize:
+                  MainAxisSize.min, // ✅ Wrap content instead of filling width
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(statusIcon, color: statusColor, size: 18),
+                SizedBox(width: 5),
+                Text(
+                  'Document Status: $statusText',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: statusColor,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+              ],
+            ),
+          )
         ],
       );
     } else {
@@ -397,50 +409,62 @@ class _ProfilePageState extends State<ProfilePage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20), // More rounded
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0), // Increased padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Documents',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal.shade700,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            width: 2,
+            color: Colors.transparent,
+          ),
+          gradient: LinearGradient(
+            colors: [Colors.teal, Colors.blueAccent],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0), // Increased padding
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Documents',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 15),
-            // Use the updated _buildGridViewForDocuments directly
-            _buildGridViewForDocuments(),
-            SizedBox(height: 20),
-            if (_documentVerifiedStatus != 1)
-              _isUploading // Show progress indicator or button
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                        strokeWidth: 4.0,
-                      ),
-                    )
-                  : ElevatedButton.icon(
-                      onPressed: _pickImageForDocuments,
-                      icon: Icon(Icons.upload_file, size: 24),
-                      label: Text('Upload Document',
-                          style: TextStyle(fontSize: 16)),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.blueAccent, // Stronger color
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(15), // Rounded button
+              SizedBox(height: 15),
+              // Use the updated _buildGridViewForDocuments directly
+              _buildGridViewForDocuments(),
+              SizedBox(height: 20),
+              if (_documentVerifiedStatus != 1)
+                _isUploading // Show progress indicator or button
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                          strokeWidth: 4.0,
                         ),
-                        elevation: 5,
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: _pickImageForDocuments,
+                        icon: Icon(Icons.upload_file, size: 24),
+                        label: Text('Upload Document',
+                            style: TextStyle(fontSize: 16)),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.blueAccent, // Stronger color
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(15), // Rounded button
+                          ),
+                          elevation: 5,
+                        ),
                       ),
-                    ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1275,7 +1299,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Edit Profile Information',
+          title: Text(GlobalVariables.instance.xmlHandler.getString('editprof'),
               style: TextStyle(fontWeight: FontWeight.bold)),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1363,7 +1387,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: TextField(
                             controller: _languageController,
                             decoration: InputDecoration(
-                              labelText: 'Add New Language',
+                              labelText: GlobalVariables.instance.xmlHandler
+                                  .getString('addlang'),
                               hintText: 'e.g., Khasi',
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
@@ -1439,6 +1464,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // Locate the _showMessageBox function
   void _showMessageBox(String title, String message, {bool isError = false}) {
     showDialog(
       context: context,
@@ -1448,10 +1474,19 @@ class _ProfilePageState extends State<ProfilePage> {
             Icon(isError ? Icons.error_outline : Icons.check_circle_outline,
                 color: isError ? Colors.red : Colors.green),
             SizedBox(width: 10),
-            Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+            // Wrap the title in a Flexible and FittedBox
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child:
+                    Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
           ],
         ),
-        content: Text(message),
+        content: SingleChildScrollView(
+          child: Text(message),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1514,19 +1549,85 @@ class _ProfilePageState extends State<ProfilePage> {
                               bottom: 0,
                               child: GestureDetector(
                                 onTap: () async {
+                                  // Locate the GestureDetector for the profile picture
+
                                   final XFile? image = await _picker.pickImage(
                                       source: ImageSource.gallery);
                                   if (image == null) return;
 
                                   File file = File(image.path);
+                                  String fileName = image.name;
+                                  String filetype = fileName.split('.').last;
+                                  final ref = FirebaseStorage.instance.ref().child(
+                                      '${GlobalVariables.instance.username}/profile.$filetype');
+
+                                  // Show a dialog with the progress indicator
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext dialogContext) {
+                                      return AlertDialog(
+                                        title:
+                                            Text("Uploading Profile Picture"),
+                                        content: StatefulBuilder(
+                                          builder: (BuildContext context,
+                                              StateSetter setState) {
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 80,
+                                                      height: 80,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        value: _uploadProgress,
+                                                        strokeWidth: 6,
+                                                        backgroundColor: Colors
+                                                            .grey.shade300,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                                Colors
+                                                                    .blueAccent),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      "${(_uploadProgress * 100).toInt()}%",
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 20),
+                                                Text("Please wait...",
+                                                    style: TextStyle(
+                                                        fontSize: 16)),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  );
+
                                   try {
-                                    String fileName = image.name;
-                                    String filetype = fileName.split('.').last;
-                                    final ref = FirebaseStorage.instance
-                                        .ref()
-                                        .child(
-                                            '${GlobalVariables.instance.username}/profile.$filetype');
-                                    await ref.putFile(file);
+                                    final uploadTask = ref.putFile(file);
+                                    uploadTask.snapshotEvents
+                                        .listen((TaskSnapshot snapshot) {
+                                      setState(() {
+                                        _uploadProgress = snapshot
+                                                .bytesTransferred
+                                                .toDouble() /
+                                            snapshot.totalBytes.toDouble();
+                                      });
+                                    });
+
+                                    await uploadTask;
                                     String downloadUrl =
                                         await ref.getDownloadURL();
 
@@ -1543,18 +1644,30 @@ class _ProfilePageState extends State<ProfilePage> {
                                         SetOptions(merge: true),
                                       );
                                     }
+
+                                    // Dismiss the loading dialog
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
+
+                                    // Update UI and show success message
                                     setState(() {
                                       _downloadUrl = downloadUrl;
+                                      _uploadProgress = 0.0;
                                     });
                                     _showMessageBox('Profile Picture Updated',
                                         'Your profile picture has been successfully updated.',
                                         isError: false);
                                   } catch (e) {
+                                    // Dismiss the loading dialog on error
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
                                     _showMessageBox('Error',
                                         'Failed to update profile picture: $e',
                                         isError: true);
                                   }
                                 },
+                                // The rest of the GestureDetector...
+
                                 child: Container(
                                   padding: EdgeInsets.all(8),
                                   decoration: BoxDecoration(

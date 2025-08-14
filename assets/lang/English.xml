@@ -150,6 +150,44 @@ Do you want to take the assessment now? </string>
 <string name="upimg">Uploaded Images</string>
 <string name="welcdash">Welcome to your Dashboard!</string>
 <string name="dashdet">Here you can:\n• Browse and filter service providers\n• Chat with potential hires\n• Manage your profile\n• Post job requirements</string>
+<string name="helpnsup">Help and Support</string>
+<string name="submitgri">Submit a Grievance</string>
+<string name="ifu">If you have encountered any issues or need support, please describe your problem in detail. Our team will review and address your grievance promptly.</string>
+<string name="descis">Describe your issue here...</string>
+<string name="subgri">Submit Grievance</string>
+<string name="faqs">FAQs</string>
+<string name="terms">Terms and Conditions</string>
+<string name="freq">Frequently Asked Questions</string>
+<string name="howdoi">How do I submit a grievance?</string>
+<string name="howgriev">How do I submit a grievance?</string>
+<string name="anshowgriev">You can submit a grievance by navigating to the Help & Support section and filling out the grievance form. Provide as many details as possible to help us address your issue quickly.</string>
+<string name="whocan">Who can use this app?</string>
+<string name="answhocan">This app is designed for both homeowners and maids. Homeowners can find and hire maids, and maids can manage their job applications and profiles.</string>
+<string name="dataprot">How is my data protected?</string>
+<string name="ansdataprot">We take your privacy seriously and implement industry-standard security measures to protect your information. Please review our Privacy Policy for more details.</string>
+<string name="caniup">Can I update or delete my account?</string>
+<string name="anscaniup">Yes, you can update your profile details or delete your account in the Profile section of the app.</string>
+<string name="howcust">How do I contact customer support?</string>
+<string name="anshowcust">If you need assistance, you can submit a grievance or review our Privacy Policy and Terms & Conditions. Our support team will address your concerns as quickly as possible.</string>
+<string name="atmaid">At Maidful, we value your privacy and are committed to protecting your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.</string>
+<string name="infocol">1. Information We Collect</string>
+<string name="ansinfocol">We may collect personal information such as your name, contact details, and any grievances you submit. We also collect data related to app usage to improve our services.</string>
+<string name="infohow">2. How We Use Your Information</string>
+<string name="ansinfohow">We use your information to: 
+1. Process and respond to your grievances.
+2. Improve app functionality and user experience. 
+3. Communicate important updates or announcements.</string>
+<string name="datashar">3. Data Sharing</string>
+<string name="ansdatashar">We do not sell or share your personal data with third parties, except when required by law or when necessary to provide our services (e.g., technical support).</string>
+<string name="secur">4. Security</string>
+<string name="anssecur">We implement industry-standard security measures to protect your data from unauthorized access, loss, or misuse.</string>
+<string name="urright">5. Your Rights</string>
+<string name="ansurright">You have the right to access, update, or delete your personal information. Please contact us if you have any questions or requests regarding your data.</string>
+<string name="changepol">6. Changes to This Policy</string>
+<string name="anschangepol">We may update this Privacy Policy from time to time. We encourage you to review it periodically to stay informed about how we protect your information.</string>
+<string name="contus">7. Contact Us</string>
+<string name="anscontus">If you have any questions about this Privacy Policy or how your data is handled, please let us know your grievances in the Help & Support page.</string>
+<string name=""></string>
 <string name=""></string>
 <string name=""></string>
 </strings> 

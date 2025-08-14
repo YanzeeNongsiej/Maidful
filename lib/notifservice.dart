@@ -189,9 +189,10 @@ class NotificationService {
   }
 }
 
+// --- MODIFIED designOfRating function ---
 void designOfRating(String ratedUserId, String raterUserId) {
   int selectedRating = 0;
-
+  final TextEditingController _reviewController = TextEditingController();
   showDialog(
     context: navigatorKey.currentContext!,
     builder: (context) {
@@ -225,19 +226,26 @@ void designOfRating(String ratedUserId, String raterUserId) {
                     );
                   }),
                 ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _reviewController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: "Enter your review...",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ],
             ),
             actions: [
-              // TextButton(
-              //   onPressed: () {
-              //     Navigator.pop(context); // Close dialog without submitting
-              //   },
-              //   child: Text("Cancel"),
-              // ),
               TextButton(
                 onPressed: () {
                   if (selectedRating > 0) {
-                    submitRating(selectedRating, ratedUserId, raterUserId);
+                    // Pass the review text here
+                    submitRating(selectedRating, _reviewController.text,
+                        ratedUserId, raterUserId);
                     Navigator.pop(context);
                   }
                 },
@@ -252,7 +260,7 @@ void designOfRating(String ratedUserId, String raterUserId) {
 }
 
 Future<void> submitRating(
-    int rating, String ratedUserId, String raterUserId) async {
+    int rating, String review, String ratedUserId, String raterUserId) async {
   CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
 
@@ -277,12 +285,22 @@ Future<void> submitRating(
         if (userSnapshot.exists) {
           Map<String, dynamic> userData =
               userSnapshot.data() as Map<String, dynamic>;
+
+          // Get the existing 'ratings' map, or create an empty one if it doesn't exist
+          // Renamed from 'rating' to 'ratings' to better represent multiple reviews
           Map<String, dynamic> ratings =
-              userData['rating'] as Map<String, dynamic>? ?? {};
+              userData['ratings'] as Map<String, dynamic>? ?? {};
 
-          ratings[raterUserId] = rating; // Update or add rating
+          // Store both rating and review under the raterUserId
+          ratings[raterUserId] = {
+            'rating': rating,
+            'review': review,
+            'timestamp':
+                FieldValue.serverTimestamp(), // Optional: add a timestamp
+          };
 
-          transaction.update(userRef, {'rating': ratings});
+          transaction.update(
+              userRef, {'ratings': ratings}); // Update the 'ratings' field
         }
       });
 
@@ -295,9 +313,11 @@ Future<void> submitRating(
         ),
       );
       if (GlobalVariables.instance.userrole == 2) {
-        showPaymentModePrompt(context);
+        // Assuming showPaymentModePrompt is defined elsewhere in your code
+        // showPaymentModePrompt(context);
       }
-      print("Rating submitted: $rating by $raterUserId for $ratedUserId");
+      print(
+          "Rating: $rating, Review: '$review' submitted by $raterUserId for $ratedUserId");
     } else {
       print("User not found with userid: $ratedUserId");
 
@@ -310,7 +330,7 @@ Future<void> submitRating(
       );
     }
   } catch (error) {
-    print("Error submitting rating: $error");
+    print("Error submitting rating and review: $error");
 
     // ❌ Show error SnackBar
     ScaffoldMessenger.of(context).showSnackBar(
