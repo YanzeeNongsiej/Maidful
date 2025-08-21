@@ -94,7 +94,7 @@ class _ServicePricingInsightsState extends State<ServicePricingInsights> {
 
   Widget buildChart() {
     if (prices.isEmpty) {
-      return Text("No pricing data found for this selection.");
+      return Text(GlobalVariables.instance.xmlHandler.getString('pricing'));
     }
 
     // Step 1: Bucket prices into ranges
