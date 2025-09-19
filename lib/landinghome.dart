@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/DAO/usersdao.dart';
 import 'package:ibitf_app/chatpage.dart';
@@ -55,7 +56,8 @@ Future<QuerySnapshot> fetchJobProfiles() async {
 
 class _LandingHomePageState extends State<LandingHomePage> {
   bool _showOnboarding = true;
-
+  late BannerAd _bannerAd;
+  bool _isAdLoaded = false;
   // Search related states
   SearchController _searchController = SearchController();
   String searchText =
@@ -63,6 +65,29 @@ class _LandingHomePageState extends State<LandingHomePage> {
   final NotificationService _notificationService = NotificationService();
   @override
   void initState() {
+//ads
+    _bannerAd = BannerAd(
+      adUnitId:
+          'ca-app-pub-3940256099942544/6300978111', // Replace with your ad unit ID
+      request: const AdRequest(),
+      size: AdSize.fullBanner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    );
+    try {
+      _bannerAd.load();
+    } catch (e) {}
+
     super.initState();
     _checkFirstTime();
     GlobalVariables.instance.xmlHandler
@@ -333,7 +358,16 @@ class _LandingHomePageState extends State<LandingHomePage> {
                   children: [
                     _buildModernHeader(),
                     SizedBox(
-                      height: 8,
+                      height: 4,
+                    ),
+                    if (_isAdLoaded)
+                      SizedBox(
+                        width: _bannerAd.size.width.toDouble(),
+                        height: _bannerAd.size.height.toDouble(),
+                        child: AdWidget(ad: _bannerAd),
+                      ),
+                    SizedBox(
+                      height: 4,
                     ),
                     Expanded(
                       // Added Expanded to make NestedTabBar take available space
@@ -502,6 +536,7 @@ class _NestedTabBarState extends State<NestedTabBar>
   List<int>? myscores;
   List<Map<String, dynamic>> skillsWithScores = [];
   List<List<dynamic>> skillsWithNames = [];
+  InterstitialAd? _interstitialAd;
   @override
   void initState() {
     super.initState();
@@ -512,6 +547,7 @@ class _NestedTabBarState extends State<NestedTabBar>
     });
     updateSearchqs();
     _nestedTabController = TabController(length: 1, vsync: this);
+    _loadInterstitialAd();
   }
 
   @override
@@ -988,6 +1024,22 @@ class _NestedTabBarState extends State<NestedTabBar>
     return res;
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:
+          'ca-app-pub-3940256099942544/1033173712', // Replace with your ad unit ID
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          _interstitialAd = null;
+        },
+      ),
+    );
+  }
+
   getServiceDetail(item, servItem) {
     showDialog(
         context: context,
@@ -1071,6 +1123,7 @@ class _NestedTabBarState extends State<NestedTabBar>
                           padding: const EdgeInsets.all(5.0),
                           child: GestureDetector(
                             onTap: () {
+                              _interstitialAd?.show();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ibitf_app/chat_bubble.dart';
 import 'package:ibitf_app/jobresume.dart';
 import 'package:ibitf_app/razorpay_payment.dart';
+import 'package:ibitf_app/upipayment.dart';
 import 'package:intl/intl.dart'; // For formatting timestamps
 import 'package:ibitf_app/controller/chat_controller.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -332,31 +333,48 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _initiatePayment() async {
-    // No longer trying to get amount from _acknowledgementDoc
-    final String description = 'Payment for service with ${widget.name}';
-
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RazorpayPaymentPage(
-          amount: null, // Pass null, so RazorpayPaymentPage prompts for amount
-          description: description,
-          purpose: 'service_payment',
-          receiverId: widget.receiverID,
-        ),
+        builder: (context) => const UpiPaymentPage(),
       ),
     );
 
     if (result == true) {
       _showAlertDialog(
           'Payment Successful', 'Your payment has been processed.');
-      // Refresh acknowledgement details to update UI if needed
       _fetchAcknowledgementDetails();
     } else {
       _showAlertDialog(
           'Payment Failed', 'Your payment could not be completed.');
     }
   }
+  // void _initiatePayment() async {
+  //   // No longer trying to get amount from _acknowledgementDoc
+  //   final String description = 'Payment for service with ${widget.name}';
+
+  //   final result = await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => RazorpayPaymentPage(
+  //         amount: null, // Pass null, so RazorpayPaymentPage prompts for amount
+  //         description: description,
+  //         purpose: 'service_payment',
+  //         receiverId: widget.receiverID,
+  //       ),
+  //     ),
+  //   );
+
+  //   if (result == true) {
+  //     _showAlertDialog(
+  //         'Payment Successful', 'Your payment has been processed.');
+  //     // Refresh acknowledgement details to update UI if needed
+  //     _fetchAcknowledgementDetails();
+  //   } else {
+  //     _showAlertDialog(
+  //         'Payment Failed', 'Your payment could not be completed.');
+  //   }
+  // }
 
   void _showAlertDialog(String title, String message) {
     showDialog(

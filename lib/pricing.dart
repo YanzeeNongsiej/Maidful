@@ -155,6 +155,7 @@ class _ServicePricingInsightsState extends State<ServicePricingInsights> {
           SizedBox(height: 10),
           ...List.generate(entries.length, (index) {
             final entry = entries[index];
+
             return Row(
               children: [
                 Container(
@@ -175,6 +176,9 @@ class _ServicePricingInsightsState extends State<ServicePricingInsights> {
   }
 
   Widget buildDropdowns() {
+    // _interstitialAd?.show().then((a) {
+    //   print('showing ads');
+    // });
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

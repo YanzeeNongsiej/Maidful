@@ -354,12 +354,13 @@ void showPaymentModePrompt(BuildContext context) {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Choose Payment Method",
+            Text(GlobalVariables.instance.xmlHandler.getString('choosepay'),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 16),
             ListTile(
               leading: Icon(Icons.money, color: Colors.green),
-              title: Text("Cash"),
+              title:
+                  Text(GlobalVariables.instance.xmlHandler.getString('cash+')),
               onTap: () {
                 Navigator.pop(context); // close bottom sheet
               },

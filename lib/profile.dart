@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:ibitf_app/chatpage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibitf_app/singleton.dart';
@@ -27,6 +28,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  late BannerAd _bannerAd;
+  bool _isAdLoaded = false;
   bool _isProfilePicUploading = false;
   double _uploadProgress = 0.0;
   final _outerScrollController = ScrollController();
@@ -70,7 +73,27 @@ class _ProfilePageState extends State<ProfilePage> {
     _fetchUploadedDocumentUrl();
     fetchSkills();
     profilepic();
-
+    _bannerAd = BannerAd(
+      adUnitId:
+          'ca-app-pub-3940256099942544/6300978111', // Replace with your ad unit ID
+      request: const AdRequest(),
+      size: AdSize.fullBanner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    );
+    try {
+      _bannerAd.load();
+    } catch (e) {}
     super.initState();
 
     _innerScrollController.addListener(() {
@@ -104,18 +127,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (querySnapshot.docs.isNotEmpty) {
         userDoc = querySnapshot.docs.first;
-        setState(() {
-          try {
-            _downloadUrl = userDoc?['url'];
-            _myaddr = userDoc?['address'];
-            _mydob = userDoc?['dob'];
-            languages = userDoc?['language'];
+        if (mounted) {
+          setState(() {
+            try {
+              _downloadUrl = userDoc?['url'];
+              _myaddr = userDoc?['address'];
+              _mydob = userDoc?['dob'];
+              languages = userDoc?['language'];
 
-            print("LANGUAGESZ IS:$languages");
-          } catch (e) {
-            print("No profileimage yet$e");
-          }
-        });
+              print("LANGUAGESZ IS:$languages");
+            } catch (e) {
+              print("No profileimage yet$e");
+            }
+          });
+        }
       }
     }
   }
@@ -865,8 +890,9 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text("Confirm Deletion"),
-          content: const Text("Are you sure you want to remove this service?"),
+          title: Text(GlobalVariables.instance.xmlHandler.getString('confdel')),
+          content:
+              Text(GlobalVariables.instance.xmlHandler.getString('remserv')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -1728,6 +1754,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
+                  ),
+                  if (_isAdLoaded)
+                    SizedBox(
+                      width: _bannerAd.size.width.toDouble(),
+                      height: _bannerAd.size.height.toDouble(),
+                      child: AdWidget(ad: _bannerAd),
+                    ),
+                  SizedBox(
+                    height: 4,
                   ),
                   if (GlobalVariables.instance.urole == 1)
                     Row(

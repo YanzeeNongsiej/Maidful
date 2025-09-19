@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ibitf_app/singleton.dart';
 import 'package:upi_india/upi_india.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -30,7 +31,9 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
 
     if (upiId.isEmpty || amountText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter both UPI ID and amount.")),
+        SnackBar(
+            content:
+                Text(GlobalVariables.instance.xmlHandler.getString('upiam'))),
       );
       return;
     }
@@ -38,7 +41,9 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
     final double? amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a valid amount.")),
+        SnackBar(
+            content:
+                Text(GlobalVariables.instance.xmlHandler.getString('validam'))),
       );
       return;
     }
@@ -100,7 +105,7 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Enter UPI ID or Scan QR Code",
+                Text(GlobalVariables.instance.xmlHandler.getString('enterupi'),
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Switch(
@@ -160,13 +165,16 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
               ),
             ),
             SizedBox(height: 24),
-            Text("Select a UPI app:", style: TextStyle(fontSize: 16)),
+            Text(GlobalVariables.instance.xmlHandler.getString('selupi'),
+                style: TextStyle(fontSize: 16)),
             SizedBox(height: 12),
             FutureBuilder<List<UpiApp>>(
               future: _appsFuture,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return CircularProgressIndicator();
-                if (snapshot.data!.isEmpty) return Text("No UPI apps found.");
+                if (snapshot.data!.isEmpty)
+                  return Text(
+                      GlobalVariables.instance.xmlHandler.getString('noupi'));
 
                 return Wrap(
                   spacing: 12,

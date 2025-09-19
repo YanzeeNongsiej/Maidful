@@ -73,6 +73,7 @@ dependencies:
   mobile_scanner: ^3.5.1
   razorpay_flutter: ^1.4.0
   emoji_picker_flutter: ^4.3.0
+  google_mobile_ads: ^3.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

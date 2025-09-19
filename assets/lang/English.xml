@@ -189,8 +189,17 @@ Do you want to take the assessment now? </string>
 <string name="anscontus">If you have any questions about this Privacy Policy or how your data is handled, please let us know your grievances in the Help & Support page.</string>
 <string name="editprof">Edit Profile Information</string>
 <string name="addlang">Add New Language</string>
-<string name="pricing">Pricing</string>
-<string name=""></string>
-<string name=""></string>
+<string name="pricing">No pricing data found for this selection.</string>
+<string name="noimg">No images selected</string>
+<string name="selimg">Select Images</string>
+<string name="choosepay">Choose Payment Method</string>
+<string name="cash">Cash-In-Hand</string>
+<string name="upiam">Please enter both UPI ID and amount.</string>
+<string name="validam">Please enter a valid amount</string>
+<string name="remserv">Are you sure you want to remove this service?</string>
+<string name="confdel">Confirm Deletion</string>
+<string name="selupi">Select a UPI app:</string>
+<string name="noupi">No UPI apps found.</string>
+<string name="enterupi">Enter UPI ID or Scan QR Code</string>
 <string name=""></string>
 </strings> 

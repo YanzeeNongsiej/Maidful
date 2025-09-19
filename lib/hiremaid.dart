@@ -345,7 +345,7 @@
 //                                   .getString('timing'),
 //                               style:
 //                                   const TextStyle(fontWeight: FontWeight.bold)),
-//                           Text("$defTimeFrom-$defTimeTo"),
+//                           ),
 //                         ],
 //                       ),
 //                       trailing: Card(

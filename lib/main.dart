@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -53,6 +54,7 @@ void main() async {
 
   // TODO: Set up foreground message handler
   // TODO: Set up background message handler
+  MobileAds.instance.initialize();
   runApp(const MyApp());
 }
 

@@ -676,7 +676,8 @@ class _JobResumeState extends State<JobResume>
               },
             ),
           )
-        : Text("No images selected", style: TextStyle(color: Colors.grey));
+        : Text(GlobalVariables.instance.xmlHandler.getString('noimg'),
+            style: TextStyle(color: Colors.grey));
   }
 
   @override
@@ -1232,7 +1233,8 @@ class _JobResumeState extends State<JobResume>
                           ElevatedButton.icon(
                             onPressed: pickImages,
                             icon: Icon(Icons.upload_file),
-                            label: Text("Select Images"),
+                            label: Text(GlobalVariables.instance.xmlHandler
+                                .getString('selimg')),
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10)),

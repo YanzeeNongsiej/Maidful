@@ -190,8 +190,18 @@ Phi lah ban submit iaka jingeh jong phi da kaba leit sha ka bynta Help & Support
 <string name="anscontus">Lada phi don kino kino ki jingkylli shaphang kane ka Privacy Policy lane kumno la pyntreikam ïa ki data jong phi, sngewbha pyntip ïa ngi ïa ki jingeh jong phi ha ka Help & Support.</string>
 <string name="editprof">Pynbeit iaki jingtip shaphang jong phi</string>
 <string name="addlang">Pynrung ktien thymmai</string>
-<string name="pricing">Ka Dor</string>
-<string name=""></string>
+<string name="pricing">Ym shym la lap ia ki jingtip dor na ka bynta kane ka jingjied</string>
+<string name="noimg">Ym shym la jied ia ki dur</string>
+<string name="selimg">Jied iaki dur</string>
+<string name="choosepay">Jied ia ka rukom siew</string>
+<string name="cash">Pisa Nokot</string>
+<string name="upiam">Sngewbha pynrung ia baroh ar ki UPI ID bad ka pisa.</string>
+<string name="validam">Sngewbha pynrung ia ka dor kaba biang</string>
+<string name="remserv">Hato phi kwah ban delete ia kane ka jingshakri?</string>
+<string name="confdel">Pyntikna iaka jing delete</string>
+<string name="selupi">Jied ia ka app UPI:</string>
+<string name="noupi">Ym shym la lap ia ki apps ba pyndonkam UPI.</string>
+<string name="enterupi">Pynrung ia ka UPI ID lane scan QR code</string>
 <string name=""></string>
 <string name=""></string>
 </strings>

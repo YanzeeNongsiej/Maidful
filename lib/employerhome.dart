@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:ibitf_app/DAO/maiddao.dart';
 import 'package:ibitf_app/appbar.dart';
 import 'package:ibitf_app/chatlist.dart';
@@ -15,6 +16,7 @@ import 'package:ibitf_app/contact.dart';
 import 'package:ibitf_app/profile.dart';
 import 'package:ibitf_app/pricing.dart';
 import 'package:ibitf_app/razorpay_payment.dart';
+import 'package:ibitf_app/upipayment.dart';
 import 'package:ibitf_app/wallet.dart';
 
 class EmployerHome extends StatefulWidget {
@@ -36,7 +38,7 @@ class _EmployerHomePageState extends State<EmployerHome>
   get uname => null;
   String userID = FirebaseAuth.instance.currentUser!.uid;
   String newaddress = "", newname = "", userid = "";
-
+  InterstitialAd? _interstitialAd;
   String? usrname;
   List<bool> _iss = [true, false], _isrs = [true, false];
   List<String> lang = ['English', 'Khasi'];
@@ -91,6 +93,7 @@ class _EmployerHomePageState extends State<EmployerHome>
 
   @override
   void initState() {
+    _loadInterstitialAd();
     _tabController = TabController(length: 3, vsync: this);
 
     // _tabController.addListener(() {
@@ -124,6 +127,23 @@ class _EmployerHomePageState extends State<EmployerHome>
     _tabController.dispose();
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:
+          'ca-app-pub-3940256099942544/1033173712', // Replace with your ad unit ID
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          print('ad has been loaded');
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          _interstitialAd = null;
+        },
+      ),
+    );
+  }
+
   void handleClick(String value) async {
     switch (value) {
       case 'Logout':
@@ -134,6 +154,9 @@ class _EmployerHomePageState extends State<EmployerHome>
         }
         break;
       case 'Pricing':
+        _interstitialAd?.show().then((a) {
+          print('showing ads');
+        });
         Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => ServicePricingInsights()));
         break;
@@ -141,9 +164,9 @@ class _EmployerHomePageState extends State<EmployerHome>
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => HelpSupportPage()));
         break;
-      case 'Wallet':
+      case 'Payment':
         Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => WalletPage()));
+            .push(MaterialPageRoute(builder: (context) => UpiPaymentPage()));
         break;
     }
   }
