@@ -201,5 +201,6 @@ Do you want to take the assessment now? </string>
 <string name="selupi">Select a UPI app:</string>
 <string name="noupi">No UPI apps found.</string>
 <string name="enterupi">Enter UPI ID or Scan QR Code</string>
+<string name="gotit">Got it!</string>
 <string name=""></string>
 </strings> 

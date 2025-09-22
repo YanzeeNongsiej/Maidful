@@ -6,7 +6,7 @@ class Service {
   final List<String> timing;
   final String userid;
   final String nego;
-  final List<String> work_history;
+  // final List<String> work_history;
   final bool ack;
   final String remarks;
   Service(
@@ -16,7 +16,7 @@ class Service {
       required this.services,
       required this.timing,
       required this.userid,
-      required this.work_history,
+      // required this.work_history,
       required this.ack,
       required this.remarks});
 
@@ -27,7 +27,7 @@ class Service {
       'services': services,
       'timing': timing,
       'userid': userid,
-      'work_history': work_history,
+      // 'work_history': work_history,
       'ack': ack,
       'nego': nego,
       'remarks': remarks

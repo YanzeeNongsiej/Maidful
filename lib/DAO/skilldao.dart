@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-void updateScoreToDB(String lang, String? s, double p) async {
+Future updateScoreToDB(String lang, String? s, double p) async {
   User? currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser != null) {
     // Query the user's document
@@ -29,4 +29,5 @@ void updateScoreToDB(String lang, String? s, double p) async {
     // Add the score
     await skillDocRef.set({'score': p.toInt()});
   }
+  return;
 }

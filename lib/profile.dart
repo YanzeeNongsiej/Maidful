@@ -677,7 +677,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return SingleChildScrollView(
       child: Theme(
         data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
+          dividerColor: Colors.transparent, // Removes the divider line
         ),
         child: Column(
           children: [
@@ -688,17 +688,35 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
-                childAspectRatio: 2.0,
+                childAspectRatio: 2.5,
               ),
-              itemCount: myskills.length,
+              // Corrected: Use the length of the 'res' list
+              itemCount: res.length,
               itemBuilder: (context, index) {
+                // Get the skill ID from the list
+                String currentSkillId = res[index];
+                String displayName = currentSkillId; // Default to ID
+
+                // Find the corresponding display name using the skill ID
+                try {
+                  displayName = skillsWithNames.firstWhere(
+                    (s) => s[0] == currentSkillId,
+                    orElse: () => [
+                      currentSkillId,
+                      currentSkillId
+                    ], // Fallback if not found
+                  )[1];
+                } catch (e) {
+                  print("Error finding skill name for $currentSkillId: $e");
+                }
+
                 return _buildSkillItem(
-                  res[index] == getSkillName(res[index])
-                      ? skillsWithNames.firstWhere((s) => s[0] == res[index])[1]
-                      : res[index],
-                  (myskills.contains(getSkillName(res[index])) &&
-                          checkVerified(res[index]))
-                      ? getLevel(getSkillName(res[index])).toInt()
+                  // Use the found display name for the title
+                  displayName,
+                  // Check if the skill ID is in the user's skills and is verified
+                  (myskills.contains(currentSkillId) &&
+                          checkVerified(currentSkillId))
+                      ? getLevel(currentSkillId).toInt()
                       : 0,
                 );
               },
@@ -1899,26 +1917,33 @@ class _ProfilePageState extends State<ProfilePage> {
                                                               TextButton(
                                                                 child: Text(
                                                                     "Done"),
-                                                                onPressed: () {
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pop();
-                                                                  selectedskills =
-                                                                      selectedOptions;
+                                                                onPressed:
+                                                                    () async {
+                                                                  // Create a list of futures to await all database writes
+                                                                  List<Future<void>>
+                                                                      updateFutures =
+                                                                      [];
                                                                   for (var s
-                                                                      in selectedskills!
+                                                                      in selectedOptions
                                                                           .toList()) {
-                                                                    updateScoreToDB(
+                                                                    // Assuming updateScoreToDB returns a Future<void>
+                                                                    updateFutures.add(updateScoreToDB(
                                                                         GlobalVariables
                                                                             .instance
                                                                             .selected,
                                                                         s,
-                                                                        -1);
+                                                                        -1));
                                                                   }
-                                                                  print(
-                                                                      "Selected skills: $selectedskills");
-                                                                  setState(
-                                                                      () {});
+
+                                                                  // Wait for all database writes to complete
+                                                                  await Future.wait(
+                                                                      updateFutures);
+
+                                                                  // Pass the updated list of skills back to the parent page
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop(selectedOptions
+                                                                          .toList());
                                                                 },
                                                               ),
                                                             ],
@@ -1926,10 +1951,27 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         },
                                                       ).then((result) {
                                                         if (result != null) {
-                                                          print(
-                                                              "Selected options: $result");
-                                                          selectedskills =
-                                                              result;
+                                                          // Result is the list of new skills from the dialog
+                                                          List<String>
+                                                              newSkills = result
+                                                                  as List<
+                                                                      String>;
+
+                                                          // Use setState to update your local state variables immediately
+                                                          setState(() {
+                                                            // Update the list of skills to include the new ones
+                                                            for (String skill
+                                                                in newSkills) {
+                                                              if (!myskills
+                                                                  .contains(
+                                                                      skill)) {
+                                                                myskills
+                                                                    .add(skill);
+                                                                // You might need to update skillsWithScores as well
+                                                                //skillsWithScores[skill] = -1; // Or whatever default score is
+                                                              }
+                                                            }
+                                                          });
                                                         }
                                                       });
                                                     },

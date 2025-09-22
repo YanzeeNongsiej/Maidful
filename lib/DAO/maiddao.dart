@@ -64,7 +64,7 @@ class maidDao {
           }),
           timing: List<String>.from(qss.get("timing")),
           userid: qss.get("userid"),
-          work_history: List<String>.from(qss.get("work_history")),
+          //work_history: List<String>.from(qss.get("work_history")),
           ack: qss.get("ack"));
       ser.add(serv);
     }

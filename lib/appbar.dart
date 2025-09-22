@@ -63,7 +63,7 @@ class _ModernAppBarState extends State<ModernAppBar> {
               _buildMenuItem("Pricing", Icons.currency_rupee),
               // _buildMenuItem("Settings", Icons.settings),
               _buildMenuItem("Contact Us", Icons.contact_mail),
-              _buildMenuItem("Wallet", Icons.account_balance_wallet),
+              // _buildMenuItem("Wallet", Icons.account_balance_wallet),
               _buildLanguageToggle(),
               // _buildRoleToggle(),
             ],
